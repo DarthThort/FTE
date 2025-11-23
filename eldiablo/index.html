@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberCrawler</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div id="ui-layer">
+        <div id="hud">
+            <div class="stat-bar health-bar">HP: <span id="hp-val">100</span>/<span id="hp-max">100</span></div>
+            <div class="stat-bar xp-bar">LVL: <span id="lvl-val">1</span></div>
+            <div class="stat-bar">FLOOR: <span id="floor-val">1</span></div>
+            <div class="stat-bar">ENERGÍA: <span id="ammo-val">10</span>/<span id="ammo-max">20</span></div>
+        </div>
+        <div id="messages"></div>
+        <div id="item-comparison" style="display: none;"></div>
+    </div>
+
+    <div id="stats-menu" class="menu-overlay" style="display: none;">
+        <div class="menu-panel">
+            <h2>STATS</h2>
+            <div class="stat-points">Puntos disponibles: <span id="stat-points">0</span></div>
+            <div class="stat-row">
+                <span class="stat-name">Fuerza:</span>
+                <span class="stat-value" id="stat-str">10</span>
+                <button class="stat-btn" data-stat="strength">+</button>
+            </div>
+            <div class="stat-row">
+                <span class="stat-name">Destreza:</span>
+                <span class="stat-value" id="stat-dex">10</span>
+                <button class="stat-btn" data-stat="dexterity">+</button>
+            </div>
+            <div class="stat-row">
+                <span class="stat-name">Vitalidad:</span>
+                <span class="stat-value" id="stat-vit">10</span>
+                <button class="stat-btn" data-stat="vitality">+</button>
+            </div>
+            <div class="stat-row">
+                <span class="stat-name">Inteligencia:</span>
+                <span class="stat-value" id="stat-int">10</span>
+                <button class="stat-btn" data-stat="intelligence">+</button>
+            </div>
+            <div class="menu-footer">
+                <p>Presiona P para cerrar</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="inventory-menu" class="menu-overlay" style="display: none;">
+        <div class="menu-panel">
+            <h2>INVENTARIO</h2>
+            <div class="equipment-grid">
+                <div class="equipment-slot">
+                    <div class="slot-label">Arma</div>
+                    <div class="slot-content" id="slot-weapon">
+                        <div class="empty-slot">Vacío</div>
+                    </div>
+                </div>
+                <div class="equipment-slot">
+                    <div class="slot-label">Armadura</div>
+                    <div class="slot-content" id="slot-armor">
+                        <div class="empty-slot">Vacío</div>
+                    </div>
+                </div>
+                <div class="equipment-slot">
+                    <div class="slot-label">Casco</div>
+                    <div class="slot-content" id="slot-helmet">
+                        <div class="empty-slot">Vacío</div>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-footer">
+                <p>Presiona I para cerrar</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="src/engine/Input.js"></script>
+    <script src="src/engine/Renderer.js"></script>
+    <script src="src/engine/Sound.js"></script>
+    <script src="src/engine/Effect.js"></script>
+    <script src="src/game/Entity.js"></script>
+    <script src="src/game/Item.js"></script>
+    <script src="src/game/Player.js"></script>
+    <script src="src/game/Enemy.js"></script>
+    <script src="src/game/Decoration.js"></script>
+    <script src="src/game/Projectile.js"></script>
+    <script src="src/game/Map.js"></script>
+    <script src="src/engine/Game.js"></script>
+    <script src="src/main.js"></script>
+</body>
+
+</html>
