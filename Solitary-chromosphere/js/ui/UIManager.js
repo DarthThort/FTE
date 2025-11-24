@@ -131,14 +131,35 @@ class UIManager {
         const crew = this.game.state.port.crew || [];
         const content = `
             <div class="module-grid">
-                ${crew.map(c => `
-                    <div class="module-card">
-                        <h4 style="color: var(--secondary);">${c.name}</h4>
-                        <p style="color: #fff;">${c.role} (Lvl ${c.skill})</p>
-                        <p>${c.desc}</p>
-                        <button style="margin-top: 10px; width: 100%; font-size: 0.8rem;" onclick="alert('Hired ${c.name}!')">Hire ${c.cost} CR</button>
+                ${crew.map(c => {
+            const primarySkill = this.game.state.getRolePrimarySkill(c.role);
+            const primaryLevel = c.skills[primarySkill]?.level || 1;
+
+            return `
+                    <div class="module-card" style="padding: 15px;">
+                        <h4 style="color: var(--secondary); margin-bottom: 5px;">${c.name}</h4>
+                        <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 10px;">${c.species} • ${c.gender} • Age ${c.age}</p>
+                        <p style="color: #fff; font-weight: bold;">${c.role} • Lvl ${primaryLevel}</p>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; font-size: 0.8rem;">
+                            <div>
+                                <span style="color: #888;">Health:</span>
+                                <span style="color: var(--success);"> ${c.health}/${c.maxHealth}</span>
+                            </div>
+                            <div>
+                                <span style="color: #888;">Morale:</span>
+                                <span style="color: ${c.morale > 70 ? 'var(--success)' : c.morale > 40 ? 'var(--warning)' : 'var(--danger)'};"> ${c.morale}/100</span>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #999; margin-bottom: 8px;">
+                            ${Object.entries(c.skills).map(([skill, data]) =>
+                `${skill.charAt(0).toUpperCase() + skill.slice(1)}: ${data.level}`
+            ).join(' • ')}
+                        </div>
+                        <p class="price">${c.cost} CR</p>
+                        <button style="margin-top: 10px; width: 100%; font-size: 0.8rem;" onclick="alert('Hired ${c.name}!')">HIRE</button>
                     </div>
-                `).join('')}
+                    `;
+        }).join('')}
             </div>
         `;
         this.createModal('TAVERN', content);
