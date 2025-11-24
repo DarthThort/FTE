@@ -387,4 +387,60 @@ class UIManager {
         `;
         this.createModal('INSTALL MODULE', content);
     }
+
+    renderCrewRoster() {
+        const crew = this.game.state.ship.crew || [];
+        const content = `
+            <div style="text-align: center;">
+                ${crew.length === 0 ? `
+                    <p style="color: var(--text-dim); padding: 40px;">No crew hired yet. Visit the Tavern at the port to recruit crew members.</p>
+                ` : `
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        ${crew.map(c => {
+            const assignment = this.game.state.ship.systems.find(s => s.assignedCrew?.id === c.id);
+            const primarySkill = this.game.state.getRolePrimarySkill(c.role);
+            const primaryLevel = c.skills[primarySkill]?.level || 1;
+
+            return `
+                                <div style="background: rgba(255,255,255,0.05); padding: 15px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;" 
+                                     onmouseover="this.style.background='rgba(255,255,255,0.1)'"  
+                                     onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                                    <div style="display: flex; justify-content: space-between; gap: 15px;">
+                                        <div style="text-align: left; flex: 1;">
+                                            <h4 style="color: var(--secondary); margin-bottom: 3px;">${c.name}</h4>
+                                            <p style="font-size: 0.85rem; color: #aaa; margin-bottom: 8px;">${c.species} • ${c.gender} • ${c.role}</p>
+                                            
+                                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px;">
+                                                <div style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px;">
+                                                    <div style="font-size: 0.75rem; color: #888;">Health</div>
+                                                    <div style="color: var(--success); font-weight: bold;">${c.health}/${c.maxHealth}</div>
+                                                </div>
+                                                <div style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px;">
+                                                    <div style="font-size: 0.75rem; color: #888;">Morale</div>
+                                                    <div style="color: ${c.morale > 70 ? 'var(--success)' : c.morale > 40 ? 'var(--warning)' : 'var(--danger)'}; font-weight: bold;">${c.morale}/100</div>
+                                                </div>
+                                            </div>
+
+                                            ${assignment ?
+                    `<p style="color: var(--primary); font-size: 0.8rem; font-weight: bold;">⚙️ Assigned to: ${assignment.name}</p>` :
+                    `<p style="color: var(--text-dim); font-size: 0.8rem;">Idle</p>`
+                }
+                                        </div>
+                                        
+                                        <div style="text-align: right; min-width: 80px;">
+                                            <div style="background: rgba(0,240,255,0.1); border: 1px solid var(--primary); padding: 8px; border-radius: 4px;">
+                                                <div style="font-size: 0.75rem; color: var(--primary);">Primary Skill</div>
+                                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--secondary);">${primaryLevel}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+        }).join('')}
+                    </div>
+                `}
+            </div>
+        `;
+        this.createModal('CREW ROSTER', content);
+    }
 }
