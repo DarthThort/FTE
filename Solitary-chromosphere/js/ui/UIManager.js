@@ -232,10 +232,10 @@ class UIManager {
                 const crewId = parseInt(btn.dataset.crewId);
                 const result = this.game.state.hireCrew(crewId);
                 if (result.success) {
-                    alert(result.message);
+                    this.showNotification(result.message, 'success');
                     this.renderTavern(); // Refresh tavern
                 } else {
-                    alert(result.message);
+                    this.showNotification(result.message, 'error');
                 }
             };
         });
