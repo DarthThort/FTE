@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creature Breeder - Juego de Crianza</title>
+    <meta name="description" content="Un juego de crianza de criaturas con genética heredable al estilo Terraria">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Game Header -->
+        <header id="game-header">
+            <h1>🧬 Creature Breeder</h1>
+            <div id="player-stats">
+                <span id="food-count">🍖 Comida: <strong>10</strong></span>
+                <span id="creature-count">🐾 Criaturas: <strong>0</strong></span>
+            </div>
+        </header>
+
+        <!-- Main Game Canvas -->
+        <div id="canvas-wrapper">
+            <canvas id="game-canvas"></canvas>
+            <div id="game-controls">
+                <div class="control-hint">
+                    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Mover
+                </div>
+                <div class="control-hint">
+                    <kbd>Click</kbd> Capturar/Interactuar
+                </div>
+                <div class="control-hint">
+                    <kbd>F</kbd> Alimentar
+                </div>
+                <div class="control-hint">
+                    <kbd>B</kbd> Criar
+                </div>
+            </div>
+        </div>
+
+        <!-- Side Panel - Inventory -->
+        <aside id="inventory-panel" class="panel">
+            <h2>📦 Inventario</h2>
+            <div id="captured-creatures">
+                <p class="empty-message">Captura criaturas para verlas aquí</p>
+            </div>
+        </aside>
+
+        <!-- Bottom Panel - Selected Creature Info -->
+        <section id="creature-info-panel" class="panel">
+            <h2>📊 Info de Criatura</h2>
+            <div id="creature-details">
+                <p class="empty-message">Selecciona una criatura para ver sus detalles</p>
+            </div>
+        </section>
+
+        <!-- Breeding Modal -->
+        <div id="breeding-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>💕 Criar Criaturas</h2>
+                    <button id="close-breeding" class="close-btn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="breeding-section">
+                        <h3>Padre 1</h3>
+                        <div id="parent1-slot" class="parent-slot">
+                            <p>Selecciona padre</p>
+                        </div>
+                    </div>
+                    <div class="breeding-icon">💕</div>
+                    <div class="breeding-section">
+                        <h3>Padre 2</h3>
+                        <div id="parent2-slot" class="parent-slot">
+                            <p>Selecciona padre</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="breed-btn" class="action-btn" disabled>Criar Criaturas</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification System -->
+        <div id="notifications"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="genetics.js"></script>
+    <script src="creatureRenderer.js"></script>
+    <script src="creature.js"></script>
+    <script src="player.js"></script>
+    <script src="world.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>

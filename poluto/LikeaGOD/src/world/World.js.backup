@@ -1,0 +1,457 @@
+import { BiomeType, Biome } from './Biome.js';
+import { Plant } from '../entities/Plant.js';
+import { Creature, DietType } from '../entities/Creature.js';
+import { Genetics, TraitType } from '../entities/Genetics.js';
+import { DensityField } from '../rendering/DensityField.js';
+
+export class World {
+    constructor(width, height, eventBus) {
+        this.width = width;
+        this.height = height;
+        this.eventBus = eventBus;
+        this.tileSize = 20;
+        this.cols = Math.ceil(width / this.tileSize);
+        this.rows = Math.ceil(height / this.tileSize);
+        this.grid = [];
+        this.entities = [];
+
+        this.biomeSpawnCooldowns = {};
+
+        // Sistema de renderizado por densidad orgánica (0.5 = mejor nitidez)
+        this.densityField = new DensityField(width, height, 0.5);
+
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                const biome = this.grid[row][col];
+                biomeCounts[biome]++;
+            }
+        }
+
+        const totalTiles = this.rows * this.cols;
+        const totalHerbivores = 30;
+        const totalCarnivores = 10;
+        const totalOmnivores = 5;
+
+        Object.keys(biomeCounts).forEach(biomeType => {
+            const proportion = biomeCounts[biomeType] / totalTiles;
+            const herbivoresToSpawn = Math.floor(totalHerbivores * proportion);
+
+            for (let i = 0; i < herbivoresToSpawn; i++) {
+                const pos = this.getRandomPositionInBiome(biomeType);
+                if (pos) {
+                    this.entities.push(new Creature(pos.x, pos.y, DietType.HERBIVORE, null, this));
+                }
+            }
+        });
+
+        for (let i = 0; i < totalCarnivores; i++) {
+            const x = Math.random() * this.width;
+            const y = Math.random() * this.height;
+            this.entities.push(new Creature(x, y, DietType.CARNIVORE, null, this));
+        }
+
+        for (let i = 0; i < totalOmnivores; i++) {
+            const x = Math.random() * this.width;
+            const y = Math.random() * this.height;
+            this.entities.push(new Creature(x, y, DietType.OMNIVORE, null, this));
+        }
+    }
+
+    getRandomPositionInBiome(biomeType) {
+        const validPositions = [];
+
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                if (this.grid[row][col] === biomeType) {
+                    validPositions.push({
+                        x: col * this.tileSize + Math.random() * this.tileSize,
+                        y: row * this.tileSize + Math.random() * this.tileSize
+                    });
+                }
+            }
+        }
+
+        if (validPositions.length > 0) {
+            return validPositions[Math.floor(Math.random() * validPositions.length)];
+        }
+        return null;
+    }
+
+    generate() {
+        for (let y = 0; y < this.rows; y++) {
+            const row = [];
+            for (let x = 0; x < this.cols; x++) {
+                row.push(this.determineBiome(x, y));
+            }
+            this.grid.push(row);
+        }
+    }
+
+    determineBiome(x, y) {
+        const ny = y / this.rows;
+
+        if (ny < 0.15) return BiomeType.TUNDRA;
+        if (ny < 0.3) return BiomeType.MOUNTAIN;
+        if (ny < 0.6) return BiomeType.FOREST;
+        if (ny < 0.8) return BiomeType.DESERT;
+        return BiomeType.SEA;
+    }
+
+    getBiomeAt(x, y) {
+        const col = Math.floor(x / this.tileSize);
+        const row = Math.floor(y / this.tileSize);
+
+        if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
+            return this.grid[row][col];
+        }
+        return BiomeType.FOREST;
+    }
+
+    update(deltaTime) {
+        this.spawnPlants();
+        this.checkAndSpawnHerbivores(deltaTime);
+        this.checkAndSpawnCarnivores(deltaTime);
+        this.checkAndSpawnOmnivores(deltaTime);
+        this.entities.forEach(entity => entity.update(deltaTime, this));
+        this.entities = this.entities.filter(e => !e.isDead);
+    }
+
+    checkAndSpawnHerbivores(deltaTime) {
+        const plantCountByBiome = {};
+
+        Object.keys(this.biomeSpawnCooldowns).forEach(biome => {
+            this.biomeSpawnCooldowns[biome] -= deltaTime;
+            if (this.biomeSpawnCooldowns[biome] <= 0) {
+                delete this.biomeSpawnCooldowns[biome];
+            }
+        });
+
+        this.entities.forEach(entity => {
+            if (entity.type === 'plant') {
+                const biome = entity.biomeType;
+                plantCountByBiome[biome] = (plantCountByBiome[biome] || 0) + 1;
+            }
+        });
+
+        Object.keys(plantCountByBiome).forEach(biomeType => {
+            if (this.biomeSpawnCooldowns[biomeType]) {
+                return;
+            }
+
+            const plantCount = plantCountByBiome[biomeType];
+            let spawnChance = 0;
+
+            if (plantCount >= 3) {
+                spawnChance = 1.0;
+            } else if (plantCount === 2) {
+                spawnChance = 0.5;
+            } else if (plantCount === 1) {
+                spawnChance = 0.25;
+            }
+
+            if (spawnChance > 0 && Math.random() < spawnChance) {
+                this.spawnHerbivoreInBiome(biomeType, plantCount);
+                this.biomeSpawnCooldowns[biomeType] = 3000;
+            }
+        });
+    }
+
+    spawnHerbivoreInBiome(biomeType, plantCount) {
+        const pos = this.getRandomPositionInBiome(biomeType);
+        if (pos) {
+            const genetics = Genetics.random();
+            genetics.traits[TraitType.ADAPTABILITY] = Math.random() * 0.4 + 0.6;
+
+            const newHerbivore = new Creature(pos.x, pos.y, DietType.HERBIVORE, genetics, this);
+            this.entities.push(newHerbivore);
+        }
+    }
+
+    checkAndSpawnCarnivores(deltaTime) {
+        const herbivoreCountByBiome = {};
+        let totalHerbivores = 0;
+
+        Object.keys(this.biomeSpawnCooldowns).forEach(biome => {
+            const key = `carnivore_${biome}`;
+            if (this.biomeSpawnCooldowns[key]) {
+                this.biomeSpawnCooldowns[key] -= deltaTime;
+                if (this.biomeSpawnCooldowns[key] <= 0) {
+                    delete this.biomeSpawnCooldowns[key];
+                }
+            }
+        });
+
+        this.entities.forEach(entity => {
+            if (entity.type === 'creature' && entity.diet === DietType.HERBIVORE && !entity.isDead) {
+                const biome = entity.currentBiome || entity.birthBiome;
+                herbivoreCountByBiome[biome] = (herbivoreCountByBiome[biome] || 0) + 1;
+                totalHerbivores++;
+            }
+        });
+
+        let totalCarnivores = 0;
+        this.entities.forEach(entity => {
+            if (entity.type === 'creature' && entity.diet === DietType.CARNIVORE && !entity.isDead) {
+                totalCarnivores++;
+            }
+        });
+
+        // Ratio más generoso: 1 carnívoro por cada 2 herbívoros
+        const maxCarnivores = Math.floor(totalHerbivores / 2);
+        if (totalCarnivores >= maxCarnivores) {
+            return;
+        }
+
+        Object.keys(herbivoreCountByBiome).forEach(biomeType => {
+            const key = `carnivore_${biomeType}`;
+            if (this.biomeSpawnCooldowns[key]) {
+                return;
+            }
+
+            const herbivoreCount = herbivoreCountByBiome[biomeType];
+            let spawnChance = 0;
+
+            // Probabilidades aumentadas y umbral más bajo
+            if (herbivoreCount >= 5) {
+                spawnChance = 0.7;  // 70% si hay 5+ herbívoros
+            } else if (herbivoreCount >= 3) {
+                spawnChance = 0.5;  // 50% si hay 3-4 herbívoros
+            } else if (herbivoreCount >= 2) {
+                spawnChance = 0.25; // 25% si hay 2 herbívoros
+            }
+
+            if (spawnChance > 0 && Math.random() < spawnChance) {
+                this.spawnCarnivoreInBiome(biomeType, herbivoreCount);
+                this.biomeSpawnCooldowns[key] = 4000; // Cooldown reducido a 4 segundos
+            }
+        });
+    }
+
+    spawnCarnivoreInBiome(biomeType, herbivoreCount) {
+        const pos = this.getRandomPositionInBiome(biomeType);
+        if (pos) {
+            const genetics = Genetics.random();
+            genetics.traits[TraitType.ATTACK] = Math.random() * 0.3 + 0.5;
+
+            const newCarnivore = new Creature(pos.x, pos.y, DietType.CARNIVORE, genetics, this);
+            this.entities.push(newCarnivore);
+            console.log(`🦁 Carnívoro spawneado en ${biomeType} (${herbivoreCount} herbívoros)`);
+        }
+    }
+
+    checkAndSpawnOmnivores(deltaTime) {
+        const foodCountByBiome = {};
+
+        Object.keys(this.biomeSpawnCooldowns).forEach(biome => {
+            const key = `omnivore_${biome}`;
+            if (this.biomeSpawnCooldowns[key]) {
+                this.biomeSpawnCooldowns[key] -= deltaTime;
+                if (this.biomeSpawnCooldowns[key] <= 0) {
+                    delete this.biomeSpawnCooldowns[key];
+                }
+            }
+        });
+
+        this.entities.forEach(entity => {
+            if (entity.isDead) return;
+
+            let biome = null;
+            if (entity.type === 'plant') {
+                biome = entity.biomeType;
+            } else if (entity.type === 'creature' && entity.diet === DietType.HERBIVORE) {
+                biome = entity.currentBiome || entity.birthBiome;
+            }
+
+            if (biome) {
+                foodCountByBiome[biome] = (foodCountByBiome[biome] || 0) + 1;
+            }
+        });
+
+        Object.keys(foodCountByBiome).forEach(biomeType => {
+            const key = `omnivore_${biomeType}`;
+            if (this.biomeSpawnCooldowns[key]) {
+                return;
+            }
+
+            const foodCount = foodCountByBiome[biomeType];
+            let spawnChance = 0;
+
+            if (foodCount >= 10) {
+                spawnChance = 0.5;
+            } else if (foodCount >= 7) {
+                spawnChance = 0.25;
+            } else if (foodCount >= 5) {
+                spawnChance = 0.1;
+            }
+
+            if (spawnChance > 0 && Math.random() < spawnChance) {
+                this.spawnOmnivoreInBiome(biomeType, foodCount);
+                this.biomeSpawnCooldowns[key] = 6000;
+            }
+        });
+    }
+
+    spawnOmnivoreInBiome(biomeType, foodCount) {
+        const pos = this.getRandomPositionInBiome(biomeType);
+        if (pos) {
+            const genetics = Genetics.random();
+            genetics.traits[TraitType.ADAPTABILITY] = Math.random() * 0.3 + 0.6;
+
+            const newOmnivore = new Creature(pos.x, pos.y, DietType.OMNIVORE, genetics, this);
+            this.entities.push(newOmnivore);
+            console.log(`🐻 Omnívoro spawneado en ${biomeType} (${foodCount} fuentes comida)`);
+        }
+    }
+
+    spawnPlants() {
+        if (Math.random() < 0.3) {
+            const x = Math.random() * this.width;
+            const y = Math.random() * this.height;
+
+            const col = Math.floor(x / this.tileSize);
+            const row = Math.floor(y / this.tileSize);
+
+            if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
+                const biomeType = this.grid[row][col];
+                const biomeStats = Biome.get(biomeType);
+
+                if (Math.random() < biomeStats.foodProduction * 0.2) {
+                    this.entities.push(new Plant(x, y, biomeType));
+                }
+            }
+        }
+    }
+
+    render(ctx) {
+        // Renderizar biomas
+        for (let y = 0; y < this.rows; y++) {
+            for (let x = 0; x < this.cols; x++) {
+                const biome = this.grid[y][x];
+                ctx.fillStyle = Biome.getColor(biome);
+                ctx.fillRect(x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
+            }
+        }
+
+        // Renderizar campo de densidad orgánico EN LUGAR de entidades individuales
+        this.densityField.update(this.entities);
+        this.densityField.render(ctx);
+
+        this.renderBiomeStats(ctx);
+    }
+
+    renderBiomeStats(ctx) {
+        const biomeStats = this.getBiomeStats();
+        const biomes = ['Tundra', 'Mountain', 'Forest', 'Desert', 'Sea'];
+        const colors = {
+            'Tundra': '#A5F3FC',
+            'Mountain': '#9CA3AF',
+            'Forest': '#86EFAC',
+            'Desert': '#FDE047',
+            'Sea': '#3B82F6'
+        };
+
+        const biomeYPositions = {
+            'Tundra': this.height * 0.075,
+            'Mountain': this.height * 0.225,
+            'Forest': this.height * 0.45,
+            'Desert': this.height * 0.70,
+            'Sea': this.height * 0.90
+        };
+
+        biomes.forEach(biomeName => {
+            const stats = biomeStats[biomeName];
+            const y = biomeYPositions[biomeName];
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(10, y - 35, 140, 70);
+
+            ctx.strokeStyle = colors[biomeName];
+            ctx.lineWidth = 2;
+            ctx.strokeRect(10, y - 35, 140, 70);
+
+            ctx.fillStyle = colors[biomeName];
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText(biomeName, 20, y - 20);
+
+            ctx.fillStyle = 'white';
+            ctx.font = '10px Arial';
+            ctx.fillText(`🌿 ${stats.plants}`, 20, y);
+            ctx.fillText(`🔲 ${stats.herbivores}`, 20, y + 12);
+            ctx.fillText(`⚫ ${stats.carnivores}`, 80, y);
+            ctx.fillText(`⬡ ${stats.omnivores}`, 80, y + 12);
+
+            const total = stats.plants + stats.herbivores + stats.carnivores + stats.omnivores;
+            ctx.fillStyle = colors[biomeName];
+            ctx.font = 'bold 10px Arial';
+            ctx.fillText(`Total: ${total}`, 20, y + 26);
+        });
+    }
+
+    handleGodPower(data) {
+        if (data.type === 'RAIN') {
+            this.entities.forEach(e => {
+                if (e.type === 'plant') e.growth = Math.min(e.maxGrowth, e.growth + 20);
+            });
+            for (let i = 0; i < 20; i++) this.spawnPlants();
+        } else if (data.type === 'METEOR') {
+            const killCount = Math.floor(this.entities.length * 0.2);
+            for (let i = 0; i < killCount; i++) {
+                const idx = Math.floor(Math.random() * this.entities.length);
+                if (this.entities[idx]) this.entities[idx].isDead = true;
+            }
+        }
+    }
+
+    getStats() {
+        const stats = {
+            plants: 0,
+            creatures: 0,
+            herbivores: 0,
+            carnivores: 0,
+            omnivores: 0
+        };
+
+        this.entities.forEach(e => {
+            if (e.type === 'plant') stats.plants++;
+            if (e.type === 'creature') {
+                stats.creatures++;
+                if (e.diet === DietType.HERBIVORE) stats.herbivores++;
+                if (e.diet === DietType.CARNIVORE) stats.carnivores++;
+                if (e.diet === DietType.OMNIVORE) stats.omnivores++;
+            }
+        });
+
+        return stats;
+    }
+
+    getBiomeStats() {
+        const biomeStats = {
+            'Tundra': { plants: 0, herbivores: 0, carnivores: 0, omnivores: 0 },
+            'Mountain': { plants: 0, herbivores: 0, carnivores: 0, omnivores: 0 },
+            'Forest': { plants: 0, herbivores: 0, carnivores: 0, omnivores: 0 },
+            'Desert': { plants: 0, herbivores: 0, carnivores: 0, omnivores: 0 },
+            'Sea': { plants: 0, herbivores: 0, carnivores: 0, omnivores: 0 }
+        };
+
+        this.entities.forEach(entity => {
+            if (entity.isDead) return;
+
+            const col = Math.floor(entity.x / this.tileSize);
+            const row = Math.floor(entity.y / this.tileSize);
+
+            if (col >= 0 && col < this.cols && row >= 0 && row < this.rows) {
+                const biome = this.grid[row][col];
+
+                if (entity.type === 'plant') {
+                    biomeStats[biome].plants++;
+                } else if (entity.type === 'creature') {
+                    if (entity.diet === DietType.HERBIVORE) biomeStats[biome].herbivores++;
+                    if (entity.diet === DietType.CARNIVORE) biomeStats[biome].carnivores++;
+                    if (entity.diet === DietType.OMNIVORE) biomeStats[biome].omnivores++;
+                }
+            }
+        });
+
+        return biomeStats;
+    }
+}

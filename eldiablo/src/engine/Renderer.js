@@ -72,8 +72,8 @@ class Renderer {
         const relX = screenX - this.canvas.width / 2;
         const relY = screenY - this.canvas.height / 2;
 
-        const isoX = (relX / (this.tileWidth / 2) + relY / this.tileHeight) / 2 + cameraX;
-        const isoY = (relY / this.tileHeight - relX / (this.tileWidth / 2)) / 2 + cameraY;
+        const isoX = (relX / (this.tileWidth / 2) + relY / (this.tileHeight / 2)) / 2 + cameraX;
+        const isoY = (relY / (this.tileHeight / 2) - relX / (this.tileWidth / 2)) / 2 + cameraY;
 
         return { x: isoX, y: isoY };
     }

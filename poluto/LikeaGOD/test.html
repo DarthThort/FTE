@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Test - God Simulator</title>
+    <style>
+        body {
+            margin: 0;
+            background: #1a1a1a;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="status">Cargando...</div>
+    <canvas id="testCanvas"></canvas>
+    <script>
+        const status = document.getElementById('status');
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Dibujar grid de prueba
+        ctx.fillStyle = '#2196F3';
+        ctx.fillRect(0, 0, canvas.width / 2, canvas.height / 2);
+
+        ctx.fillStyle = '#4CAF50';
+        ctx.fillRect(canvas.width / 2, 0, canvas.width / 2, canvas.height / 2);
+
+        ctx.fillStyle = '#FFF59D';
+        ctx.fillRect(0, canvas.height / 2, canvas.width / 2, canvas.height / 2);
+
+        ctx.fillStyle = '#E0F7FA';
+        ctx.fillRect(canvas.width / 2, canvas.height / 2, canvas.width / 2, canvas.height / 2);
+
+        // Texto
+        ctx.fillStyle = 'white';
+        ctx.font = '24px monospace';
+        ctx.fillText('Canvas funciona! ✓', 50, 50);
+
+        status.innerHTML = '✅ Canvas renderizado correctamente<br>Si ves 4 cuadrados de colores, el canvas funciona.';
+
+        console.log('Test canvas ejecutado correctamente');
+    </script>
+</body>
+
+</html>

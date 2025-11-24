@@ -1,0 +1,330 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --bg-dark: hsl(260, 20%, 8%);
+    --bg-darker: hsl(260, 25%, 5%);
+    --primary: hsl(280, 80%, 60%);
+    --secondary: hsl(180, 70%, 50%);
+    --accent: hsl(145, 65%, 55%);
+    --text-light: hsl(0, 0%, 95%);
+    --text-dim: hsl(0, 0%, 70%);
+    --glass-bg: hsla(260, 30%, 15%, 0.7);
+    --glass-border: hsla(280, 60%, 70%, 0.2);
+    --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 50%, hsl(280, 20%, 10%) 100%);
+    color: var(--text-light);
+    overflow: hidden;
+    height: 100vh;
+}
+
+#game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+}
+
+#gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+/* HUD Overlay */
+#hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.hud-panel {
+    position: absolute;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: var(--shadow);
+    pointer-events: auto;
+    transition: all 0.3s ease;
+}
+
+.hud-panel:hover {
+    background: hsla(260, 30%, 18%, 0.8);
+    border-color: hsla(280, 60%, 70%, 0.4);
+}
+
+.hud-panel h2,
+.hud-panel h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    margin-bottom: 0.8rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.hud-panel h2 {
+    font-size: 1.5rem;
+}
+
+.hud-panel h3 {
+    font-size: 1rem;
+}
+
+.hud-panel h4 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    color: var(--secondary);
+    margin-top: 0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+/* Top Left Panel - Stats */
+.top-left {
+    top: 1.5rem;
+    left: 1.5rem;
+    min-width: 250px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.5rem 0;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid hsla(280, 60%, 70%, 0.1);
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+}
+
+.stat-row .label {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    font-weight: 300;
+}
+
+.stat-row .value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: 'Orbitron', monospace;
+}
+
+/* Top Right Panel - God Powers */
+.top-right {
+    top: 1.5rem;
+    right: 1.5rem;
+    min-width: 280px;
+}
+
+.power-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.power-btn {
+    background: linear-gradient(135deg, hsla(280, 50%, 25%, 0.5), hsla(280, 50%, 20%, 0.5));
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-light);
+}
+
+.power-btn:hover {
+    background: linear-gradient(135deg, hsla(280, 70%, 35%, 0.7), hsla(280, 60%, 30%, 0.7));
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+}
+
+.power-btn:active {
+    transform: translateY(0);
+}
+
+.power-btn .icon {
+    font-size: 1.5rem;
+}
+
+.power-btn .label {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.time-controls {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.time-btn {
+    flex: 1;
+    background: hsla(260, 30%, 20%, 0.6);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    color: var(--text-dim);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.time-btn:hover {
+    background: hsla(260, 30%, 25%, 0.8);
+    color: var(--text-light);
+}
+
+.time-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    border-color: var(--primary);
+    font-weight: 700;
+}
+
+/* Bottom Left Panel - Inspector */
+.bottom-left {
+    bottom: 1.5rem;
+    left: 1.5rem;
+    min-width: 280px;
+    max-width: 350px;
+}
+
+.genome-display {
+    margin-top: 1rem;
+}
+
+#genome-canvas {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid var(--glass-border);
+}
+
+/* Bottom Right Panel - Event Log */
+.bottom-right {
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 320px;
+    max-height: 250px;
+}
+
+#log-content {
+    max-height: 180px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+#log-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+#log-content::-webkit-scrollbar-track {
+    background: hsla(260, 30%, 10%, 0.5);
+    border-radius: 3px;
+}
+
+#log-content::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+}
+
+.log-entry {
+    padding: 0.4rem 0.6rem;
+    margin: 0.3rem 0;
+    border-left: 3px solid var(--accent);
+    background: hsla(260, 30%, 15%, 0.4);
+    border-radius: 4px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.log-entry.event-birth {
+    border-left-color: hsl(145, 65%, 55%);
+}
+
+.log-entry.event-death {
+    border-left-color: hsl(0, 70%, 60%);
+}
+
+.log-entry.event-extinction {
+    border-left-color: hsl(30, 80%, 60%);
+}
+
+.log-entry.event-mutation {
+    border-left-color: hsl(280, 80%, 60%);
+}
+
+/* Minimap */
+.minimap-container {
+    position: absolute;
+    bottom: 280px;
+    right: 1.5rem;
+    width: 180px;
+    height: 180px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 0.5rem;
+    pointer-events: auto;
+}
+
+#minimap {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    image-rendering: pixelated;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .hud-panel {
+        padding: 1rem;
+    }
+    
+    .top-left,
+    .top-right {
+        min-width: 220px;
+    }
+    
+    .bottom-right {
+        width: 280px;
+    }
+}
