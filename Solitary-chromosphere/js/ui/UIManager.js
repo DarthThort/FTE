@@ -120,7 +120,7 @@ class UIManager {
             const primarySkill = state.getRolePrimarySkill(c.role);
             const primaryLevel = c.skills[primarySkill]?.level || 1;
             return `
-                <div class="crew-panel" style="background: rgba(0,0,0,0.4); padding: 8px; margin-bottom: 8px; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">
+                <div class="crew-panel" data-crew-id="${c.id}" style="background: rgba(0,0,0,0.4); padding: 8px; margin-bottom: 8px; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;" onmouseover="this.style.borderColor='var(--secondary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
                         <div style="flex: 1; font-size: 0.75rem; font-weight: bold; color: var(--secondary);">${c.name.split(' ')[0]}</div>
                         <div style="font-size: 0.65rem; color: var(--primary);">Lvl ${primaryLevel}</div>
@@ -153,6 +153,17 @@ class UIManager {
                 </div>
             ` : ''}
         `;
+
+        // Add click listeners to crew panels in HUD
+        setTimeout(() => {
+            const crewPanels = element.querySelectorAll('.crew-panel[data-crew-id]');
+            crewPanels.forEach(panel => {
+                panel.onclick = () => {
+                    const crewId = parseInt(panel.dataset.crewId);
+                    this.showCrewDetail(crewId);
+                };
+            });
+        }, 100);
     }
 
 
