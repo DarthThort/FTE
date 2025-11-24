@@ -39,8 +39,8 @@ class GameState {
                 { x: 5, y: 5, id: 'weapons', name: 'Weapons Array', type: 'weapon', color: '#ff0055' },
                 { x: 11, y: 5, id: 'shields', name: 'Shield Generator', type: 'shield', color: '#00ff55' }
             ],
-            modules: [], // Installed modules
-            crew: [], // Hired crew members
+            modules: [],
+            crew: [],
             maxCrew: 6,
             fuel: 100,
             maxFuel: 100
@@ -66,15 +66,11 @@ class GameState {
             { id: 'electronics', name: 'Microchips', price: 150, stock: 10 }
         ];
 
-        // Initialize Port Content
         this.generatePortContent();
-
-        // Simple observer pattern for UI updates
         this.listeners = [];
     }
 
     generatePortContent() {
-        // Mock Data Generation
         this.port.ships = [
             { id: 1, name: "Kestrel Class", type: "Frigate", cost: 1500, hull: 100, slots: 4, desc: "Versatile starter ship." },
             { id: 2, name: "Mantis Class", type: "Interceptor", cost: 800, hull: 60, slots: 2, desc: "Fast and deadly." },
@@ -289,6 +285,10 @@ class GameState {
         this.listeners.forEach(cb => cb(this));
     }
 
+    notifyObservers() {
+        this.notify();
+    }
+
     updateCredits(amount) {
         this.credits += amount;
         this.notify();
@@ -306,17 +306,13 @@ class GameState {
         const cost = item.price * amount;
         if (this.credits < cost) return false;
 
-        // Simplified inventory check
         this.credits -= cost;
         item.stock -= amount;
-
-        // Add to inventory logic (simplified)
         this.notify();
         return true;
     }
 
     sellItem(itemId, amount) {
-        // Simplified
         this.notify();
         return true;
     }
@@ -327,10 +323,8 @@ class GameState {
     }
 
     installSystem(item, x, y) {
-        // Check if slot is empty
         if (this.ship.systems.find(s => s.x === x && s.y === y)) return false;
 
-        // Add to systems
         this.ship.systems.push({
             x: x,
             y: y,
@@ -347,9 +341,9 @@ class GameState {
     toggleDoor(x, y) {
         const tile = this.ship.layout[y][x];
         if (tile === 4) {
-            this.ship.layout[y][x] = 5; // Open
+            this.ship.layout[y][x] = 5;
         } else if (tile === 5) {
-            this.ship.layout[y][x] = 4; // Close
+            this.ship.layout[y][x] = 4;
         }
         this.notify();
     }
@@ -364,8 +358,6 @@ class GameState {
         }
     }
 
-    // === CREW MANAGEMENT ===
-
     hireCrew(crewId) {
         const crew = this.port.crew.find(c => c.id === crewId);
         if (!crew) return { success: false, message: 'Crew member not found!' };
@@ -378,13 +370,10 @@ class GameState {
             return { success: false, message: 'Insufficient credits!' };
         }
 
-
-        // Hire the crew
         this.credits -= crew.cost;
         this.ship.crew.push({ ...crew, x: 250, y: 160, targetX: null, targetY: null, path: [], speed: 1.5, state: 'idle' });
         this.port.crew = this.port.crew.filter(c => c.id !== crewId);
         this.notify();
-
 
         return { success: true, message: `${crew.name} has joined your crew!` };
     }
@@ -397,13 +386,17 @@ class GameState {
             return { success: false, message: 'Invalid crew or system!' };
         }
 
-        // Check if system already has assigned crew
         if (system.assignedCrew) {
             return { success: false, message: 'System already has assigned crew!' };
         }
 
-        // Assign crew
         system.assignedCrew = crew;
+
+        // Set target position for crew movement
+        crew.targetX = system.x * 32 + 16;
+        crew.targetY = system.y * 32 + 16;
+        crew.state = 'moving';
+
         this.notify();
 
         return { success: true, message: `${crew.name} assigned to ${system.name}` };
@@ -415,6 +408,11 @@ class GameState {
         if (!system || !system.assignedCrew) {
             return { success: false, message: 'No crew assigned to this system!' };
         }
+
+        const crew = system.assignedCrew;
+        crew.targetX = null;
+        crew.targetY = null;
+        crew.state = 'idle';
 
         const crewName = system.assignedCrew.name;
         system.assignedCrew = null;
@@ -431,5 +429,28 @@ class GameState {
             'Medic': 'medical'
         };
         return skillMap[role] || 'engineering';
+    }
+
+    updateCrewAI() {
+        for (const crew of this.ship.crew) {
+            if (crew.state === 'moving' && crew.targetX !== null && crew.targetY !== null) {
+                const dx = crew.targetX - crew.x;
+                const dy = crew.targetY - crew.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance < 2) {
+                    crew.x = crew.targetX;
+                    crew.y = crew.targetY;
+                    crew.state = 'working';
+                    crew.targetX = null;
+                    crew.targetY = null;
+                } else {
+                    const moveX = (dx / distance) * crew.speed;
+                    const moveY = (dy / distance) * crew.speed;
+                    crew.x += moveX;
+                    crew.y += moveY;
+                }
+            }
+        }
     }
 }

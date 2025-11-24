@@ -19,6 +19,7 @@ class SceneManager {
     update(dt) {
         if (this.currentScene === 'SHIP') {
             this.player.update(dt);
+            this.game.state.updateCrewAI();
             this.shipRenderer.computeVisibility(this.player);
         }
     }
