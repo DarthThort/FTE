@@ -403,8 +403,9 @@ class UIManager {
 
             return `
                                 <div style="background: rgba(255,255,255,0.05); padding: 15px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: all 0.2s;" 
+                                     data-crew-id="${c.id}"
                                      onmouseover="this.style.background='rgba(255,255,255,0.1)'"  
-                                     onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                                     onmouseout="this.style.background='rgba(255,255,255,0.05)'">>
                                     <div style="display: flex; justify-content: space-between; gap: 15px;">
                                         <div style="text-align: left; flex: 1;">
                                             <h4 style="color: var(--secondary); margin-bottom: 3px;">${c.name}</h4>
@@ -442,6 +443,15 @@ class UIManager {
             </div>
         `;
         this.createModal('CREW ROSTER', content);
+
+        // Add click listeners to crew cards
+        const crewCards = document.querySelectorAll('[data-crew-id]');
+        crewCards.forEach(card => {
+            card.onclick = () => {
+                const crewId = parseInt(card.dataset.crewId);
+                this.showCrewDetail(crewId);
+            };
+        });
     }
 
     showCrewDetail(crewId) {
