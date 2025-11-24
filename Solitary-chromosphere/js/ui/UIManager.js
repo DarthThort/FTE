@@ -110,21 +110,51 @@ class UIManager {
         }
     }
 
-    updateHUD(element) {
+	updateHUD(element) {
         const state = this.game.state;
         if (!state || !state.ship) return;
-
+        const crewPanelsHTML = state.ship.crew.map(c => {
+            const assignment = state.ship.systems.find(s => s.assignedCrew?.id === c.id);
+            let taskStatus = 'Idle';
+            if (assignment) taskStatus = `At ${assignment.name}`;
+            const primarySkill = state.getRolePrimarySkill(c.role);
+            const primaryLevel = c.skills[primarySkill]?.level || 1;
+            return `
+                <div class="crew-panel" style="background: rgba(0,0,0,0.4); padding: 8px; margin-bottom: 8px; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
+                        <div style="flex: 1; font-size: 0.75rem; font-weight: bold; color: var(--secondary);">${c.name.split(' ')[0]}</div>
+                        <div style="font-size: 0.65rem; color: var(--primary);">Lvl ${primaryLevel}</div>
+                    </div>
+                    <div style="font-size: 0.65rem; color: #aaa; margin-bottom: 3px;">${c.role}</div>
+                    <div style="display: flex; gap: 5px; margin-bottom: 3px;">
+                        <div style="flex: 1; height: 4px; background: #333; border-radius: 2px;">
+                            <div style="width: ${c.health}%; height: 100%; background: var(--success); border-radius: 2px;"></div>
+                        </div>
+                        <div style="flex: 1; height: 4px; background: #333; border-radius: 2px;">
+                            <div style="width: ${c.morale}%; height: 100%; background: ${c.morale > 70 ? 'var(--success)' : c.morale > 40 ? 'var(--warning)' : 'var(--danger)'}; border-radius: 2px;"></div>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.6rem; color: var(--text-dim);">${taskStatus}</div>
+                </div>
+            `;
+        }).join('');
         element.innerHTML = `
             <h3>${state.ship.name}</h3>
-            <div class="stat-row"><span>HULL</span> <span class="stat-value" style="color: ${state.ship.health < 30 ? 'var(--danger)' : 'var(--secondary)'}">${state.ship.health}/${state.ship.maxHealth}</span></div>
-            <div class="stat-row"><span>SHIELD</span> <span class="stat-value" style="color: var(--primary)">${state.ship.shield}/${state.ship.maxShield}</span></div>
-            <div class="stat-row"><span>CREDITS</span> <span class="stat-value" style="color: var(--warning)">${state.credits} CR</span></div>
-            <div style="margin-top: 10px; font-size: 0.8rem; color: var(--text-dim);">
-                LOC: SECTOR 0-1<br>
-                STATUS: DOCKED (Simulated)
-            </div>
+            <div class="stat-row"><span>CREDITS</span> <span class="stat-value">${state.credits} CR</span></div>
+            <div class="stat-row"><span>HULL</span> <span class="stat-value">${state.ship.health}%</span></div>
+            <div class="stat-row"><span>FUEL</span> <span class="stat-value">${state.ship.fuel}/${state.ship.maxFuel}</span></div>
+            <div class="stat-row"><span>CREW</span> <span class="stat-value">${state.ship.crew.length}/${state.ship.maxCrew}</span></div>
+            ${state.ship.crew.length > 0 ? `
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h4 style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 10px;">CREW STATUS</h4>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        ${crewPanelsHTML}
+                    </div>
+                </div>
+            ` : ''}
         `;
     }
+
 
     showInteractionPrompt(text) {
         const prompt = document.getElementById('interaction-prompt');
