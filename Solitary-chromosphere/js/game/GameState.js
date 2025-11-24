@@ -574,7 +574,10 @@ class GameState {
             const dx2 = next.x - current.x;
             const dy2 = next.y - current.y;
 
-            if (dx1 !== dx2 || dy1 !== dy2) {
+            // Check if current tile is a door
+            const isDoor = this.ship.layout[current.y][current.x] === 4;
+
+            if ((dx1 !== dx2 || dy1 !== dy2) || isDoor) {
                 smoothed.push(current);
             }
         }
