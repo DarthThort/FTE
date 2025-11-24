@@ -478,11 +478,17 @@ class GameState {
 
                 if (crew.path && crew.path.length > 0) {
                     const nextNode = crew.path[0];
+                    const nextX = nextNode.x * 32 + 16 + (nextNode.offsetX || 0);
+                    const nextY = nextNode.y * 32 + 16 + (nextNode.offsetY || 0);
+
+                    const dx = nextX - crew.x;
+                    const dy = nextY - crew.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
 
                     // Check if next tile is a closed door
                     const nextTile = this.ship.layout[nextNode.y]?.[nextNode.x];
 
-                    if (nextTile === 4) {
+                    if (nextTile === 4 && distance < 40) {
                         // Initialize timer if not present
                         if (crew.doorWaitTimer === undefined) {
                             crew.doorWaitTimer = 0;
@@ -506,13 +512,6 @@ class GameState {
                             continue;
                         }
                     }
-
-                    const nextX = nextNode.x * 32 + 16 + (nextNode.offsetX || 0);
-                    const nextY = nextNode.y * 32 + 16 + (nextNode.offsetY || 0);
-
-                    const dx = nextX - crew.x;
-                    const dy = nextY - crew.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (distance < 3) {
                         crew.path.shift();
