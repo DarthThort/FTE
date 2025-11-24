@@ -100,17 +100,7 @@ class ShipRenderer {
         this.drawGrid(ctx, layout, ship.systems);
         this.drawFog(ctx, layout);
 
-        // Render crew members
-        this.renderCrewMembers(ctx);
-
         ctx.restore();
-    }
-
-    renderCrewMembers(ctx) {
-        const crewMembers = this.game.state.crewMembers || [];
-        for (const crew of crewMembers) {
-            crew.render(ctx, this.tileSize, 0, 0); // No camera offset since we use ctx.translate
-        }
     }
 
     drawGrid(ctx, layout, systems) {

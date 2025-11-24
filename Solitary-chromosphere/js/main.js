@@ -11,7 +11,6 @@ if (!canvas || !uiLayer) {
     const game = new GameEngine(canvas);
     window.game = game; // Expose for UI onclick handlers
     const ui = new UIManager(uiLayer, game);
-    window.uiManager = ui; // Expose for crew detail modals
 
     // Simulate loading
     setTimeout(() => {
