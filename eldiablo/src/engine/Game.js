@@ -404,10 +404,6 @@ class Game {
             return;
         }
 
-        // Trigger teleport effects
-        this.effects.push(new Effect(this.player.x, this.player.y, 'teleport', 0));
-        this.sound.playTeleport();
-
         // Set level announcement
         this.levelAnnouncementText = `LEVEL ${this.currentLevel}`;
         this.levelAnnouncementTimer = 3.0; // 3 seconds
@@ -425,6 +421,10 @@ class Game {
         }
 
         this.initLevel();
+
+        // Trigger teleport effects AFTER player position is updated
+        this.effects.push(new Effect(this.player.x, this.player.y, 'teleport', 0));
+        this.sound.playTeleport();
     }
 
     playerAttack() {
