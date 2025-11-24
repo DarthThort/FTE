@@ -156,13 +156,28 @@ class UIManager {
             ).join(' • ')}
                         </div>
                         <p class="price">${c.cost} CR</p>
-                        <button style="margin-top: 10px; width: 100%; font-size: 0.8rem;" onclick="alert('Hired ${c.name}!')">HIRE</button>
+                        <button style="margin-top: 10px; width: 100%; font-size: 0.8rem;" data-crew-id="${c.id}">HIRE</button>
                     </div>
                     `;
         }).join('')}
             </div>
         `;
         this.createModal('TAVERN', content);
+
+        // Add event listeners for hire buttons
+        const hireButtons = document.querySelectorAll('[data-crew-id]');
+        hireButtons.forEach(btn => {
+            btn.onclick = () => {
+                const crewId = parseInt(btn.dataset.crewId);
+                const result = this.game.state.hireCrew(crewId);
+                if (result.success) {
+                    alert(result.message);
+                    this.renderTavern(); // Refresh tavern
+                } else {
+                    alert(result.message);
+                }
+            };
+        });
     }
 
     renderContracts() {
