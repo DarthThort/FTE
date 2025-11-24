@@ -98,6 +98,7 @@ class ShipRenderer {
         ctx.translate(this.offsetX, this.offsetY);
 
         this.drawGrid(ctx, layout, ship.systems);
+        this.drawCrew(ctx, ship);
         this.drawFog(ctx, layout);
 
         ctx.restore();
@@ -226,6 +227,65 @@ class ShipRenderer {
             ctx.textAlign = 'center';
             ctx.fillText(sys.id.substring(0, 3).toUpperCase(), posX + this.tileSize / 2, posY + this.tileSize / 2 + 4);
         }
+    }
+
+    drawCrew(ctx, ship) {
+        if (!ship.crew || ship.crew.length === 0) return;
+
+        // Draw each crew member at their current position
+        for (const crewMember of ship.crew) {
+            const posX = crewMember.x || 0;
+            const posY = crewMember.y || 0;
+
+            // Draw crew member as a circle
+            const radius = 8;
+
+            // Outer glow
+            ctx.save();
+            ctx.shadowColor = this.getCrewColor(crewMember.role);
+            ctx.shadowBlur = 12;
+
+            // Crew circle
+            ctx.fillStyle = this.getCrewColor(crewMember.role);
+            ctx.beginPath();
+            ctx.arc(posX, posY, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Inner detail
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.beginPath();
+            ctx.arc(posX, posY, radius - 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Core
+            ctx.fillStyle = this.getCrewColor(crewMember.role);
+            ctx.beginPath();
+            ctx.arc(posX, posY, radius - 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+
+            // Name label
+            const gridX = Math.floor(posX / this.tileSize);
+            const gridY = Math.floor(posY / this.tileSize);
+
+            if (this.visible && this.visible[gridY] && this.visible[gridY][gridX]) {
+                ctx.fillStyle = '#fff';
+                ctx.font = '9px "Courier New", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(crewMember.name.split(' ')[0], posX, posY - radius - 4);
+            }
+        }
+    }
+
+    getCrewColor(role) {
+        const colors = {
+            'Engineer': '#fbbf24', // Amber
+            'Pilot': '#60a5fa',    // Blue
+            'Gunner': '#ef4444',   // Red
+            'Medic': '#34d399'     // Green
+        };
+        return colors[role] || '#9ca3af'; // Gray fallback
     }
 
     drawFog(ctx, layout) {
