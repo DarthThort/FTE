@@ -6,7 +6,7 @@ class GameEngine {
         this.lastTime = 0;
 
         this.state = new GameState();
-        this.input = new InputHandler();
+        this.input = new InputHandler(canvas);
         this.sceneManager = new SceneManager(this);
 
         this.resize();
@@ -46,7 +46,6 @@ class GameEngine {
     }
 
     render() {
-        // Clear screen
         this.ctx.fillStyle = '#05050a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
