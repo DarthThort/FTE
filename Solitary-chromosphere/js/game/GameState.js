@@ -381,7 +381,7 @@ class GameState {
 
         // Hire the crew
         this.credits -= crew.cost;
-        this.ship.crew.push({ ...crew, x: 160, y: 96, targetX: null, targetY: null, path: [], speed: 1.5, state: 'idle' });
+        this.ship.crew.push({ ...crew, x: 250, y: 160, targetX: null, targetY: null, path: [], speed: 1.5, state: 'idle' });
         this.port.crew = this.port.crew.filter(c => c.id !== crewId);
         this.notify();
 
