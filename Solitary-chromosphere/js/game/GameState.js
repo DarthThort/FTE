@@ -12,25 +12,24 @@ class GameState {
             cargo: 0,
             maxCargo: 50,
             level: 1,
-            // Layout: 0=Void, 1=Wall, 2=Floor, 3=Slot, 4=Door(Closed), 5=Door(Open)
             layout: [
                 [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 1, 2, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Bridge
-                [0, 0, 0, 0, 0, 0, 1, 2, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Door (8,3)
+                [0, 0, 0, 0, 0, 0, 1, 2, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 2, 4, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
                 [0, 0, 1, 2, 2, 3, 2, 2, 2, 2, 2, 3, 2, 2, 1, 0, 0, 0, 0, 0],
                 [0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0],
-                [0, 0, 1, 1, 1, 4, 1, 1, 4, 1, 1, 4, 1, 1, 1, 0, 0, 0, 0, 0], // Doors to corridors
+                [0, 0, 1, 1, 1, 4, 1, 1, 4, 1, 1, 4, 1, 1, 1, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 1, 2, 1, 0, 2, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 1, 2, 1, 0, 2, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 1, 1, 1, 4, 1, 1, 4, 1, 1, 4, 1, 1, 1, 0, 0, 0, 0, 0], // Doors to cargo
+                [0, 0, 1, 1, 1, 4, 1, 1, 4, 1, 1, 4, 1, 1, 1, 0, 0, 0, 0, 0],
                 [0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0],
                 [0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0],
                 [0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0],
-                [0, 0, 1, 1, 1, 1, 1, 4, 4, 4, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], // Wide door to engine
+                [0, 0, 1, 1, 1, 1, 1, 4, 4, 4, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 1, 2, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], // Engine
+                [0, 0, 0, 0, 0, 0, 1, 2, 3, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             ],
             systems: [
@@ -371,7 +370,7 @@ class GameState {
         }
 
         this.credits -= crew.cost;
-        this.ship.crew.push({ ...crew, x: 250, y: 160, targetX: null, targetY: null, path: [], speed: 1.5, state: 'idle' });
+        this.ship.crew.push({ ...crew, x: 250, y: 160, targetX: null, targetY: null, path: [], speed: 1.5, state: 'idle', wanderTimer: 0 });
         this.port.crew = this.port.crew.filter(c => c.id !== crewId);
         this.notify();
 
@@ -391,11 +390,10 @@ class GameState {
         }
 
         system.assignedCrew = crew;
-
-        // Set target position for crew movement
         crew.targetX = system.x * 32 + 16;
         crew.targetY = system.y * 32 + 16;
         crew.state = 'moving';
+        crew.path = [];
 
         this.notify();
 
@@ -413,6 +411,8 @@ class GameState {
         crew.targetX = null;
         crew.targetY = null;
         crew.state = 'idle';
+        crew.path = [];
+        crew.wanderTimer = 0;
 
         const crewName = system.assignedCrew.name;
         system.assignedCrew = null;
@@ -433,36 +433,64 @@ class GameState {
 
     updateCrewAI() {
         for (const crew of this.ship.crew) {
-            if (crew.state === 'moving' && crew.targetX !== null && crew.targetY !== null) {
-                // If no path or path is empty, calculate new path
+            if (crew.state === 'idle' && (!crew.targetX || !crew.targetY)) {
+                if (!crew.wanderTimer || crew.wanderTimer <= 0) {
+                    const wanderSpot = this.getRandomWalkablePosition();
+                    if (wanderSpot) {
+                        crew.targetX = wanderSpot.x * 32 + 16;
+                        crew.targetY = wanderSpot.y * 32 + 16;
+                        crew.state = 'wandering';
+                        crew.path = [];
+                    }
+                    crew.wanderTimer = 3 + Math.random() * 2;
+                }
+                crew.wanderTimer -= 1 / 60;
+            }
+
+            if ((crew.state === 'moving' || crew.state === 'wandering') && crew.targetX !== null && crew.targetY !== null) {
                 if (!crew.path || crew.path.length === 0) {
                     const startX = Math.floor(crew.x / 32);
                     const startY = Math.floor(crew.y / 32);
                     const targetX = Math.floor(crew.targetX / 32);
                     const targetY = Math.floor(crew.targetY / 32);
 
-                    crew.path = this.findPath(startX, startY, targetX, targetY);
+                    let path = this.findPath(startX, startY, targetX, targetY);
+                    path = this.smoothPath(path);
+
+                    crew.path = path.map(node => ({
+                        x: node.x,
+                        y: node.y,
+                        offsetX: (Math.random() - 0.5) * 4,
+                        offsetY: (Math.random() - 0.5) * 4
+                    }));
                 }
 
-                // Follow the path
                 if (crew.path && crew.path.length > 0) {
                     const nextNode = crew.path[0];
-                    const nextX = nextNode.x * 32 + 16;
-                    const nextY = nextNode.y * 32 + 16;
+                    const nextX = nextNode.x * 32 + 16 + (nextNode.offsetX || 0);
+                    const nextY = nextNode.y * 32 + 16 + (nextNode.offsetY || 0);
 
                     const dx = nextX - crew.x;
                     const dy = nextY - crew.y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
 
-                    if (distance < 2) {
+                    if (distance < 3) {
                         crew.path.shift();
 
                         if (crew.path.length === 0) {
                             crew.x = crew.targetX;
                             crew.y = crew.targetY;
-                            crew.state = 'working';
-                            crew.targetX = null;
-                            crew.targetY = null;
+
+                            if (crew.state === 'moving') {
+                                crew.state = 'working';
+                                crew.targetX = null;
+                                crew.targetY = null;
+                            } else if (crew.state === 'wandering') {
+                                crew.state = 'idle';
+                                crew.targetX = null;
+                                crew.targetY = null;
+                                crew.wanderTimer = 2 + Math.random() * 3;
+                            }
                         }
                     } else {
                         const moveX = (dx / distance) * crew.speed;
@@ -473,6 +501,47 @@ class GameState {
                 }
             }
         }
+    }
+
+    getRandomWalkablePosition() {
+        const walkableTiles = [];
+        for (let y = 0; y < this.ship.layout.length; y++) {
+            for (let x = 0; x < this.ship.layout[y].length; x++) {
+                if (this.isWalkable(x, y)) {
+                    walkableTiles.push({ x, y });
+                }
+            }
+        }
+
+        if (walkableTiles.length > 0) {
+            return walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
+        }
+        return null;
+    }
+
+    smoothPath(path) {
+        if (path.length <= 2) return path;
+
+        const smoothed = [path[0]];
+
+        for (let i = 1; i < path.length - 1; i++) {
+            const prev = path[i - 1];
+            const current = path[i];
+            const next = path[i + 1];
+
+            const dx1 = current.x - prev.x;
+            const dy1 = current.y - prev.y;
+            const dx2 = next.x - current.x;
+            const dy2 = next.y - current.y;
+
+            if (dx1 !== dx2 || dy1 !== dy2) {
+                smoothed.push(current);
+            }
+        }
+
+        smoothed.push(path[path.length - 1]);
+
+        return smoothed;
     }
 
     findPath(startX, startY, targetX, targetY) {
