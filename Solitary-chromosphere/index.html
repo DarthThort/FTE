@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Sim RPG</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <canvas id="game-canvas"></canvas>
+        <div id="ui-layer">
+            <!-- UI elements will be injected here -->
+            <div id="loading-screen" class="screen active">
+                <h1>SYSTEM INITIALIZING...</h1>
+                <div class="loader"></div>
+            </div>
+
+            <!-- Crew Tooltip -->
+            <div id="crew-tooltip"
+                style="position: absolute; display: none; background: rgba(0,0,0,0.9); border: 1px solid var(--primary); padding: 10px; border-radius: 4px; pointer-events: none; z-index: 1000; font-size: 0.8rem; min-width: 150px;">
+            </div>
+
+            <!-- Notification Container -->
+            <div id="notification-container"
+                style="position: absolute; top: 20px; right: 20px; z-index: 2000; width: 300px;"></div>
+        </div>
+    </div>
+
+    <!-- Load scripts sequentially (Order matters!) -->
+    <script src="js/game/GameState.js"></script>
+    <script src="js/game/InputHandler.js"></script>
+    <script src="js/game/ShipRenderer.js"></script>
+    <script src="js/game/CrewMember.js"></script>
+    <script src="js/game/Player.js"></script>
+    <script src="js/game/SceneManager.js"></script>
+    <script src="js/game/GameEngine.js"></script>
+    <script src="js/ui/UIManager.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

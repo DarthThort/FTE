@@ -1,0 +1,320 @@
+:root {
+    --bg-dark: #020617;
+    --bg-panel: rgba(15, 23, 42, 0.8);
+    --primary: #00f0ff;
+    --secondary: #00ff9d;
+    --danger: #ff0055;
+    --warning: #ffcc00;
+    --text-main: #e2e8f0;
+    --text-dim: #94a3b8;
+
+    --font-header: 'Orbitron', sans-serif;
+    --font-body: 'Rajdhani', sans-serif;
+
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+    --neon-glow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    font-family: var(--font-body);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+}
+
+#app {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#ui-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Let clicks pass through to canvas */
+}
+
+/* Enable pointer events for interactive UI elements */
+#ui-layer>* {
+    pointer-events: auto;
+}
+
+/* --- UTILITIES --- */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(2, 6, 23, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+}
+
+.screen.active {
+    display: flex;
+}
+
+h1,
+h2,
+h3 {
+    font-family: var(--font-header);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--primary);
+    text-shadow: var(--neon-glow);
+}
+
+button {
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid var(--primary);
+    color: var(--primary);
+    font-family: var(--font-header);
+    padding: 12px 24px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+button:hover {
+    background: var(--primary);
+    color: var(--bg-dark);
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+}
+
+/* --- LOADING SCREEN --- */
+#loading-screen h1 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    animation: pulse 2s infinite;
+}
+
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(0, 240, 255, 0.3);
+    border-top: 3px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.8;
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+
+    50% {
+        opacity: 1;
+        text-shadow: 0 0 20px rgba(0, 240, 255, 0.8);
+    }
+
+    100% {
+        opacity: 0.8;
+        text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+    }
+}
+
+/* --- HUD --- */
+.hud-panel {
+    position: absolute;
+    background: var(--bg-panel);
+    border: var(--glass-border);
+    backdrop-filter: blur(5px);
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Top Left: Status */
+#hud-status {
+    top: 20px;
+    left: 20px;
+    min-width: 200px;
+    border-left: 3px solid var(--primary);
+}
+
+#hud-status h3 {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    color: var(--secondary);
+    font-weight: 600;
+}
+
+/* Bottom Center: Interaction Prompt */
+#interaction-prompt {
+    position: absolute;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid var(--text-dim);
+    padding: 10px 20px;
+    font-family: var(--font-header);
+    color: var(--text-main);
+    font-size: 1rem;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    border-radius: 20px;
+}
+
+#interaction-prompt.visible {
+    opacity: 1;
+    border-color: var(--primary);
+    box-shadow: var(--neon-glow);
+}
+
+/* --- MODALS / CONSOLES --- */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+}
+
+.modal-window {
+    background: rgba(10, 15, 30, 0.95);
+    border: 1px solid var(--primary);
+    width: 600px;
+    max-width: 90%;
+    padding: 2rem;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 240, 255, 0.05);
+    position: relative;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+    padding-bottom: 0.5rem;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    clip-path: none;
+}
+
+.modal-close:hover {
+    color: var(--danger);
+    background: transparent;
+    box-shadow: none;
+    text-shadow: 0 0 10px var(--danger);
+}
+
+.modal-content {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.action-btn {
+    width: 100%;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+/* System Console Specifics */
+.console-log {
+    font-family: 'Courier New', monospace;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    height: 150px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    color: var(--secondary);
+    font-size: 0.9rem;
+}
+
+/* Install Menu Grid */
+.module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+.module-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.module-card:hover {
+    border-color: var(--primary);
+    background: rgba(0, 240, 255, 0.1);
+}
+
+.module-card h4 {
+    color: var(--text-main);
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.module-card p {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+}
