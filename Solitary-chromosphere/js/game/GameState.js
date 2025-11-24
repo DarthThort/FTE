@@ -370,7 +370,18 @@ class GameState {
         }
 
         this.credits -= crew.cost;
-        this.ship.crew.push({ ...crew, x: 250, y: 160, targetX: null, targetY: null, path: [], speed: 1.5, state: 'idle', wanderTimer: 0 });
+        this.ship.crew.push({
+            ...crew,
+            x: 250,
+            y: 160,
+            targetX: null,
+            targetY: null,
+            path: [],
+            speed: 1.5,
+            state: 'idle',
+            wanderTimer: 0,
+            doorWaitTimer: 0
+        });
         this.port.crew = this.port.crew.filter(c => c.id !== crewId);
         this.notify();
 
@@ -467,6 +478,35 @@ class GameState {
 
                 if (crew.path && crew.path.length > 0) {
                     const nextNode = crew.path[0];
+
+                    // Check if next tile is a closed door
+                    const nextTile = this.ship.layout[nextNode.y]?.[nextNode.x];
+
+                    if (nextTile === 4) {
+                        // Initialize timer if not present
+                        if (crew.doorWaitTimer === undefined) {
+                            crew.doorWaitTimer = 0;
+                        }
+
+                        // If timer not started, start it
+                        if (crew.doorWaitTimer <= 0) {
+                            crew.doorWaitTimer = 0.5; // 0.5 seconds wait
+                        }
+
+                        // Decrement timer
+                        crew.doorWaitTimer -= 1 / 60;
+
+                        // If timer finished, open door and proceed
+                        if (crew.doorWaitTimer <= 0) {
+                            this.ship.layout[nextNode.y][nextNode.x] = 5;
+                            crew.doorWaitTimer = 0;
+                            this.notify();
+                        } else {
+                            // Still waiting, skip movement
+                            continue;
+                        }
+                    }
+
                     const nextX = nextNode.x * 32 + 16 + (nextNode.offsetX || 0);
                     const nextY = nextNode.y * 32 + 16 + (nextNode.offsetY || 0);
 
@@ -619,7 +659,8 @@ class GameState {
         if (!this.ship.layout[y] || !this.ship.layout[y][x]) return false;
 
         const tile = this.ship.layout[y][x];
-        return tile === 2 || tile === 3 || tile === 5;
+        // Walkable: Floor (2), Slot (3), Closed Door (4), Open Door (5)
+        return tile === 2 || tile === 3 || tile === 4 || tile === 5;
     }
 
     reconstructPath(node) {
