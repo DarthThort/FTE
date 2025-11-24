@@ -39,7 +39,11 @@ class GameState {
                 { x: 5, y: 5, id: 'weapons', name: 'Weapons Array', type: 'weapon', color: '#ff0055' },
                 { x: 11, y: 5, id: 'shields', name: 'Shield Generator', type: 'shield', color: '#00ff55' }
             ],
-            modules: [] // Installed modules
+            modules: [], // Installed modules
+            crew: [], // Hired crew members
+            maxCrew: 6,
+            fuel: 100,
+            maxFuel: 100
         };
 
         this.inventory = [
@@ -78,9 +82,63 @@ class GameState {
         ];
 
         this.port.crew = [
-            { id: 1, name: "John Doe", role: "Engineer", skill: 5, cost: 100, desc: "Reliable with a wrench." },
-            { id: 2, name: "Jane Smith", role: "Pilot", skill: 7, cost: 150, desc: "Ace pilot." },
-            { id: 3, name: "Xar'thos", role: "Gunner", skill: 6, cost: 120, desc: "Never misses." }
+            {
+                id: 1,
+                name: "Bolt",
+                species: "Human",
+                gender: "Male",
+                age: 32,
+                role: "Engineer",
+                health: 100,
+                maxHealth: 100,
+                morale: 85,
+                cost: 150,
+                skills: {
+                    engineering: { level: 5, xp: 0, xpToNext: 100 },
+                    piloting: { level: 2, xp: 0, xpToNext: 100 },
+                    combat: { level: 1, xp: 0, xpToNext: 100 },
+                    medical: { level: 1, xp: 0, xpToNext: 100 }
+                },
+                background: "Former military engineer turned freelancer."
+            },
+            {
+                id: 2,
+                name: "Nova",
+                species: "Human",
+                gender: "Female",
+                age: 28,
+                role: "Pilot",
+                health: 100,
+                maxHealth: 100,
+                morale: 90,
+                cost: 200,
+                skills: {
+                    piloting: { level: 7, xp: 0, xpToNext: 100 },
+                    engineering: { level: 2, xp: 0, xpToNext: 100 },
+                    combat: { level: 3, xp: 0, xpToNext: 100 },
+                    medical: { level: 1, xp: 0, xpToNext: 100 }
+                },
+                background: "Ace pilot with racing history."
+            },
+            {
+                id: 3,
+                name: "Xar'thos",
+                species: "Alien",
+                gender: "Male",
+                age: 45,
+                role: "Gunner",
+                health: 120,
+                maxHealth: 120,
+                morale: 75,
+                cost: 180,
+                skills: {
+                    combat: { level: 6, xp: 0, xpToNext: 100 },
+                    piloting: { level: 2, xp: 0, xpToNext: 100 },
+                    engineering: { level: 1, xp: 0, xpToNext: 100 },
+                    medical: { level: 1, xp: 0, xpToNext: 100 }
+                },
+                background: "Veteran soldier seeking new horizons."
+            }
         ];
 
         this.port.contracts = [
@@ -171,5 +229,72 @@ class GameState {
             case 'shield': return '#00ff55';
             default: return '#ffffff';
         }
+    }
+
+    // === CREW MANAGEMENT ===
+
+    hireCrew(crewId) {
+        const crew = this.port.crew.find(c => c.id === crewId);
+        if (!crew) return { success: false, message: 'Crew member not found!' };
+
+        if (this.ship.crew.length >= this.ship.maxCrew) {
+            return { success: false, message: 'Crew quarters are full!' };
+        }
+
+        if (this.credits < crew.cost) {
+            return { success: false, message: 'Insufficient credits!' };
+        }
+
+        // Hire the crew
+        this.credits -= crew.cost;
+        this.ship.crew.push({ ...crew }); // Deep copy
+        this.port.crew = this.port.crew.filter(c => c.id !== crewId);
+        this.notify();
+
+        return { success: true, message: `${crew.name} has joined your crew!` };
+    }
+
+    assignCrewToSystem(crewId, systemId) {
+        const crew = this.ship.crew.find(c => c.id === crewId);
+        const system = this.ship.systems.find(s => s.id === systemId);
+
+        if (!crew || !system) {
+            return { success: false, message: 'Invalid crew or system!' };
+        }
+
+        // Check if system already has assigned crew
+        if (system.assignedCrew) {
+            return { success: false, message: 'System already has assigned crew!' };
+        }
+
+        // Assign crew
+        system.assignedCrew = crew;
+        this.notify();
+
+        return { success: true, message: `${crew.name} assigned to ${system.name}` };
+    }
+
+    unassignCrewFromSystem(systemId) {
+        const system = this.ship.systems.find(s => s.id === systemId);
+
+        if (!system || !system.assignedCrew) {
+            return { success: false, message: 'No crew assigned to this system!' };
+        }
+
+        const crewName = system.assignedCrew.name;
+        system.assignedCrew = null;
+        this.notify();
+
+        return { success: true, message: `${crewName} unassigned` };
+    }
+
+    getRolePrimarySkill(role) {
+        const skillMap = {
+            'Engineer': 'engineering',
+            'Pilot': 'piloting',
+            'Gunner': 'combat',
+            'Medic': 'medical'
+        };
+        return skillMap[role] || 'engineering';
     }
 }
