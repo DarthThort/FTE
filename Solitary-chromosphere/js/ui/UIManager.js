@@ -12,6 +12,67 @@ class UIManager {
         // Default to showing nothing until scene starts
     }
 
+    showNotification(message, type = 'info') {
+        const container = document.getElementById('notification-container');
+        if (!container) return;
+
+        const notification = document.createElement('div');
+        const colors = {
+            success: 'var(--success)',
+            error: 'var(--danger)',
+            info: 'var(--primary)',
+            warning: 'var(--warning)'
+        };
+
+        notification.style.cssText = `
+            background: rgba(0,0,0,0.9);
+            border: 1px solid ${colors[type] || colors.info};
+            border-left: 4px solid ${colors[type] || colors.info};
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            color: #fff;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease-out;
+            pointer-events: auto;
+            cursor: pointer;
+        `;
+        notification.innerHTML = message;
+
+        // Add animation keyframes if not exists
+        if (!document.querySelector('#notification-style')) {
+            const style = document.createElement('style');
+            style.id = 'notification-style';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(400px); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(400px); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        container.appendChild(notification);
+
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+
+        // Click to dismiss
+        notification.onclick = () => {
+            notification.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        };
+    }
+
     clearUI() {
         this.root.innerHTML = '';
     }
