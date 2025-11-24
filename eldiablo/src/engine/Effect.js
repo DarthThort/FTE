@@ -3,18 +3,20 @@ class Effect {
         this.x = x;
         this.y = y;
         this.type = type;
-        this.life = type === 'damage' ? 0.5 : 0.3;
+        this.life = type === 'damage' ? 0.5 : (type === 'teleport' ? 1.0 : 0.3);
         this.maxLife = this.life;
         this.size = initialSize;
 
-        if (type === 'damage') {
+        if (type === 'damage' || type === 'teleport') {
             this.particles = [];
-            for (let i = 0; i < 8; i++) {
-                const angle = (Math.PI * 2 * i) / 8;
+            const particleCount = type === 'teleport' ? 16 : 8;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const speed = type === 'teleport' ? (3 + Math.random() * 2) : (2 + Math.random());
                 this.particles.push({
-                    dx: Math.cos(angle) * (2 + Math.random()),
-                    dy: Math.sin(angle) * (2 + Math.random()),
-                    size: 2 + Math.random() * 3
+                    dx: Math.cos(angle) * speed,
+                    dy: Math.sin(angle) * speed,
+                    size: type === 'teleport' ? (3 + Math.random() * 4) : (2 + Math.random() * 3)
                 });
             }
         }
@@ -26,6 +28,8 @@ class Effect {
             this.size += dt * 5;
         } else if (this.type === 'damage') {
             this.size += dt * 3;
+        } else if (this.type === 'teleport') {
+            this.size += dt * 4;
         }
     }
 
@@ -67,6 +71,38 @@ class Effect {
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, flashSize, 0, Math.PI * 2);
             ctx.fill();
+            ctx.restore();
+        } else if (this.type === 'teleport') {
+            ctx.save();
+            // Draw expanding rings
+            for (let i = 0; i < 3; i++) {
+                const ringAlpha = alpha * (1 - i * 0.3);
+                const ringSize = this.size + i * 0.3;
+                ctx.strokeStyle = `rgba(0, 255, 255, ${ringAlpha})`;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.ellipse(pos.x, pos.y, ringSize * 40, ringSize * 20, 0, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Draw radiating particles
+            for (let particle of this.particles) {
+                const px = pos.x + particle.dx * this.size * 12;
+                const py = pos.y + particle.dy * this.size * 12;
+
+                ctx.fillStyle = `rgba(0, 255, 255, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(px, py, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Trail effect
+                ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.4})`;
+                ctx.lineWidth = particle.size / 2;
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+                ctx.lineTo(px, py);
+                ctx.stroke();
+            }
             ctx.restore();
         }
     }

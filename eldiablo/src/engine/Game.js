@@ -36,6 +36,11 @@ class Game {
         this.stairs = null;
         this.damageFlash = 0;
 
+        // Level transition properties
+        this.levelTransitionActive = false;
+        this.levelAnnouncementTimer = 0;
+        this.levelAnnouncementText = '';
+
         console.log('Calling initLevel');
         this.initLevel();
         console.log('initLevel complete, enemies:', this.enemies.length);
@@ -195,6 +200,15 @@ class Game {
     }
 
     update(dt) {
+        // Update level announcement timer
+        if (this.levelAnnouncementTimer > 0) {
+            this.levelAnnouncementTimer -= dt;
+            if (this.levelAnnouncementTimer <= 0) {
+                this.levelTransitionActive = false;
+                this.levelAnnouncementText = '';
+            }
+        }
+
         if (this.player.hp <= 0) {
             this.showMessage('GAME OVER! Refresh to restart.');
             return;
@@ -390,7 +404,14 @@ class Game {
             return;
         }
 
-        this.showMessage(`Level ${this.currentLevel}!`);
+        // Trigger teleport effects
+        this.effects.push(new Effect(this.player.x, this.player.y, 'teleport', 0));
+        this.sound.playTeleport();
+
+        // Set level announcement
+        this.levelAnnouncementText = `LEVEL ${this.currentLevel}`;
+        this.levelAnnouncementTimer = 3.0; // 3 seconds
+        this.levelTransitionActive = true;
 
         this.map = new Map(50, 50);
 
@@ -507,6 +528,46 @@ class Game {
             const alpha = Math.min(this.damageFlash, 0.4);
             ctx.fillStyle = `rgba(255, 0, 0, ${alpha})`;
             ctx.fillRect(0, 0, this.renderer.canvas.width, this.renderer.canvas.height);
+        }
+
+        // Draw level announcement banner
+        if (this.levelAnnouncementTimer > 0 && this.levelAnnouncementText) {
+            const ctx = this.renderer.ctx;
+            const canvas = this.renderer.canvas;
+
+            // Calculate fade animation
+            let alpha = 1.0;
+            if (this.levelAnnouncementTimer > 2.5) {
+                // Fade in (first 0.5s)
+                alpha = (3.0 - this.levelAnnouncementTimer) / 0.5;
+            } else if (this.levelAnnouncementTimer < 0.5) {
+                // Fade out (last 0.5s)
+                alpha = this.levelAnnouncementTimer / 0.5;
+            }
+
+            ctx.save();
+
+            // Draw background overlay
+            ctx.fillStyle = `rgba(0, 20, 30, ${alpha * 0.8})`;
+            const bannerHeight = 120;
+            const bannerY = 80;
+            ctx.fillRect(0, bannerY, canvas.width, bannerHeight);
+
+            // Draw border
+            ctx.strokeStyle = `rgba(0, 255, 255, ${alpha})`;
+            ctx.lineWidth = 4;
+            ctx.strokeRect(10, bannerY + 10, canvas.width - 20, bannerHeight - 20);
+
+            // Draw text
+            ctx.fillStyle = `rgba(0, 255, 255, ${alpha})`;
+            ctx.font = 'bold 64px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = `rgba(0, 255, 255, ${alpha})`;
+            ctx.fillText(this.levelAnnouncementText, canvas.width / 2, bannerY + bannerHeight / 2);
+
+            ctx.restore();
         }
     }
 
