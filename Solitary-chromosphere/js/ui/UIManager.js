@@ -347,6 +347,15 @@ class UIManager {
     // --- SYSTEM CONSOLES ---
 
     renderSystemConsole(system) {
+        const assignedCrew = system.assignedCrew;
+        const availableCrew = this.game.state.ship.crew.filter(c => {
+            // Crew is available if not assigned to any system OR already assigned to THIS system
+            const isAssignedElsewhere = this.game.state.ship.systems.some(s =>
+                s.id !== system.id && s.assignedCrew?.id === c.id
+            );
+            return !isAssignedElsewhere;
+        });
+
         const content = `
             <div style="text-align: center;">
                 <h1 style="color: ${system.color}; margin-bottom: 10px;">${system.name.toUpperCase()}</h1>
@@ -362,6 +371,31 @@ class UIManager {
                     </div>
                 </div>
 
+                ${assignedCrew ? `
+                    <div style="background: rgba(0,255,100,0.1); border: 1px solid var(--success); padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <h3 style="color: var(--success); font-size: 0.9rem; margin-bottom: 10px;">ASSIGNED CREW</h3>
+                        <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                            <h4 style="color: var(--secondary); margin-bottom: 5px;">${assignedCrew.name}</h4>
+                            <p style="font-size: 0.85rem; color: #aaa;">${assignedCrew.role} • Lvl ${assignedCrew.skills[this.game.state.getRolePrimarySkill(assignedCrew.role)]?.level || 1}</p>
+                        </div>
+                        <button id="btn-unassign-system" style="width: 100%; background: var(--danger); border-color: var(--danger);">UNASSIGN CREW</button>
+                    </div>
+                ` : `
+                    <div style="background: rgba(255,200,0,0.1); border: 1px solid var(--warning); padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <h3 style="color: var(--warning); font-size: 0.9rem; margin-bottom: 10px;">NO CREW ASSIGNED</h3>
+                        <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 10px;">Assign a crew member to this station:</p>
+                        <select id="crew-selector" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; margin-bottom: 10px; cursor: pointer;">
+                            <option value="">-- Select Crew Member --</option>
+                            ${availableCrew.map(c => {
+            const primarySkill = this.game.state.getRolePrimarySkill(c.role);
+            const level = c.skills[primarySkill]?.level || 1;
+            return `<option value="${c.id}">${c.name} (${c.role}, Lvl ${level})</option>`;
+        }).join('')}
+                        </select>
+                        <button id="btn-assign-system" style="width: 100%;">ASSIGN TO STATION</button>
+                    </div>
+                `}
+
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <button>DIAGNOSTICS</button>
                     <button>POWER: ON</button>
@@ -374,6 +408,37 @@ class UIManager {
             </div>
         `;
         this.createModal('SYSTEM CONSOLE', content);
+
+        // Add event listeners for crew assignment buttons
+        if (assignedCrew) {
+            const unassignBtn = document.getElementById('btn-unassign-system');
+            if (unassignBtn) {
+                unassignBtn.onclick = () => {
+                    const result = this.game.state.unassignCrewFromSystem(system.id);
+                    this.showNotification(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        this.renderSystemConsole(system); // Refresh console
+                    }
+                };
+            }
+        } else {
+            const assignBtn = document.getElementById('btn-assign-system');
+            if (assignBtn) {
+                assignBtn.onclick = () => {
+                    const selector = document.getElementById('crew-selector');
+                    const crewId = parseInt(selector.value);
+                    if (!crewId) {
+                        this.showNotification('Please select a crew member first!', 'warning');
+                        return;
+                    }
+                    const result = this.game.state.assignCrewToSystem(crewId, system.id);
+                    this.showNotification(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        this.renderSystemConsole(system); // Refresh console
+                    }
+                };
+            }
+        }
     }
 
     renderInstallMenu(x, y) {
