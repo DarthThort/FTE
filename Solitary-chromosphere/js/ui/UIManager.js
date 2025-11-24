@@ -110,7 +110,7 @@ class UIManager {
         }
     }
 
-	updateHUD(element) {
+    updateHUD(element) {
         const state = this.game.state;
         if (!state || !state.ship) return;
         const crewPanelsHTML = state.ship.crew.map(c => {
@@ -185,6 +185,7 @@ class UIManager {
             <div style="display: flex; gap: 20px;">
                 <button id="btn-shipyard">SHIPYARD</button>
                 <button id="btn-tavern">TAVERN</button>
+                <button id="btn-crew">CREW ROSTER</button>
                 <button id="btn-contracts">CONTRACTS</button>
                 <button id="btn-undock" style="border-color: var(--warning); color: var(--warning);">UNDOCK</button>
             </div>
@@ -194,6 +195,7 @@ class UIManager {
 
         document.getElementById('btn-shipyard').onclick = () => this.renderShipyard();
         document.getElementById('btn-tavern').onclick = () => this.renderTavern();
+        document.getElementById('btn-crew').onclick = () => this.renderCrewRoster();
         document.getElementById('btn-contracts').onclick = () => this.renderContracts();
         document.getElementById('btn-undock').onclick = () => {
             this.game.sceneManager.changeScene('SHIP');
