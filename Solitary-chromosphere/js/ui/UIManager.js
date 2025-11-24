@@ -443,4 +443,124 @@ class UIManager {
         `;
         this.createModal('CREW ROSTER', content);
     }
+
+    showCrewDetail(crewId) {
+        const crew = this.game.state.ship.crew.find(c => c.id === crewId);
+        if (!crew) return;
+
+        const assignment = this.game.state.ship.systems.find(s => s.assignedCrew?.id === crewId);
+        const primarySkill = this.game.state.getRolePrimarySkill(crew.role);
+        const availableSystems = this.game.state.ship.systems.filter(s => !s.assignedCrew || s.assignedCrew.id === crewId);
+
+        const content = `
+            <div style="max-width: 500px; margin: 0 auto;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: var(--secondary); margin-bottom: 5px;">${crew.name}</h2>
+                    <p style="color: #aaa; font-size: 0.9rem;">${crew.species} • ${crew.gender} • Age ${crew.age}</p>
+                    <p style="color: var(--primary); font-weight: bold; font-size: 1.1rem; margin-top: 5px;">${crew.role}</p>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                    <h3 style="color: var(--warning); font-size: 0.9rem; margin-bottom: 10px;">CORE STATS</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div>
+                            <div style="font-size: 0.75rem; color: #888;">Health</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3px;">
+                                <div style="flex: 1; height: 8px; background: #333; border-radius: 4px; margin-right: 8px;">
+                                    <div style="width: ${crew.health}%; height: 100%; background: var(--success); border-radius: 4px;"></div>
+                                </div>
+                                <span style="color: var(--success); font-weight: bold; font-size: 0.9rem;">${crew.health}/${crew.maxHealth}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #888;">Morale</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3px;">
+                                <div style="flex: 1; height: 8px; background: #333; border-radius: 4px; margin-right: 8px;">
+                                    <div style="width: ${crew.morale}%; height: 100%; background: ${crew.morale > 70 ? 'var(--success)' : crew.morale > 40 ? 'var(--warning)' : 'var(--danger)'}; border-radius: 4px;"></div>
+                                </div>
+                                <span style="color: ${crew.morale > 70 ? 'var(--success)' : crew.morale > 40 ? 'var(--warning)' : 'var(--danger)'}; font-weight: bold; font-size: 0.9rem;">${crew.morale}/100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                    <h3 style="color: var(--primary); font-size: 0.9rem; margin-bottom: 10px;">SKILLS</h3>
+                    ${Object.keys(crew.skills).map(skillName => {
+            const skill = crew.skills[skillName];
+            const isPrimary = skillName === primarySkill;
+            const xpPercent = (skill.xp / skill.xpToNext) * 100;
+            return `
+                            <div style="margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                                    <span style="font-size: 0.85rem; ${isPrimary ? 'color: var(--secondary); font-weight: bold;' : ''}">${skillName.charAt(0).toUpperCase() + skillName.slice(1)} ${isPrimary ? '⭐' : ''}</span>
+                                    <span style="font-size: 0.85rem; ${isPrimary ? 'color: var(--secondary); font-weight: bold;' : ''}">Level ${skill.level}</span>
+                                </div>
+                                <div style="height: 6px; background: #333; border-radius: 3px;">
+                                    <div style="width: ${xpPercent}%; height: 100%; background: ${isPrimary ? 'var(--secondary)' : 'var(--primary)'}; border-radius: 3px;"></div>
+                                </div>
+                                <div style="font-size: 0.7rem; color: #666; margin-top: 2px;">${skill.xp}/${skill.xpToNext} XP</div>
+                            </div>
+                        `;
+        }).join('')}
+                </div>
+
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                    <h3 style="color: var(--success); font-size: 0.9rem; margin-bottom: 10px;">ASSIGNMENT</h3>
+                    ${assignment ?
+                `<div>
+                            <p style="color: var(--primary); font-weight: bold; margin-bottom: 10px;">Currently working at: ${assignment.name}</p>
+                            <button id="btn-unassign-crew" style="width: 100%; padding: 8px; background: var(--danger); border-color: var(--danger);">UNASSIGN FROM STATION</button>
+                        </div>` :
+                `<div>
+                            <p style="color: var(--text-dim); margin-bottom: 10px;">Currently idle.</p>
+                            <select id="system-selector" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; margin-bottom: 10px; cursor: pointer;">
+                                <option value="">-- Select System --</option>
+                                ${availableSystems.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                            </select>
+                            <button id="btn-assign-crew" style="width: 100%; padding: 8px;">ASSIGN TO SYSTEM</button>
+                        </div>`
+            }
+                </div>
+
+                <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px;">
+                    <h3 style="color: #aaa; font-size: 0.9rem; margin-bottom: 8px;">BACKGROUND</h3>
+                    <p style="color: #ccc; font-style: italic; font-size: 0.9rem;">"${crew.background}"</p>
+                </div>
+            </div>
+        `;
+
+        this.createModal(`CREW PROFILE: ${crew.name.toUpperCase()}`, content);
+
+        // Add event listeners for assignment buttons
+        if (assignment) {
+            const unassignBtn = document.getElementById('btn-unassign-crew');
+            if (unassignBtn) {
+                unassignBtn.onclick = () => {
+                    const result = this.game.state.unassignCrewFromSystem(assignment.id);
+                    this.showNotification(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        this.showCrewDetail(crewId); // Refresh modal
+                    }
+                };
+            }
+        } else {
+            const assignBtn = document.getElementById('btn-assign-crew');
+            if (assignBtn) {
+                assignBtn.onclick = () => {
+                    const selector = document.getElementById('system-selector');
+                    const systemId = selector.value;
+                    if (!systemId) {
+                        this.showNotification('Please select a system first!', 'warning');
+                        return;
+                    }
+                    const result = this.game.state.assignCrewToSystem(crewId, systemId);
+                    this.showNotification(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        this.showCrewDetail(crewId); // Refresh modal
+                    }
+                };
+            }
+        }
+    }
 }
