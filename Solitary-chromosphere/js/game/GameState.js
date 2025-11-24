@@ -378,11 +378,13 @@ class GameState {
             return { success: false, message: 'Insufficient credits!' };
         }
 
+
         // Hire the crew
         this.credits -= crew.cost;
-        this.ship.crew.push({ ...crew }); // Deep copy
+        this.ship.crew.push({ ...crew, x: 160, y: 96, targetX: null, targetY: null, path: [], speed: 1.5, state: 'idle' });
         this.port.crew = this.port.crew.filter(c => c.id !== crewId);
         this.notify();
+
 
         return { success: true, message: `${crew.name} has joined your crew!` };
     }
