@@ -308,17 +308,16 @@ class UIManager {
                     const btnJump = document.getElementById('btn-jump');
                     if (btnJump) {
                         btnJump.onclick = () => {
-                            if (confirm(`Initiate jump to ${sys.name}?`)) {
-                                const result = state.travelToSystem(sys.id);
-                                if (result.success) {
-                                    document.querySelector('.modal-overlay').remove();
-                                    this.showTravelAnimation('WARP', () => {
-                                        this.showNotification(result.message, 'success');
-                                        this.renderSystemMap(); // Show system map on arrival
-                                    });
-                                } else {
-                                    this.showNotification(result.message, 'error');
-                                }
+                            // Execute jump immediately without confirm dialog
+                            const result = state.travelToSystem(sys.id);
+                            if (result.success) {
+                                document.querySelector('.modal-overlay').remove();
+                                this.showTravelAnimation('WARP', () => {
+                                    this.showNotification(result.message, 'success');
+                                    this.renderSystemMap(); // Show system map on arrival
+                                });
+                            } else {
+                                this.showNotification(result.message, 'error');
                             }
                         };
                     }
@@ -421,22 +420,144 @@ class UIManager {
         overlay.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
-            color: #fff; font-family: var(--font-tech); font-size: 2rem; letter-spacing: 5px;
+            flex-direction: column; overflow: hidden;
         `;
 
         if (type === 'WARP') {
-            overlay.innerHTML = `<div class="warp-effect">INITIATING WARP JUMP...</div>`;
-            // Add warp CSS dynamically if needed, or simple text for now
+            // Warp effect with streaking stars
+            overlay.innerHTML = `
+                <canvas id="warp-canvas" width="1920" height="1080" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                <div style="position: relative; z-index: 10; color: var(--primary); font-family: var(--font-tech); font-size: 2rem; letter-spacing: 5px; text-shadow: 0 0 20px var(--primary);">
+                    INITIATING WARP JUMP...
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // Create warp effect on canvas
+            const canvas = document.getElementById('warp-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Create stars
+            const stars = [];
+            for (let i = 0; i < 200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    z: Math.random() * canvas.width,
+                    speed: Math.random() * 20 + 10
+                });
+            }
+
+            // Animation loop
+            let animationId;
+            const animate = () => {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                stars.forEach(star => {
+                    star.z -= star.speed;
+                    if (star.z <= 0) {
+                        star.z = canvas.width;
+                        star.x = Math.random() * canvas.width;
+                        star.y = Math.random() * canvas.height;
+                    }
+
+                    const k = 128 / star.z;
+                    const px = (star.x - canvas.width / 2) * k + canvas.width / 2;
+                    const py = (star.y - canvas.height / 2) * k + canvas.height / 2;
+
+                    const size = (1 - star.z / canvas.width) * 3;
+                    const opacity = 1 - star.z / canvas.width;
+
+                    ctx.fillStyle = `rgba(0, 240, 255, ${opacity})`;
+                    ctx.fillRect(px, py, size, size);
+                });
+
+                animationId = requestAnimationFrame(animate);
+            };
+            animate();
+
+            setTimeout(() => {
+                cancelAnimationFrame(animationId);
+                overlay.remove();
+                if (callback) callback();
+            }, 3000);
+
+        } else if (type === 'SUBLIGHT') {
+            // Sublight effect with asteroids
+            overlay.innerHTML = `
+                <canvas id="sublight-canvas" width="1920" height="1080" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                <div style="position: relative; z-index: 10; color: var(--warning); font-family: var(--font-tech); font-size: 2rem; letter-spacing: 5px; text-shadow: 0 0 20px var(--warning);">
+                    TRAVELLING...
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+
+            // Create asteroid field effect
+            const canvas = document.getElementById('sublight-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Create asteroids
+            const asteroids = [];
+            for (let i = 0; i < 50; i++) {
+                asteroids.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 4 + 2,
+                    speedX: Math.random() * 4 - 2,
+                    speedY: Math.random() * 4 + 2
+                });
+            }
+
+            // Animation loop
+            let animationId;
+            const animate = () => {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                asteroids.forEach(ast => {
+                    ast.x += ast.speedX;
+                    ast.y += ast.speedY;
+
+                    if (ast.y > canvas.height) {
+                        ast.y = 0;
+                        ast.x = Math.random() * canvas.width;
+                    }
+                    if (ast.x < 0 || ast.x > canvas.width) {
+                        ast.x = Math.random() * canvas.width;
+                        ast.y = 0;
+                    }
+
+                    ctx.fillStyle = '#aaa';
+                    ctx.beginPath();
+                    ctx.arc(ast.x, ast.y, ast.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                animationId = requestAnimationFrame(animate);
+            };
+            animate();
+
+            setTimeout(() => {
+                cancelAnimationFrame(animationId);
+                overlay.remove();
+                if (callback) callback();
+            }, 3000);
         } else {
-            overlay.innerHTML = `<div>TRAVELLING...</div>`;
+            // Fallback
+            overlay.innerHTML = `<div style="color: #fff; font-family: var(--font-tech); font-size: 2rem;">TRAVELLING...</div>`;
+            document.body.appendChild(overlay);
+            setTimeout(() => {
+                overlay.remove();
+                if (callback) callback();
+            }, 3000);
         }
-
-        document.body.appendChild(overlay);
-
-        setTimeout(() => {
-            overlay.remove();
-            if (callback) callback();
-        }, 3000);
     }
 
     // --- PORT INTERFACE ---
