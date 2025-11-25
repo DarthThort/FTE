@@ -336,21 +336,21 @@ class UIManager {
 
         const content = `
             <div style="position: relative; width: 100%; height: 500px; background: radial-gradient(circle at center, #001020 0%, #000000 100%); border: 1px solid var(--primary); border-radius: 4px; overflow: hidden;">
-                <div style="position: absolute; top: 20px; left: 20px; color: var(--primary); font-family: var(--font-tech); z-index: 10;">
+                <div style="position: absolute; top: 20px; left: 20px; color: var(--primary); font-family: var(--font-tech); z-index: 10; pointer-events: none;">
                     <h2>${system.name.toUpperCase()} SYSTEM</h2>
                     <p>Fuel: ${state.ship.fuel}/${state.ship.maxFuel}</p>
+                    <p style="font-size: 0.75rem; color: #aaa; margin-top: 5px;">💡 Drag to pan the map</p>
                 </div>
 
-                <!-- Central Star -->
-                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: ${system.color}; border-radius: 50%; box-shadow: 0 0 50px ${system.color}; z-index: 5;"></div>
+                <!-- Planetary System Container (for panning) -->
+                <div id="planetary-system-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                    <!-- Central Star -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: ${system.color}; border-radius: 50%; box-shadow: 0 0 50px ${system.color}; z-index: 5;"></div>
 
-                <!-- Planets -->
-                ${system.planets.map((planet, index) => {
-            // Calculate orbit position based on index to spread them out visually, or use distance
-            // For visual simplicity in 2D, we'll place them along a line or simple orbits
-            // Let's do simple static orbits for now, maybe animate later
+                    <!-- Planets -->
+                    ${system.planets.map((planet, index) => {
             const orbitRadius = 60 + (index + 1) * 40;
-            const angle = (index * 45) * (Math.PI / 180); // Stagger planets
+            const angle = (index * 45) * (Math.PI / 180);
             const px = Math.cos(angle) * orbitRadius;
             const py = Math.sin(angle) * orbitRadius;
             const isCurrent = state.currentPlanet && state.currentPlanet.id === planet.id;
@@ -365,6 +365,7 @@ class UIManager {
                         </div>
                     `;
         }).join('')}
+                </div>
             </div>
             <div id="planet-info-panel" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); min-height: 80px; display: flex; justify-content: space-between; align-items: center;">
                 <p style="color: #aaa; font-style: italic;">Select a planet.</p>
@@ -380,7 +381,7 @@ class UIManager {
             const planets = document.querySelectorAll('.planet-node');
             const infoPanel = document.getElementById('planet-info-panel');
             const mapContainer = document.querySelector('.modal-content');
-            const systemView = mapContainer.querySelector('div'); // The first div is the system view container
+            const planetarySystem = document.getElementById('planetary-system-container');
 
             // Panning Logic for System Map
             let isDragging = false;
@@ -403,7 +404,7 @@ class UIManager {
                 e.preventDefault();
                 currentX = e.clientX - startX;
                 currentY = e.clientY - startY;
-                systemView.style.transform = `translate(${currentX}px, ${currentY}px)`;
+                planetarySystem.style.transform = `translate(${currentX}px, ${currentY}px)`;
             });
 
             document.addEventListener('mouseup', () => {
