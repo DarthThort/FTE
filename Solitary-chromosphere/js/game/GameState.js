@@ -11,7 +11,9 @@ class GameState {
             maxShield: 50,
             cargo: 0,
             maxCargo: 50,
+            maxCargo: 50,
             level: 1,
+            jumpRange: 6, // Light Years
             layout: [
                 [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -338,38 +340,62 @@ class GameState {
     }
 
     generateGalaxy() {
-        const systems = [];
-        const systemTypes = ['Red Dwarf', 'Yellow Star', 'Blue Giant', 'Binary System', 'Nebula', 'Black Hole'];
-        const starColors = {
-            'Red Dwarf': '#ff4444',
-            'Yellow Star': '#ffdd44',
-            'Blue Giant': '#4444ff',
-            'Binary System': '#ff88ff',
-            'Nebula': '#00ffcc',
-            'Black Hole': '#333333'
-        };
+        // Real Star Systems Data (Sol + 9 closest)
+        const REAL_STARS = [
+            { id: 'sol', name: 'Sol', x: 0, y: 0, type: 'Yellow Star', color: '#ffdd44', realDist: 0 },
+            { id: 'alpha_centauri', name: 'Alpha Centauri', x: 4, y: 2, type: 'Binary System', color: '#ff88ff', realDist: 4.37 },
+            { id: 'barnards_star', name: "Barnard's Star", x: -2, y: 5, type: 'Red Dwarf', color: '#ff4444', realDist: 5.96 },
+            { id: 'wolf_359', name: 'Wolf 359', x: 6, y: -4, type: 'Red Dwarf', color: '#ff4444', realDist: 7.78 },
+            { id: 'lalande_21185', name: 'Lalande 21185', x: -5, y: -6, type: 'Red Dwarf', color: '#ff4444', realDist: 8.29 },
+            { id: 'sirius', name: 'Sirius', x: -3, y: 8, type: 'Blue Giant', color: '#4444ff', realDist: 8.6 },
+            { id: 'luyten_726_8', name: 'Luyten 726-8', x: 8, y: 3, type: 'Binary System', color: '#ff88ff', realDist: 8.73 },
+            { id: 'ross_154', name: 'Ross 154', x: 2, y: -9, type: 'Red Dwarf', color: '#ff4444', realDist: 9.68 },
+            { id: 'ross_248', name: 'Ross 248', x: -9, y: 1, type: 'Red Dwarf', color: '#ff4444', realDist: 10.32 },
+            { id: 'epsilon_eridani', name: 'Epsilon Eridani', x: 7, y: 7, type: 'Yellow Star', color: '#ffdd44', realDist: 10.52 }
+        ];
 
-        for (let i = 0; i < 50; i++) {
-            const type = systemTypes[Math.floor(Math.random() * systemTypes.length)];
-            systems.push({
-                id: i,
-                x: Math.floor(Math.random() * 2000) - 1000,
-                y: Math.floor(Math.random() * 2000) - 1000,
-                name: `System-${Math.random().toString(36).substring(7).toUpperCase()}`,
-                type: type,
-                color: starColors[type],
-                visited: i === 0,
-                planets: Math.floor(Math.random() * 5) + 1,
-                resources: Math.random() > 0.5 ? ['Iron', 'Ice'] : ['Gold', 'Titanium']
-            });
-        }
+        const systems = REAL_STARS.map(star => ({
+            ...star,
+            visited: star.id === 'sol',
+            planets: [], // Will be populated below
+            resources: Math.random() > 0.5 ? ['Iron', 'Ice'] : ['Gold', 'Titanium']
+        }));
 
-        systems[0].x = 0;
-        systems[0].y = 0;
-        systems[0].name = "Prime Sector";
+        // Populate Sol System
+        const solSystem = systems.find(s => s.id === 'sol');
+        solSystem.planets = [
+            { id: 'mercury', name: 'Mercury', type: 'Barren', color: '#aaaaaa', distance: 30, hasStation: false },
+            { id: 'venus', name: 'Venus', type: 'Toxic', color: '#eebb00', distance: 50, hasStation: false },
+            { id: 'earth', name: 'Earth', type: 'Terran', color: '#00aaff', distance: 80, hasStation: true },
+            { id: 'mars', name: 'Mars', type: 'Desert', color: '#ff4400', distance: 110, hasStation: true },
+            { id: 'jupiter', name: 'Jupiter', type: 'Gas Giant', color: '#ddaa88', distance: 180, hasStation: false },
+            { id: 'saturn', name: 'Saturn', type: 'Gas Giant', color: '#eecc88', distance: 240, hasStation: false },
+            { id: 'uranus', name: 'Uranus', type: 'Ice Giant', color: '#88ffff', distance: 300, hasStation: false },
+            { id: 'neptune', name: 'Neptune', type: 'Ice Giant', color: '#4444ff', distance: 360, hasStation: false }
+        ];
+
+        // Populate other systems procedurally
+        systems.forEach(system => {
+            if (system.id !== 'sol') {
+                const numPlanets = Math.floor(Math.random() * 4) + 2; // 2-5 planets
+                for (let i = 0; i < numPlanets; i++) {
+                    const hasStation = Math.random() > 0.6; // 40% chance of station
+                    system.planets.push({
+                        id: `${system.id}_p${i}`,
+                        name: `${system.name} ${['I', 'II', 'III', 'IV', 'V'][i]}`,
+                        type: ['Barren', 'Desert', 'Ice', 'Terran', 'Gas Giant'][Math.floor(Math.random() * 5)],
+                        color: ['#aaaaaa', '#ff4400', '#88ffff', '#00aaff', '#ddaa88'][Math.floor(Math.random() * 5)],
+                        distance: 40 + (i * 50),
+                        hasStation: hasStation
+                    });
+                }
+            }
+        });
 
         this.galaxy = systems;
-        this.currentSystem = systems[0];
+        this.currentSystem = solSystem;
+        this.currentPlanet = solSystem.planets.find(p => p.id === 'earth'); // Start at Earth
+
         return systems;
     }
 
@@ -451,6 +477,51 @@ class GameState {
         }
         this.saveGame();
         this.notify();
+    }
+
+    travelToSystem(systemId) {
+        const targetSystem = this.galaxy.find(s => s.id === systemId);
+        if (!targetSystem) return { success: false, message: "System not found." };
+
+        // Calculate distance
+        const dx = targetSystem.x - this.currentSystem.x;
+        const dy = targetSystem.y - this.currentSystem.y;
+        // Simplified distance for grid, but realDist is for flavor/lore
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Use realDist if available and jumping from Sol (or relative logic)
+        // For now, let's use the grid distance as the mechanic
+
+        if (distance > this.ship.jumpRange) {
+            return { success: false, message: `Target out of jump range (${distance.toFixed(1)} LY > ${this.ship.jumpRange} LY)` };
+        }
+
+        this.currentSystem = targetSystem;
+        this.currentPlanet = null; // Reset planet when jumping systems
+
+        // Mark as visited
+        targetSystem.visited = true;
+
+        this.saveGame();
+        this.notify();
+        return { success: true, message: `Jumping to ${targetSystem.name}...` };
+    }
+
+    travelToPlanet(planetId) {
+        const targetPlanet = this.currentSystem.planets.find(p => p.id === planetId);
+        if (!targetPlanet) return { success: false, message: "Planet not found." };
+
+        const fuelCost = 5; // Fixed cost for now
+        if (this.ship.fuel < fuelCost) {
+            return { success: false, message: "Insufficient fuel for planetary travel." };
+        }
+
+        this.ship.fuel -= fuelCost;
+        this.currentPlanet = targetPlanet;
+
+        this.saveGame();
+        this.notify();
+        return { success: true, message: `Traveling to ${targetPlanet.name}...` };
     }
 
     getSystemColor(type) {

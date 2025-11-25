@@ -153,8 +153,9 @@ class UIManager {
                 </div>
             ` : ''}
             
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <button id="btn-dock" style="width: 100%; padding: 10px; border-color: var(--success); color: var(--success); font-weight: bold;">DOCK AT STATION</button>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
+                <button id="btn-nav" style="flex: 1; padding: 10px; border-color: var(--primary); color: var(--primary); font-weight: bold;">NAVIGATION</button>
+                <button id="btn-dock" style="flex: 1; padding: 10px; border-color: var(--success); color: var(--success); font-weight: bold;">DOCK</button>
             </div>
         `;
 
@@ -167,6 +168,13 @@ class UIManager {
                     this.showCrewDetail(crewId);
                 };
             });
+
+            const btnNav = document.getElementById('btn-nav');
+            if (btnNav) {
+                btnNav.onclick = () => {
+                    this.renderGalaxyMap();
+                };
+            }
 
             const btnDock = document.getElementById('btn-dock');
             if (btnDock) {
@@ -191,6 +199,210 @@ class UIManager {
         if (prompt) {
             prompt.classList.remove('visible');
         }
+    }
+
+    // --- NAVIGATION & MAPS ---
+
+    renderGalaxyMap() {
+        const state = this.game.state;
+        const currentSystem = state.currentSystem;
+
+        const content = `
+            <div style="position: relative; width: 100%; height: 500px; background: rgba(0, 10, 20, 0.9); border: 1px solid var(--primary); border-radius: 4px; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 255, 255, 0.05) 2px); pointer-events: none;"></div>
+                <div style="position: absolute; top: 20px; left: 20px; color: var(--primary); font-family: var(--font-tech); pointer-events: none;">
+                    <h2>GALAXY MAP</h2>
+                    <p>Current System: ${currentSystem.name}</p>
+                    <p>Jump Range: ${state.ship.jumpRange} LY</p>
+                </div>
+                
+                <div id="galaxy-grid" style="position: absolute; top: 50%; left: 50%; width: 2000px; height: 2000px; transform: translate(-50%, -50%); pointer-events: auto;">
+                    ${state.galaxy.map(sys => {
+            const relX = (sys.x - currentSystem.x) * 40 + 1000; // Center at 1000,1000
+            const relY = (sys.y - currentSystem.y) * 40 + 1000;
+            const dist = Math.sqrt(Math.pow(sys.x - currentSystem.x, 2) + Math.pow(sys.y - currentSystem.y, 2));
+            const inRange = dist <= state.ship.jumpRange;
+            const isCurrent = sys.id === currentSystem.id;
+
+            return `
+                            <div class="star-system" 
+                                 data-system-id="${sys.id}"
+                                 style="position: absolute; left: ${relX}px; top: ${relY}px; transform: translate(-50%, -50%); cursor: pointer; text-align: center; z-index: 10; pointer-events: auto;">
+                                <div style="width: ${isCurrent ? 20 : 12}px; height: ${isCurrent ? 20 : 12}px; background: ${sys.color}; border-radius: 50%; box-shadow: 0 0 ${isCurrent ? 20 : 10}px ${sys.color}; margin: 0 auto; border: ${isCurrent ? '2px solid #fff' : 'none'};"></div>
+                                <div style="color: ${inRange ? '#fff' : '#666'}; font-size: 0.7rem; margin-top: 5px; white-space: nowrap; text-shadow: 0 0 2px #000;">${sys.name}</div>
+                                ${!isCurrent ? `<div style="color: #aaa; font-size: 0.6rem;">${dist.toFixed(1)} LY</div>` : ''}
+                            </div>
+                        `;
+        }).join('')}
+                </div>
+            </div>
+            <div id="system-info-panel" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); min-height: 100px;">
+                <p style="color: #aaa; font-style: italic;">Select a system to view details.</p>
+            </div>
+        `;
+
+        this.createModal('NAVIGATION', content);
+
+        // Add event listeners to stars
+        setTimeout(() => {
+            const stars = document.querySelectorAll('.star-system');
+            const infoPanel = document.getElementById('system-info-panel');
+
+            stars.forEach(star => {
+                star.onclick = () => {
+                    const sysId = star.dataset.systemId;
+                    const sys = state.galaxy.find(s => s.id == sysId); // Loose equality for string/number ids
+                    if (!sys) return;
+
+                    const dist = Math.sqrt(Math.pow(sys.x - currentSystem.x, 2) + Math.pow(sys.y - currentSystem.y, 2));
+                    const inRange = dist <= state.ship.jumpRange;
+                    const isCurrent = sys.id === currentSystem.id;
+
+                    infoPanel.innerHTML = `
+                        <h3 style="color: ${sys.color}; margin-bottom: 5px;">${sys.name}</h3>
+                        <p style="color: #ccc; font-size: 0.9rem;">Type: ${sys.type}</p>
+                        <p style="color: #ccc; font-size: 0.9rem;">Distance: ${dist.toFixed(1)} Light Years</p>
+                        <p style="color: #ccc; font-size: 0.9rem;">Planets: ${sys.planets ? sys.planets.length : 'Unknown'}</p>
+                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                            ${isCurrent ?
+                            `<button onclick="game.ui.renderSystemMap()">VIEW SYSTEM MAP</button>` :
+                            `<button ${inRange ? '' : 'disabled style="opacity: 0.5; cursor: not-allowed;"'} id="btn-jump">INITIATE JUMP</button>`
+                        }
+                        </div>
+                    `;
+
+                    const btnJump = document.getElementById('btn-jump');
+                    if (btnJump) {
+                        btnJump.onclick = () => {
+                            if (confirm(`Initiate jump to ${sys.name}?`)) {
+                                const result = state.travelToSystem(sys.id);
+                                if (result.success) {
+                                    document.querySelector('.modal-overlay').remove();
+                                    this.showTravelAnimation('WARP', () => {
+                                        this.showNotification(result.message, 'success');
+                                        this.renderSystemMap(); // Show system map on arrival
+                                    });
+                                } else {
+                                    this.showNotification(result.message, 'error');
+                                }
+                            }
+                        };
+                    }
+                };
+            });
+        }, 100);
+    }
+
+    renderSystemMap() {
+        const state = this.game.state;
+        const system = state.currentSystem;
+
+        const content = `
+            <div style="position: relative; width: 100%; height: 500px; background: radial-gradient(circle at center, #001020 0%, #000000 100%); border: 1px solid var(--primary); border-radius: 4px; overflow: hidden;">
+                <div style="position: absolute; top: 20px; left: 20px; color: var(--primary); font-family: var(--font-tech); z-index: 10;">
+                    <h2>${system.name.toUpperCase()} SYSTEM</h2>
+                    <p>Fuel: ${state.ship.fuel}/${state.ship.maxFuel}</p>
+                </div>
+
+                <!-- Central Star -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60px; height: 60px; background: ${system.color}; border-radius: 50%; box-shadow: 0 0 50px ${system.color}; z-index: 5;"></div>
+
+                <!-- Planets -->
+                ${system.planets.map((planet, index) => {
+            // Calculate orbit position based on index to spread them out visually, or use distance
+            // For visual simplicity in 2D, we'll place them along a line or simple orbits
+            // Let's do simple static orbits for now, maybe animate later
+            const orbitRadius = 60 + (index + 1) * 40;
+            const angle = (index * 45) * (Math.PI / 180); // Stagger planets
+            const px = Math.cos(angle) * orbitRadius;
+            const py = Math.sin(angle) * orbitRadius;
+            const isCurrent = state.currentPlanet && state.currentPlanet.id === planet.id;
+
+            return `
+                        <div class="planet-orbit" style="position: absolute; top: 50%; left: 50%; width: ${orbitRadius * 2}px; height: ${orbitRadius * 2}px; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none;"></div>
+                        <div class="planet-node" 
+                             data-planet-id="${planet.id}"
+                             style="position: absolute; top: 50%; left: 50%; width: ${isCurrent ? 24 : 16}px; height: ${isCurrent ? 24 : 16}px; background: ${planet.color}; border-radius: 50%; transform: translate(calc(-50% + ${px}px), calc(-50% + ${py}px)); cursor: pointer; z-index: 6; border: ${isCurrent ? '2px solid #fff' : '1px solid rgba(0,0,0,0.5)'}; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+                             ${planet.hasStation ? '<div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 10px;">🏠</div>' : ''}
+                             <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 0.7rem; white-space: nowrap; text-shadow: 0 0 2px #000;">${planet.name}</div>
+                        </div>
+                    `;
+        }).join('')}
+            </div>
+            <div id="planet-info-panel" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); min-height: 80px; display: flex; justify-content: space-between; align-items: center;">
+                <p style="color: #aaa; font-style: italic;">Select a planet.</p>
+            </div>
+            <div style="margin-top: 10px; text-align: right;">
+                <button onclick="game.ui.renderGalaxyMap()">BACK TO GALAXY MAP</button>
+            </div>
+        `;
+
+        this.createModal('SYSTEM MAP', content);
+
+        setTimeout(() => {
+            const planets = document.querySelectorAll('.planet-node');
+            const infoPanel = document.getElementById('planet-info-panel');
+
+            planets.forEach(p => {
+                p.onclick = () => {
+                    const pId = p.dataset.planetId;
+                    const planet = system.planets.find(pl => pl.id === pId);
+                    const isCurrent = state.currentPlanet && state.currentPlanet.id === planet.id;
+
+                    infoPanel.innerHTML = `
+                        <div>
+                            <h3 style="color: ${planet.color}; margin-bottom: 5px;">${planet.name}</h3>
+                            <p style="color: #ccc; font-size: 0.85rem;">Type: ${planet.type}</p>
+                            <p style="color: #ccc; font-size: 0.85rem;">Station: ${planet.hasStation ? 'Yes' : 'No'}</p>
+                        </div>
+                        <div>
+                            ${isCurrent ?
+                            `<span style="color: var(--success); font-weight: bold;">CURRENT LOCATION</span>` :
+                            `<button onclick="
+                                    if(game.state.ship.fuel >= 5) {
+                                        game.ui.showTravelAnimation('SUBLIGHT', () => {
+                                            const res = game.state.travelToPlanet('${planet.id}');
+                                            if(res.success) {
+                                                game.ui.showNotification(res.message, 'success');
+                                                game.ui.renderSystemMap();
+                                            }
+                                        });
+                                    } else {
+                                        alert('Insufficient Fuel!');
+                                    }
+                                ">TRAVEL (5 Fuel)</button>`
+                        }
+                            ${isCurrent && planet.hasStation ?
+                            `<button style="margin-left: 10px; border-color: var(--success); color: var(--success);" onclick="document.querySelector('.modal-overlay').remove(); game.sceneManager.changeScene('PORT');">DOCK</button>` : ''
+                        }
+                        </div>
+                    `;
+                };
+            });
+        }, 100);
+    }
+
+    showTravelAnimation(type, callback) {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-family: var(--font-tech); font-size: 2rem; letter-spacing: 5px;
+        `;
+
+        if (type === 'WARP') {
+            overlay.innerHTML = `<div class="warp-effect">INITIATING WARP JUMP...</div>`;
+            // Add warp CSS dynamically if needed, or simple text for now
+        } else {
+            overlay.innerHTML = `<div>TRAVELLING...</div>`;
+        }
+
+        document.body.appendChild(overlay);
+
+        setTimeout(() => {
+            overlay.remove();
+            if (callback) callback();
+        }, 3000);
     }
 
     // --- PORT INTERFACE ---
