@@ -22,8 +22,9 @@ if (!canvas || !uiLayer) {
             setTimeout(() => loadingScreen.classList.add('hidden'), 500);
         }
         game.start();
-        // Force UI update for initial scene
-        game.sceneManager.changeScene('PORT');
+        // Start in ship mode if current planet has no station, otherwise start at port
+        const initialScene = (game.state.currentPlanet && game.state.currentPlanet.hasStation) ? 'PORT' : 'SHIP';
+        game.sceneManager.changeScene(initialScene);
         console.log('System Online.');
     }, 1000);
 }
