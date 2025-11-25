@@ -399,24 +399,35 @@ class GameState {
                     });
                 }
 
-                // Ensure at least 2-3 stations per system
-                const numStations = Math.floor(Math.random() * 2) + 2; // 2-3 stations
-                const stationIndices = [];
-                while (stationIndices.length < Math.min(numStations, planets.length)) {
-                    const idx = Math.floor(Math.random() * planets.length);
-                    if (!stationIndices.includes(idx)) {
-                        stationIndices.push(idx);
-                        planets[idx].hasStation = true;
-                    }
-                }
-
-                system.planets = planets;
+              // Ensure at least 2-3 stations per system
+const numStations = Math.floor(Math.random() * 2) + 2; // 2-3 stations
+const stationIndices = [];
+while (stationIndices.length < Math.min(numStations, planets.length)) {
+    const idx = Math.floor(Math.random() * planets.length);
+    if (!stationIndices.includes(idx)) {
+        stationIndices.push(idx);
+        planets[idx].hasStation = true;
+        // Generate unique market for this station
+        planets[idx].market = Economy.generateStationMarket(planets[idx].id, system.id);
+    }
+}
+system.planets = planets;
+			  
+			  
+			  
             }
         });
 
         this.galaxy = systems;
         this.currentSystem = solSystem;
         this.currentPlanet = solSystem.planets.find(p => p.id === 'earth'); // Start at Earth
+		
+		// Generate markets for Sol system stations
+solSystem.planets.forEach(planet => {
+    if (planet.hasStation) {
+        planet.market = Economy.generateStationMarket(planet.id, solSystem.id);
+    }
+});
 
         return systems;
     }
