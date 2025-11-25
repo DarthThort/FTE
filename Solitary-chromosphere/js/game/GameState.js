@@ -67,6 +67,7 @@ class GameState {
 
         this.generatePortContent();
         this.listeners = [];
+        this.loadGame();
     }
 
     generatePortContent() {
@@ -276,6 +277,102 @@ class GameState {
         ];
     }
 
+    loadGame() {
+        const savedData = localStorage.getItem('spaceSimSave');
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                this.credits = data.credits;
+                this.ship = { ...this.ship, ...data.ship };
+                this.port.crew = data.portCrew || this.port.crew;
+                this.port.contracts = data.contracts || this.port.contracts;
+
+                if (data.galaxy) {
+                    this.galaxy = data.galaxy;
+                    this.currentSystem = data.currentSystem || this.galaxy[0];
+                } else {
+                    this.generateGalaxy();
+                }
+
+                if (data.ship.crew) {
+                    this.ship.crew = data.ship.crew.map(c => ({
+                        ...c,
+                        targetX: null,
+                        targetY: null,
+                        path: [],
+                        state: 'idle',
+                        wanderTimer: 0,
+                        doorWaitTimer: 0
+                    }));
+                }
+                console.log('Game Loaded');
+            } catch (e) {
+                console.error('Failed to load save:', e);
+                this.generateGalaxy();
+            }
+        } else {
+            this.generateGalaxy();
+        }
+    }
+
+    saveGame() {
+        const data = {
+            credits: this.credits,
+            ship: {
+                ...this.ship,
+                crew: this.ship.crew.map(c => ({
+                    ...c,
+                    targetX: null,
+                    targetY: null,
+                    path: [],
+                    state: 'idle'
+                }))
+            },
+            portCrew: this.port.crew,
+            contracts: this.port.contracts,
+            galaxy: this.galaxy,
+            currentSystem: this.currentSystem
+        };
+        localStorage.setItem('spaceSimSave', JSON.stringify(data));
+        console.log('Game Saved');
+    }
+
+    generateGalaxy() {
+        const systems = [];
+        const systemTypes = ['Red Dwarf', 'Yellow Star', 'Blue Giant', 'Binary System', 'Nebula', 'Black Hole'];
+        const starColors = {
+            'Red Dwarf': '#ff4444',
+            'Yellow Star': '#ffdd44',
+            'Blue Giant': '#4444ff',
+            'Binary System': '#ff88ff',
+            'Nebula': '#00ffcc',
+            'Black Hole': '#333333'
+        };
+
+        for (let i = 0; i < 50; i++) {
+            const type = systemTypes[Math.floor(Math.random() * systemTypes.length)];
+            systems.push({
+                id: i,
+                x: Math.floor(Math.random() * 2000) - 1000,
+                y: Math.floor(Math.random() * 2000) - 1000,
+                name: `System-${Math.random().toString(36).substring(7).toUpperCase()}`,
+                type: type,
+                color: starColors[type],
+                visited: i === 0,
+                planets: Math.floor(Math.random() * 5) + 1,
+                resources: Math.random() > 0.5 ? ['Iron', 'Ice'] : ['Gold', 'Titanium']
+            });
+        }
+
+        systems[0].x = 0;
+        systems[0].y = 0;
+        systems[0].name = "Prime Sector";
+
+        this.galaxy = systems;
+        this.currentSystem = systems[0];
+        return systems;
+    }
+
     subscribe(callback) {
         this.listeners.push(callback);
     }
@@ -284,17 +381,15 @@ class GameState {
         this.listeners.forEach(cb => cb(this));
     }
 
-    notifyObservers() {
-        this.notify();
-    }
-
     updateCredits(amount) {
         this.credits += amount;
+        this.saveGame();
         this.notify();
     }
 
     damageShip(amount) {
         this.ship.health = Math.max(0, this.ship.health - amount);
+        this.saveGame();
         this.notify();
     }
 
@@ -307,17 +402,20 @@ class GameState {
 
         this.credits -= cost;
         item.stock -= amount;
+        this.saveGame();
         this.notify();
         return true;
     }
 
     sellItem(itemId, amount) {
+        this.saveGame();
         this.notify();
         return true;
     }
 
     uninstallSystem(system) {
         this.ship.systems = this.ship.systems.filter(s => s !== system);
+        this.saveGame();
         this.notify();
     }
 
@@ -333,6 +431,13 @@ class GameState {
             color: this.getSystemColor(item.systemType)
         });
 
+        // Remove from inventory if it exists there
+        const inventoryIndex = this.inventory.findIndex(i => i.id === item.id);
+        if (inventoryIndex > -1) {
+            this.inventory.splice(inventoryIndex, 1);
+        }
+
+        this.saveGame();
         this.notify();
         return true;
     }
@@ -344,6 +449,7 @@ class GameState {
         } else if (tile === 5) {
             this.ship.layout[y][x] = 4;
         }
+        this.saveGame();
         this.notify();
     }
 
@@ -383,6 +489,7 @@ class GameState {
             doorWaitTimer: 0
         });
         this.port.crew = this.port.crew.filter(c => c.id !== crewId);
+        this.saveGame();
         this.notify();
 
         return { success: true, message: `${crew.name} has joined your crew!` };
@@ -406,6 +513,7 @@ class GameState {
         crew.state = 'moving';
         crew.path = [];
 
+        this.saveGame();
         this.notify();
 
         return { success: true, message: `${crew.name} assigned to ${system.name}` };
@@ -427,6 +535,7 @@ class GameState {
 
         const crewName = system.assignedCrew.name;
         system.assignedCrew = null;
+        this.saveGame();
         this.notify();
 
         return { success: true, message: `${crewName} unassigned` };

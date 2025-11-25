@@ -152,6 +152,10 @@ class UIManager {
                     </div>
                 </div>
             ` : ''}
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <button id="btn-dock" style="width: 100%; padding: 10px; border-color: var(--success); color: var(--success); font-weight: bold;">DOCK AT STATION</button>
+            </div>
         `;
 
         // Add click listeners to crew panels in HUD
@@ -163,6 +167,13 @@ class UIManager {
                     this.showCrewDetail(crewId);
                 };
             });
+
+            const btnDock = document.getElementById('btn-dock');
+            if (btnDock) {
+                btnDock.onclick = () => {
+                    this.game.sceneManager.changeScene('PORT');
+                };
+            }
         }, 100);
     }
 
@@ -202,7 +213,33 @@ class UIManager {
             </div>
         `;
 
-        this.uiLayer.appendChild(container);
+        // Add Reset Save Button (Port Only)
+        const resetBtn = document.createElement('button');
+        resetBtn.innerText = "RESET SAVE DATA";
+        resetBtn.id = "btn-reset-save";
+        Object.assign(resetBtn.style, {
+            position: 'absolute', top: '20px', right: '20px',
+            padding: '8px 16px', background: 'rgba(200, 0, 0, 0.2)', color: '#ff4444',
+            border: '1px solid #ff4444', cursor: 'pointer', fontFamily: 'var(--font-tech)',
+            fontSize: '0.8rem', borderRadius: '4px', transition: 'all 0.2s'
+        });
+        resetBtn.addEventListener('mouseover', () => {
+            resetBtn.style.background = 'rgba(255, 0, 0, 0.8)';
+            resetBtn.style.color = '#fff';
+        });
+        resetBtn.addEventListener('mouseout', () => {
+            resetBtn.style.background = 'rgba(200, 0, 0, 0.2)';
+            resetBtn.style.color = '#ff4444';
+        });
+        resetBtn.addEventListener('click', () => {
+            if (confirm("WARNING: ALL PROGRESS WILL BE LOST.\n\nAre you sure you want to wipe your save data and restart?")) {
+                localStorage.removeItem('spaceSimSave');
+                location.reload();
+            }
+        });
+        container.appendChild(resetBtn);
+
+        this.root.appendChild(container); // Use this.root instead of this.uiLayer for consistency
 
         document.getElementById('btn-shipyard').onclick = () => this.renderShipyard();
         document.getElementById('btn-tavern').onclick = () => this.renderTavern();
