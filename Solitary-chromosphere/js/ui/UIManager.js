@@ -637,7 +637,7 @@ class UIManager {
         });
         resetBtn.addEventListener('click', () => {
             if (confirm("WARNING: ALL PROGRESS WILL BE LOST.\n\nAre you sure you want to wipe your save data and restart?")) {
-                localStorage.removeItem('spaceSimSave');
+                localStorage.clear();
                 location.reload();
             }
         });
