@@ -358,12 +358,15 @@ class UIManager {
             const period = basePeriod * Math.pow(orbitRadius / 100, 1.5); // ~Kepler's 3rd law
             const animationName = `orbit-${planet.id}`;
 
+            // Random starting position: use negative delay to start animation at different point
+            const randomStart = -Math.random() * period;
+
             return `
                         <!-- Orbit ring -->
                         <div class="planet-orbit" style="position: absolute; top: 50%; left: 50%; width: ${orbitRadius * 2}px; height: ${orbitRadius * 2}px; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none;"></div>
                         
                         <!-- Rotating orbit container -->
-                        <div style="position: absolute; top: 50%; left: 50%; width: ${orbitRadius * 2}px; height: ${orbitRadius * 2}px; transform: translate(-50%, -50%); animation: ${animationName} ${period}s linear infinite; pointer-events: none;">
+                        <div style="position: absolute; top: 50%; left: 50%; width: ${orbitRadius * 2}px; height: ${orbitRadius * 2}px; transform: translate(-50%, -50%); animation: ${animationName} ${period}s linear infinite; animation-delay: ${randomStart}s; pointer-events: none;">
                             <!-- Planet positioned at orbit edge -->
                             <div class="planet-node" 
                                  data-planet-id="${planet.id}"
