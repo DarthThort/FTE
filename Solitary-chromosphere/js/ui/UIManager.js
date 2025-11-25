@@ -214,6 +214,7 @@ class UIManager {
                     <h2>GALAXY MAP</h2>
                     <p>Current System: ${currentSystem.name}</p>
                     <p>Jump Range: ${state.ship.jumpRange} LY</p>
+                    <p style="font-size: 0.75rem; color: #aaa; margin-top: 5px;">💡 Drag to pan the map</p>
                 </div>
                 
                 <div id="galaxy-grid" style="position: absolute; top: 50%; left: 50%; width: 2000px; height: 2000px; transform: translate(-50%, -50%); pointer-events: auto;">
@@ -247,6 +248,39 @@ class UIManager {
         setTimeout(() => {
             const stars = document.querySelectorAll('.star-system');
             const infoPanel = document.getElementById('system-info-panel');
+            const mapContainer = document.querySelector('.modal-content');
+            const grid = document.getElementById('galaxy-grid');
+
+            // Panning Logic
+            let isDragging = false;
+            let startX, startY;
+            let currentX = 0;
+            let currentY = 0;
+
+            mapContainer.addEventListener('mousedown', (e) => {
+                // Only start drag if not clicking on a star
+                if (e.target.closest('.star-system')) return;
+                isDragging = true;
+                startX = e.clientX - currentX;
+                startY = e.clientY - currentY;
+                mapContainer.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                currentX = e.clientX - startX;
+                currentY = e.clientY - startY;
+                grid.style.transform = `translate(calc(-50% + ${currentX}px), calc(-50% + ${currentY}px))`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    mapContainer.style.cursor = 'default';
+                }
+            });
 
             stars.forEach(star => {
                 star.onclick = () => {
