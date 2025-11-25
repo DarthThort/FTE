@@ -350,19 +350,36 @@ class UIManager {
                     <!-- Planets -->
                     ${system.planets.map((planet, index) => {
             const orbitRadius = 60 + (index + 1) * 40;
-            const angle = (index * 45) * (Math.PI / 180);
-            const px = Math.cos(angle) * orbitRadius;
-            const py = Math.sin(angle) * orbitRadius;
             const isCurrent = state.currentPlanet && state.currentPlanet.id === planet.id;
 
+            // Calculate orbital period: closer planets move faster (Kepler's third law approximation)
+            // Base period scaled by orbital radius - larger radius = slower orbit
+            const basePeriod = 20; // seconds for innermost planet
+            const period = basePeriod * Math.pow(orbitRadius / 100, 1.5); // ~Kepler's 3rd law
+            const animationName = `orbit-${planet.id}`;
+
             return `
+                        <!-- Orbit ring -->
                         <div class="planet-orbit" style="position: absolute; top: 50%; left: 50%; width: ${orbitRadius * 2}px; height: ${orbitRadius * 2}px; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none;"></div>
-                        <div class="planet-node" 
-                             data-planet-id="${planet.id}"
-                             style="position: absolute; top: 50%; left: 50%; width: ${isCurrent ? 24 : 16}px; height: ${isCurrent ? 24 : 16}px; background: ${planet.color}; border-radius: 50%; transform: translate(calc(-50% + ${px}px), calc(-50% + ${py}px)); cursor: pointer; z-index: 6; border: ${isCurrent ? '2px solid #fff' : '1px solid rgba(0,0,0,0.5)'}; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
-                             ${planet.hasStation ? '<div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 10px;">🏠</div>' : ''}
-                             <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 0.7rem; white-space: nowrap; text-shadow: 0 0 2px #000;">${planet.name}</div>
+                        
+                        <!-- Rotating orbit container -->
+                        <div style="position: absolute; top: 50%; left: 50%; width: ${orbitRadius * 2}px; height: ${orbitRadius * 2}px; transform: translate(-50%, -50%); animation: ${animationName} ${period}s linear infinite; pointer-events: none;">
+                            <!-- Planet positioned at orbit edge -->
+                            <div class="planet-node" 
+                                 data-planet-id="${planet.id}"
+                                 style="position: absolute; top: 50%; left: 100%; width: ${isCurrent ? 24 : 16}px; height: ${isCurrent ? 24 : 16}px; background: ${planet.color}; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; z-index: 6; border: ${isCurrent ? '2px solid #fff' : '1px solid rgba(0,0,0,0.5)'}; box-shadow: 0 0 10px rgba(0,0,0,0.5); pointer-events: auto;">
+                                 ${planet.hasStation ? '<div style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); font-size: 10px;">🏠</div>' : ''}
+                                 <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 0.7rem; white-space: nowrap; text-shadow: 0 0 2px #000;">${planet.name}</div>
+                            </div>
                         </div>
+                        
+                        <!-- CSS animation for this orbit -->
+                        <style>
+                            @keyframes ${animationName} {
+                                from { transform: translate(-50%, -50%) rotate(0deg); }
+                                to { transform: translate(-50%, -50%) rotate(360deg); }
+                            }
+                        </style>
                     `;
         }).join('')}
                 </div>
