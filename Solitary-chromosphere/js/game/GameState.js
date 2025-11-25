@@ -67,6 +67,12 @@ class GameState {
             { id: 'electronics', name: 'Microchips', price: 150, stock: 10 }
         ];
 
+        // Star Systems (Sol + 10 nearest real systems)
+        this.galaxy = null;
+        this.currentSystem = null;
+        this.currentPlanet = null;
+        this.initializeGalaxy();
+
         this.generatePortContent();
         this.listeners = [];
         this.loadGame();
@@ -292,8 +298,9 @@ class GameState {
                 if (data.galaxy) {
                     this.galaxy = data.galaxy;
                     this.currentSystem = data.currentSystem || this.galaxy[0];
+                    this.currentPlanet = data.currentPlanet || (this.currentSystem.planets && this.currentSystem.planets[0]);
                 } else {
-                    this.generateGalaxy();
+                    this.initializeGalaxy();
                 }
 
                 if (data.ship.crew) {
@@ -310,10 +317,10 @@ class GameState {
                 console.log('Game Loaded');
             } catch (e) {
                 console.error('Failed to load save:', e);
-                this.generateGalaxy();
+                this.initializeGalaxy();
             }
         } else {
-            this.generateGalaxy();
+            this.initializeGalaxy();
         }
     }
 
@@ -333,13 +340,14 @@ class GameState {
             portCrew: this.port.crew,
             contracts: this.port.contracts,
             galaxy: this.galaxy,
-            currentSystem: this.currentSystem
+            currentSystem: this.currentSystem,
+            currentPlanet: this.currentPlanet
         };
         localStorage.setItem('spaceSimSave', JSON.stringify(data));
         console.log('Game Saved');
     }
 
-    generateGalaxy() {
+    initializeGalaxy() {
         // Real Star Systems Data (Sol + 9 closest)
         const REAL_STARS = [
             { id: 'sol', name: 'Sol', x: 0, y: 0, type: 'Yellow Star', color: '#ffdd44', realDist: 0 },
@@ -854,6 +862,77 @@ class GameState {
             current = current.parent;
         }
 
+
         return path;
+    }
+
+    // Travel System Methods
+    travelToSystem(systemId) {
+        const targetSystem = this.galaxy.find(s => s.id === systemId);
+        if (!targetSystem) {
+            return { success: false, message: 'System not found' };
+        }
+
+        // Calculate distance
+        const dx = targetSystem.x - this.currentSystem.x;
+        const dy = targetSystem.y - this.currentSystem.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Check jump range
+        if (distance > this.ship.jumpRange) {
+            return {
+                success: false,
+                message: `Target system is ${distance.toFixed(1)} LY away. Your jump drive can only reach ${this.ship.jumpRange} LY.`
+            };
+        }
+
+        // Execute jump
+        this.currentSystem = targetSystem;
+        this.currentSystem.visited = true;
+
+        // Select first planet with station, or first planet
+        const stationPlanet = targetSystem.planets.find(p => p.hasStation);
+        this.currentPlanet = stationPlanet || targetSystem.planets[0];
+
+        this.saveGame();
+        this.notify();
+
+        return {
+            success: true,
+            message: `Jumped to ${targetSystem.name}. Now orbiting ${this.currentPlanet.name}.`
+        };
+    }
+
+    travelToPlanet(planetId) {
+        const targetPlanet = this.currentSystem.planets.find(p => p.id === planetId);
+        if (!targetPlanet) {
+            return { success: false, message: 'Planet not found in current system' };
+        }
+
+        // Check if same planet
+        if (this.currentPlanet && this.currentPlanet.id === planetId) {
+            return { success: false, message: 'Already at this planet' };
+        }
+
+        // Check fuel
+        const fuelCost = 5;
+        if (this.ship.fuel < fuelCost) {
+            return {
+                success: false,
+                message: `Insufficient fuel. Need ${fuelCost} units, have ${this.ship.fuel}.`
+            };
+        }
+
+        // Consume fuel
+        this.ship.fuel -= fuelCost;
+        this.currentPlanet = targetPlanet;
+
+        this.saveGame();
+        this.notify();
+
+        return {
+            success: true,
+            message: `Traveled to ${targetPlanet.name}. Fuel: ${this.ship.fuel}/${this.ship.maxFuel}`
+        };
     }
 }
