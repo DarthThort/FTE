@@ -719,33 +719,9 @@ class UIManager {
             </div>
         `;
 
-        // Add Reset Save Button (Port Only)
-        const resetBtn = document.createElement('button');
-        resetBtn.innerText = "RESET SAVE DATA";
-        resetBtn.id = "btn-reset-save";
-        Object.assign(resetBtn.style, {
-            position: 'absolute', top: '20px', right: '20px',
-            padding: '8px 16px', background: 'rgba(200, 0, 0, 0.2)', color: '#ff4444',
-            border: '1px solid #ff4444', cursor: 'pointer', fontFamily: 'var(--font-tech)',
-            fontSize: '0.8rem', borderRadius: '4px', transition: 'all 0.2s'
-        });
-        resetBtn.addEventListener('mouseover', () => {
-            resetBtn.style.background = 'rgba(255, 0, 0, 0.8)';
-            resetBtn.style.color = '#fff';
-        });
-        resetBtn.addEventListener('mouseout', () => {
-            resetBtn.style.background = 'rgba(200, 0, 0, 0.2)';
-            resetBtn.style.color = '#ff4444';
-        });
-        resetBtn.addEventListener('click', () => {
-            if (confirm("WARNING: ALL PROGRESS WILL BE LOST.\n\nAre you sure you want to wipe your save data and restart?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        });
-        container.appendChild(resetBtn);
 
         this.root.appendChild(container); // Use this.root instead of this.uiLayer for consistency
+
 
         document.getElementById('btn-shipyard').onclick = () => this.renderShipyard();
         document.getElementById('btn-tavern').onclick = () => this.renderTavern();
