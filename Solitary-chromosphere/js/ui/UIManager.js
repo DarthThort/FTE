@@ -622,9 +622,10 @@ class UIManager {
 
         // Close handlers
         overlay.querySelector('.modal-close').onclick = closeModal;
-        overlay.onclick = (e) => {
-            if (e.target === overlay) closeModal();
-        };
+        // Disabled overlay click-to-close to allow panning in galaxy map
+        // overlay.onclick = (e) => {
+        //     if (e.target === overlay) closeModal();
+        // };
     }
 
     // --- SYSTEM CONSOLES ---
