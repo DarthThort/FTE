@@ -625,69 +625,136 @@ class UIManager {
                 if (callback) callback();
             }, 3000);
 
-        } else if (type === 'SUBLIGHT') {
-            // Sublight effect with asteroids
-            overlay.innerHTML = `
-                <canvas id="sublight-canvas" width="1920" height="1080" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
-                <div style="position: relative; z-index: 10; color: var(--warning); font-family: var(--font-tech); font-size: 2rem; letter-spacing: 5px; text-shadow: 0 0 20px var(--warning);">
-                    TRAVELLING...
-                </div>
-            `;
-
-            document.body.appendChild(overlay);
-
-            // Create asteroid field effect
-            const canvas = document.getElementById('sublight-canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            // Create asteroids
-            const asteroids = [];
-            for (let i = 0; i < 50; i++) {
-                asteroids.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 4 + 2,
-                    speedX: Math.random() * 4 - 2,
-                    speedY: Math.random() * 4 + 2
-                });
+} else if (type === 'SUBLIGHT') {
+    // Sublight effect with ship visible and planets/moons passing by
+    overlay.innerHTML = `
+        <canvas id="sublight-canvas" width="1920" height="1080" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+        <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); z-index: 10; color: var(--warning); font-family: var(--font-tech); font-size: 1.2rem; letter-spacing: 3px; text-shadow: 0 0 10px var(--warning); opacity: 0.7;">
+            TRAVELLING...
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Create planetary travel scene
+    const canvas = document.getElementById('sublight-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Create planets and moons
+    const celestialBodies = [];
+    const colors = ['#ff8844', '#4488ff', '#88ff44', '#ff4488', '#ffaa44', '#aaaaaa', '#8844ff'];
+    for (let i = 0; i < 8; i++) {
+        celestialBodies.push({
+            x: Math.random() * canvas.width * 2 - canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 60 + 20,
+            speedX: Math.random() * 3 + 2,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            isMoon: Math.random() > 0.6
+        });
+    }
+    
+    // Add background stars
+    const stars = [];
+    for (let i = 0; i < 100; i++) {
+        stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2 + 0.5,
+            speedX: Math.random() * 1 + 0.5
+        });
+    }
+    
+    // Animation loop
+    let animationId;
+    const animate = () => {
+        // Clear with space background
+        ctx.fillStyle = 'rgba(0, 0, 10, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw moving stars
+        stars.forEach(star => {
+            star.x += star.speedX;
+            if (star.x > canvas.width) {
+                star.x = -10;
+                star.y = Math.random() * canvas.height;
             }
-
-            // Animation loop
-            let animationId;
-            const animate = () => {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(star.x, star.y, star.size, star.size);
+        });
+        
+        // Draw planets/moons
+        celestialBodies.forEach(body => {
+            body.x += body.speedX;
+            if (body.x > canvas.width + 100) {
+                body.x = -100;
+                body.y = Math.random() * canvas.height;
+            }
+            
+            // Planet with glow
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = body.color;
+            ctx.fillStyle = body.color;
+            ctx.beginPath();
+            ctx.arc(body.x, body.y, body.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            // Craters for moons
+            if (body.isMoon) {
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                asteroids.forEach(ast => {
-                    ast.x += ast.speedX;
-                    ast.y += ast.speedY;
-
-                    if (ast.y > canvas.height) {
-                        ast.y = 0;
-                        ast.x = Math.random() * canvas.width;
-                    }
-                    if (ast.x < 0 || ast.x > canvas.width) {
-                        ast.x = Math.random() * canvas.width;
-                        ast.y = 0;
-                    }
-
-                    ctx.fillStyle = '#aaa';
+                for (let i = 0; i < 3; i++) {
+                    const craterX = body.x + (Math.random() - 0.5) * body.size;
+                    const craterY = body.y + (Math.random() - 0.5) * body.size;
+                    const craterSize = Math.random() * body.size * 0.2 + 2;
                     ctx.beginPath();
-                    ctx.arc(ast.x, ast.y, ast.size, 0, Math.PI * 2);
+                    ctx.arc(craterX, craterY, craterSize, 0, Math.PI * 2);
                     ctx.fill();
-                });
-
-                animationId = requestAnimationFrame(animate);
-            };
-            animate();
-
-            setTimeout(() => {
-                cancelAnimationFrame(animationId);
-                overlay.remove();
-                if (callback) callback();
-            }, 3000);
+                }
+            }
+        });
+        
+        // Draw player ship in center
+        const shipX = canvas.width / 2;
+        const shipY = canvas.height / 2;
+        const shipSize = 40;
+        
+        ctx.save();
+        ctx.translate(shipX, shipY);
+        
+        // Ship body (triangle)
+        ctx.fillStyle = '#00f0ff';
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#00f0ff';
+        ctx.beginPath();
+        ctx.moveTo(shipSize, 0);
+        ctx.lineTo(-shipSize / 2, -shipSize / 2);
+        ctx.lineTo(-shipSize / 2, shipSize / 2);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Engine glow
+        ctx.fillStyle = '#ff8800';
+        ctx.shadowColor = '#ff8800';
+        ctx.beginPath();
+        ctx.arc(-shipSize / 2, 0, shipSize / 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        
+        animationId = requestAnimationFrame(animate);
+    };
+    animate();
+    
+    setTimeout(() => {
+        cancelAnimationFrame(animationId);
+        overlay.remove();
+        if (callback) callback();
+    }, 5000);
+ 
         } else {
             // Fallback
             overlay.innerHTML = `<div style="color: #fff; font-family: var(--font-tech); font-size: 2rem;">TRAVELLING...</div>`;
