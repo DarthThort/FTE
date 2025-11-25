@@ -155,7 +155,11 @@ class UIManager {
             
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
                 <button id="btn-nav" style="flex: 1; padding: 10px; border-color: var(--primary); color: var(--primary); font-weight: bold;">NAVIGATION</button>
-                <button id="btn-dock" style="flex: 1; padding: 10px; border-color: var(--success); color: var(--success); font-weight: bold;">DOCK</button>
+                <button id="btn-dock" 
+                    ${state.currentPlanet && state.currentPlanet.hasStation ? '' : 'disabled style="opacity: 0.5; cursor: not-allowed;"'}
+                    style="flex: 1; padding: 10px; border-color: var(--success); color: var(--success); font-weight: bold;">
+                    ${state.currentPlanet && state.currentPlanet.hasStation ? 'DOCK' : 'NO STATION'}
+                </button>
             </div>
         `;
 
@@ -375,6 +379,39 @@ class UIManager {
         setTimeout(() => {
             const planets = document.querySelectorAll('.planet-node');
             const infoPanel = document.getElementById('planet-info-panel');
+            const mapContainer = document.querySelector('.modal-content');
+            const systemView = mapContainer.querySelector('div'); // The first div is the system view container
+
+            // Panning Logic for System Map
+            let isDragging = false;
+            let startX, startY;
+            let currentX = 0;
+            let currentY = 0;
+
+            mapContainer.addEventListener('mousedown', (e) => {
+                // Only start drag if not clicking on a planet
+                if (e.target.closest('.planet-node')) return;
+                isDragging = true;
+                startX = e.clientX - currentX;
+                startY = e.clientY - currentY;
+                mapContainer.style.cursor = 'grabbing';
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                currentX = e.clientX - startX;
+                currentY = e.clientY - startY;
+                systemView.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    mapContainer.style.cursor = 'default';
+                }
+            });
 
             planets.forEach(p => {
                 p.onclick = () => {

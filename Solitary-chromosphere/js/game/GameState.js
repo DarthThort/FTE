@@ -385,18 +385,32 @@ class GameState {
         // Populate other systems procedurally
         systems.forEach(system => {
             if (system.id !== 'sol') {
-                const numPlanets = Math.floor(Math.random() * 4) + 2; // 2-5 planets
+                const numPlanets = Math.floor(Math.random() * 3) + 3; // 3-5 planets
+                const planets = [];
+
                 for (let i = 0; i < numPlanets; i++) {
-                    const hasStation = Math.random() > 0.6; // 40% chance of station
-                    system.planets.push({
+                    planets.push({
                         id: `${system.id}_p${i}`,
                         name: `${system.name} ${['I', 'II', 'III', 'IV', 'V'][i]}`,
                         type: ['Barren', 'Desert', 'Ice', 'Terran', 'Gas Giant'][Math.floor(Math.random() * 5)],
                         color: ['#aaaaaa', '#ff4400', '#88ffff', '#00aaff', '#ddaa88'][Math.floor(Math.random() * 5)],
                         distance: 40 + (i * 50),
-                        hasStation: hasStation
+                        hasStation: false // Will be set below
                     });
                 }
+
+                // Ensure at least 2-3 stations per system
+                const numStations = Math.floor(Math.random() * 2) + 2; // 2-3 stations
+                const stationIndices = [];
+                while (stationIndices.length < Math.min(numStations, planets.length)) {
+                    const idx = Math.floor(Math.random() * planets.length);
+                    if (!stationIndices.includes(idx)) {
+                        stationIndices.push(idx);
+                        planets[idx].hasStation = true;
+                    }
+                }
+
+                system.planets = planets;
             }
         });
 
