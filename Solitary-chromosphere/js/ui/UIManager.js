@@ -1,4 +1,4 @@
-class UIManager {
+﻿class UIManager {
     constructor(rootElement, gameEngine) {
         this.root = rootElement;
         this.game = gameEngine;
@@ -144,6 +144,15 @@ class UIManager {
         setTimeout(() => {
             this.powerUI.attachPowerEventListeners();
             this.powerUI.attachDoorEventListeners();
+
+        // Add weapon panel
+        const weaponPanelHTML = this.weaponUI.renderWeaponsPanel();
+        if (weaponPanelHTML) {
+            const tempDiv2 = document.createElement('div');
+            tempDiv2.innerHTML = weaponPanelHTML;
+            this.root.appendChild(tempDiv2.firstElementChild);
+            this.weaponUI.attachWeaponEventListeners();
+        }
         }, 100);
     }
 
