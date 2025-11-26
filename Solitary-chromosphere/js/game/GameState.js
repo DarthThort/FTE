@@ -102,6 +102,7 @@ class GameState {
         this.powerManager = new PowerManager(this);
         this.lifeSupportManager = new LifeSupportManager(this);
         this.weaponManager = new WeaponManager(this);
+        this.shieldManager = new ShieldManager(this);
 
         // Generate rooms and doors from layout
         this.ship.rooms = this.generateRooms();
