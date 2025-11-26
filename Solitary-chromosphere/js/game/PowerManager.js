@@ -5,7 +5,7 @@ class PowerManager {
 
     // Reactor Management
     getMaxPower() {
-        return 1 + this.state.ship.reactor.level;
+        return this.state.ship.reactor.maxPower;
     }
 
     getAvailablePower() {
