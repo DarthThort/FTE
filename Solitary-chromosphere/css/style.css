@@ -229,11 +229,14 @@ button:hover {
 .modal-window {
     background: rgba(10, 15, 30, 0.95);
     border: 1px solid var(--primary);
-    width: 600px;
+    width: 1200px;
     max-width: 90%;
+    max-height: 85vh;
     padding: 2rem;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 240, 255, 0.05);
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
 
 .modal-header {
@@ -243,6 +246,7 @@ button:hover {
     margin-bottom: 1.5rem;
     border-bottom: 1px solid rgba(0, 240, 255, 0.3);
     padding-bottom: 0.5rem;
+	flex-shrink: 0;
 }
 
 .modal-close {
@@ -265,6 +269,27 @@ button:hover {
 .modal-content {
     font-size: 1.1rem;
     line-height: 1.6;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+    flex: 1;
+    min-height: 0;
+}
+/* Custom scrollbar for modal content */
+.modal-content::-webkit-scrollbar {
+    width: 8px;
+}
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+.modal-content::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 4px;
+    opacity: 0.5;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary);
 }
 
 .action-btn {
