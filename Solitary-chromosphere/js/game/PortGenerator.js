@@ -239,8 +239,10 @@ class PortGenerator {
             const role = roles[Math.abs(randomSeed >> 4) % roles.length];
             const gender = speciesData.name === 'Robot' ? 'N/A' : genders[Math.abs(randomSeed >> 8) % 2];
 
-            const firstName = firstNames[Math.abs(randomSeed >> 12) % firstNames.length];
-            const lastName = lastNames[Math.abs(randomSeed >> 16) % lastNames.length];
+            const firstNameSeed = this.hashCode(`${seed}-fn-${i}`);
+            const lastNameSeed = this.hashCode(`${seed}-ln-${i}`);
+            const firstName = firstNames[Math.abs(firstNameSeed) % firstNames.length];
+            const lastName = lastNames[Math.abs(lastNameSeed) % lastNames.length];
             const name = `${firstName} ${lastName}`;
 
             const age = 20 + (Math.abs(randomSeed >> 20) % 40);

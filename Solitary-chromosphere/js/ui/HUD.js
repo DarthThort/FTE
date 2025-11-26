@@ -110,9 +110,9 @@ class HUD {
             const btnNav = document.getElementById('btn-nav');
             if (btnNav) {
                 btnNav.onclick = () => {
-                    // UIManager will handle this
-                    if (this.game.ui && this.game.ui.renderGalaxyMap) {
-                        this.game.ui.renderGalaxyMap();
+                    // Show system map first, then galaxy map
+                    if (this.game.ui && this.game.ui.renderSystemMap) {
+                        this.game.ui.renderSystemMap();
                     }
                 };
             }
