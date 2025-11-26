@@ -56,6 +56,11 @@ class CrewManager {
         this.state.saveGame();
         this.state.notify();
 
+        // Refresh weapon panel to update AUTO/MANUAL status
+        if (window.game && window.game.ui && window.game.ui.weaponUI) {
+            window.game.ui.weaponUI.refreshWeaponsPanel();
+        }
+
         return { success: true, message: `${crew.name} assigned to ${system.name}` };
     }
 
@@ -78,6 +83,11 @@ class CrewManager {
         this.state.saveGame();
         this.state.notify();
 
+        // Refresh weapon panel to update AUTO/MANUAL status
+        if (window.game && window.game.ui && window.game.ui.weaponUI) {
+            window.game.ui.weaponUI.refreshWeaponsPanel();
+        }
+
         return { success: true, message: `${crewName} unassigned` };
     }
 
@@ -93,6 +103,19 @@ class CrewManager {
 
     updateCrewAI() {
         for (const crew of this.state.ship.crew) {
+            // Check if crew is assigned to a system
+            const assignedSystem = this.state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
+
+            // Don't wander if assigned to a system - stay at post
+            if (assignedSystem && crew.state !== 'moving') {
+                crew.x = assignedSystem.x * 32 + 16;
+                crew.y = assignedSystem.y * 32 + 16;
+                crew.targetX = null;
+                crew.targetY = null;
+                crew.state = 'working';
+                continue; // Skip normal AI for assigned crew
+            }
+
             if (crew.state === 'idle' && (!crew.targetX || !crew.targetY)) {
                 if (!crew.wanderTimer || crew.wanderTimer <= 0) {
                     const wanderSpot = this.getRandomWalkablePosition();
