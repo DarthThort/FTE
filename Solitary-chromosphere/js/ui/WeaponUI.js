@@ -300,7 +300,12 @@ class WeaponUI {
             const newContent = this.renderWeaponsPanel();
             const temp = document.createElement('div');
             temp.innerHTML = newContent;
-            panel.replaceWith(temp.firstElementChild);
+            const newPanel = temp.firstElementChild;
+
+            // Replace the panel
+            panel.replaceWith(newPanel);
+
+            // IMPORTANT: Re-attach event listeners to the NEW panel
             this.attachWeaponEventListeners();
         }
     }
