@@ -34,35 +34,6 @@ class PowerManager {
             this.updateShieldLayers();
         }
 
-        this.state.saveGame();
-        this.state.notify();
-        return true;
-    }
-
-    addPower(systemId) {
-        console.log('addPower called for system:', systemId);
-        const system = this.getSystem(systemId);
-        console.log('System found:', system);
-        if (!system) {
-            console.log('System not found, returning false');
-            return false;
-        }
-
-        const availPower = this.getAvailablePower();
-        console.log('Available power:', availPower);
-        console.log('System current/max power:', system.currentPower, '/', system.maxPower);
-
-        if (system.currentPower < system.maxPower && availPower > 0) {
-            console.log('Adding power...');
-            return this.setPowerLevel(systemId, system.currentPower + 1);
-        }
-        console.log('Cannot add power - current:', system.currentPower, 'max:', system.maxPower, 'avail:', availPower);
-        return false;
-    }
-
-    removePower(systemId) {
-        const system = this.getSystem(systemId);
-        if (!system) return false;
 
         if (system.currentPower > 0) {
             return this.setPowerLevel(systemId, system.currentPower - 1);
@@ -167,13 +138,7 @@ class PowerManager {
 
     // Helpers
     getSystem(systemId) {
-        console.log('getSystem called with:', systemId);
-        console.log('this.state:', this.state);
-        console.log('this.state.ship:', this.state?.ship);
-        console.log('this.state.ship.systems:', this.state?.ship?.systems);
-        const result = this.state.ship.systems.find(s => s.id === systemId);
-        console.log('getSystem result:', result);
-        return result;
+        return this.state.ship.systems.find(s => s.id === systemId);
     }
 
     recalculateUsedPower() {

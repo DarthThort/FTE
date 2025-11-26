@@ -338,9 +338,7 @@ class PowerUI {
         document.querySelectorAll('.power-btn-plus').forEach(btn => {
             btn.onclick = () => {
                 const systemId = btn.dataset.systemId;
-                console.log('Power + clicked for system:', systemId);
                 const success = this.game.state.powerManager.addPower(systemId);
-                console.log('addPower result:', success);
                 if (success) {
                     this.refreshPowerPanel();
                 }
@@ -351,9 +349,7 @@ class PowerUI {
         document.querySelectorAll('.power-btn-minus').forEach(btn => {
             btn.onclick = () => {
                 const systemId = btn.dataset.systemId;
-                console.log('Power - clicked for system:', systemId);
                 const success = this.game.state.powerManager.removePower(systemId);
-                console.log('removePower result:', success);
                 if (success) {
                     this.refreshPowerPanel();
                 }
