@@ -34,11 +34,24 @@ class PowerManager {
             this.updateShieldLayers();
         }
 
+        return true;
+    }
 
-        if (system.currentPower > 0) {
-            return this.setPowerLevel(systemId, system.currentPower - 1);
-        }
-        return false;
+    // Power shortcuts for UI
+    addPower(systemId) {
+        const system = this.getSystem(systemId);
+        if (!system) return false;
+
+        const newLevel = Math.min(system.maxPower, system.currentPower + 1);
+        return this.setPowerLevel(systemId, newLevel);
+    }
+
+    removePower(systemId) {
+        const system = this.getSystem(systemId);
+        if (!system) return false;
+
+        const newLevel = Math.max(0, system.currentPower - 1);
+        return this.setPowerLevel(systemId, newLevel);
     }
 
     // System Effectiveness
