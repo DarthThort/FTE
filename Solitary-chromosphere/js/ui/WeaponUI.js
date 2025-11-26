@@ -60,7 +60,7 @@ class WeaponUI {
         const crewStatus = weapon.autofire ? '👤 AUTO' : '👤 MANUAL';
 
         return `
-            <div style="
+            <div class="weapon-slot" style="
                 margin-bottom: 15px;
                 padding: 10px;
                 background: rgba(0,0,0,0.3);
@@ -87,9 +87,9 @@ class WeaponUI {
 
                 <!-- Progress Bar -->
                 <div style="margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: ${stateColor}; margin-bottom: 4px;">
-                        <span>${stateText}</span>
-                        <span>${Math.round(progressPercent)}%</span>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 4px;">
+                        <span class="weapon-state-text" style="color: ${stateColor};">${stateText}</span>
+                        <span class="weapon-progress-text" style="color: ${stateColor};">${Math.round(progressPercent)}%</span>
                     </div>
                     <div style="
                         width: 100%;
@@ -99,12 +99,12 @@ class WeaponUI {
                         overflow: hidden;
                         border: 1px solid rgba(255,255,255,0.2);
                     ">
-                        <div style="
+                        <div class="weapon-progress-bar" style="
                             width: ${progressPercent}%;
                             height: 100%;
                             background: ${stateColor};
                             box-shadow: 0 0 8px ${stateColor};
-                            transition: width 0.1s linear;
+                            transition: width 0.05s linear;
                         "></div>
                     </div>
                 </div>
@@ -249,15 +249,15 @@ class WeaponUI {
         const chargeBtns = document.querySelectorAll('.weapon-charge-btn');
 
         chargeBtns.forEach(btn => {
-                btn.onclick = () => {
+            btn.onclick = () => {
                 const weaponId = btn.dataset.weaponId;
                 const result = this.game.state.weaponManager.chargeWeapon(weaponId);
                 if (result) {
                     this.refreshWeaponsPanel();
                 } else {
-                        const weapon = this.game.state.weaponManager.getWeapon(weaponId);
-                        const weaponsSystem = this.game.state.ship.systems.find(s => s.type === 'weapon');
-                        }
+                    const weapon = this.game.state.weaponManager.getWeapon(weaponId);
+                    const weaponsSystem = this.game.state.ship.systems.find(s => s.type === 'weapon');
+                }
             };
         });
 
