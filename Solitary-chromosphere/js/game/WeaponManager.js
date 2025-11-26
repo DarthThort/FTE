@@ -36,6 +36,9 @@ class WeaponManager {
                     weapon.currentCharge = weapon.chargeTime;
                     weapon.state = 'ready';
 
+                    // Refresh UI when state changes
+                    this.refreshUI();
+
                     // Auto-fire if crew is manning weapons system
                     if (this.hasCrewAtWeapons()) {
                         this.fireWeapon(weapon.id);
@@ -49,6 +52,9 @@ class WeaponManager {
                 if (weapon.currentCharge <= 0) {
                     weapon.currentCharge = 0;
                     weapon.state = 'idle';
+
+                    // Refresh UI when state changes
+                    this.refreshUI();
                 }
                 break;
 
@@ -59,6 +65,13 @@ class WeaponManager {
             case 'idle':
                 // Waiting to be charged
                 break;
+        }
+    }
+
+    refreshUI() {
+        // Refresh the weapon UI if available
+        if (window.game && window.game.ui && window.game.ui.weaponUI) {
+            window.game.ui.weaponUI.refreshWeaponsPanel();
         }
     }
 
