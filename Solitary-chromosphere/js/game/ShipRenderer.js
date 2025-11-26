@@ -7,6 +7,9 @@ class ShipRenderer {
 
         // Layout is now pulled from GameState
 
+        // Reference to PowerUI for rendering overlays
+        this.powerUI = null;
+
         // Fog of War State
         this.explored = []; // 2D array matching layout
         this.visible = [];  // 2D array matching layout
@@ -98,6 +101,12 @@ class ShipRenderer {
         ctx.translate(this.offsetX, this.offsetY);
 
         this.drawGrid(ctx, layout, ship.systems);
+
+        // Draw room overlays (O2, fire, breaches)
+        if (this.powerUI) {
+            this.powerUI.renderRoomOverlays(ctx, layout, 0, 0, this.tileSize);
+        }
+
         this.drawCrew(ctx, ship);
         this.drawFog(ctx, layout);
 

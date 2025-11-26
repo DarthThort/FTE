@@ -21,6 +21,12 @@ class SceneManager {
         if (this.currentScene === 'SHIP') {
             this.player.update(dt);
             this.game.state.updateCrewAI();
+
+            // Update life support systems (O2, fire, etc.)
+            if (this.game.state.lifeSupportManager) {
+                this.game.state.lifeSupportManager.tick();
+            }
+
             this.shipRenderer.computeVisibility(this.player);
             this.handleCrewInteraction();
         }

@@ -3,12 +3,19 @@ class UIManager {
         this.root = rootElement;
         this.game = gameEngine;
         this.uiLayer = rootElement; // Alias for clarity
-		this.hud = new HUD(gameEngine, rootElement);
-		this.animationUI = new AnimationUI(gameEngine, rootElement);
-		// MapUI necesita 'this' para acceder a createModal
-		this.mapUI = new MapUI(gameEngine, rootElement, this);
-		this.portUI = new PortUI(gameEngine, rootElement, this);
-		this.shipSystemUI = new ShipSystemUI(gameEngine, rootElement, this);
+        this.hud = new HUD(gameEngine, rootElement);
+        this.animationUI = new AnimationUI(gameEngine, rootElement);
+        // MapUI necesita 'this' para acceder a createModal
+        this.mapUI = new MapUI(gameEngine, rootElement, this);
+        this.portUI = new PortUI(gameEngine, rootElement, this);
+        this.shipSystemUI = new ShipSystemUI(gameEngine, rootElement, this);
+        this.powerUI = new PowerUI(gameEngine, this);
+
+        // Link PowerUI to ShipRenderer for room overlays
+        if (gameEngine.sceneManager && gameEngine.sceneManager.shipRenderer) {
+            gameEngine.sceneManager.shipRenderer.powerUI = this.powerUI;
+        }
+
         this.init();
     }
 
@@ -100,15 +107,15 @@ class UIManager {
     }
 
     showNotification(message, type = 'info') {
-    this.hud.showNotification(message, type);
-}
-	
-   
-    
+        this.hud.showNotification(message, type);
+    }
+
+
+
 
     clearUI() {
-    this.hud.clearUI();
-}
+        this.hud.clearUI();
+    }
 
     setMode(mode) {
         this.clearUI();
@@ -120,35 +127,52 @@ class UIManager {
     }
 
     renderHUD() {
-    this.hud.renderHUD();
-}
+        this.hud.renderHUD();
+
+        // Add power management and door control panels
+        const powerPanelHTML = this.powerUI.renderPowerPanel();
+        const doorPanelHTML = this.powerUI.renderDoorPanel();
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = powerPanelHTML + doorPanelHTML;
+
+        while (tempDiv.firstChild) {
+            this.root.appendChild(tempDiv.firstChild);
+        }
+
+        // Attach event listeners
+        setTimeout(() => {
+            this.powerUI.attachPowerEventListeners();
+            this.powerUI.attachDoorEventListeners();
+        }, 100);
+    }
 
     updateHUD(element) {
-    this.hud.updateHUD(element);
-}
+        this.hud.updateHUD(element);
+    }
 
 
     showInteractionPrompt(text) {
-    this.hud.showInteractionPrompt(text);
-}
+        this.hud.showInteractionPrompt(text);
+    }
 
     hideInteractionPrompt() {
-    this.hud.hideInteractionPrompt();
-}
+        this.hud.hideInteractionPrompt();
+    }
 
     // --- NAVIGATION & MAPS ---
 
     renderGalaxyMap() {
-    this.mapUI.renderGalaxyMap();
-}
+        this.mapUI.renderGalaxyMap();
+    }
 
     renderSystemMap() {
-    this.mapUI.renderSystemMap();
-}
+        this.mapUI.renderSystemMap();
+    }
 
-	showTravelAnimation(type, callback) {
-    this.animationUI.showTravelAnimation(type, callback);
-}
+    showTravelAnimation(type, callback) {
+        this.animationUI.showTravelAnimation(type, callback);
+    }
 
     // --- PORT INTERFACE ---
 
@@ -221,20 +245,20 @@ class UIManager {
     renderCrewRoster() {
         this.portUI.renderCrewRoster();
 
-	}
-	
+    }
+
     showCrewDetail(crewId) {
         this.shipSystemUI.showCrewDetail(crewId);
     }
-	
-	renderMarket() {
-    this.portUI.renderMarket();
-}
-buyItem(commodityId, price) {
-    this.portUI.buyItem(commodityId, price);
-}
-sellItem(commodityId, price) {
-    this.portUI.sellItem(commodityId, price);
-}
-	
+
+    renderMarket() {
+        this.portUI.renderMarket();
+    }
+    buyItem(commodityId, price) {
+        this.portUI.buyItem(commodityId, price);
+    }
+    sellItem(commodityId, price) {
+        this.portUI.sellItem(commodityId, price);
+    }
+
 }
