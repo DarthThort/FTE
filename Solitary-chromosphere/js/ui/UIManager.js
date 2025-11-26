@@ -3,6 +3,7 @@ class UIManager {
         this.root = rootElement;
         this.game = gameEngine;
         this.uiLayer = rootElement; // Alias for clarity
+		this.hud = new HUD(gameEngine, rootElement);
         this.init();
     }
 
@@ -94,69 +95,15 @@ class UIManager {
     }
 
     showNotification(message, type = 'info') {
-        const container = document.getElementById('notification-container');
-        if (!container) return;
-
-        const notification = document.createElement('div');
-        const colors = {
-            success: 'var(--success)',
-            error: 'var(--danger)',
-            info: 'var(--primary)',
-            warning: 'var(--warning)'
-        };
-
-        notification.style.cssText = `
-            background: rgba(0,0,0,0.9);
-            border: 1px solid ${colors[type] || colors.info};
-            border-left: 4px solid ${colors[type] || colors.info};
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            color: #fff;
-            font-family: var(--font-body);
-            font-size: 0.85rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            animation: slideIn 0.3s ease-out;
-            pointer-events: auto;
-            cursor: pointer;
-        `;
-        notification.innerHTML = message;
-
-        // Add animation keyframes if not exists
-        if (!document.querySelector('#notification-style')) {
-            const style = document.createElement('style');
-            style.id = 'notification-style';
-            style.textContent = `
-                @keyframes slideIn {
-                    from { transform: translateX(400px); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes slideOut {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(400px); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        container.appendChild(notification);
-
-        // Auto-remove after 3 seconds
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease-in';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
-
-        // Click to dismiss
-        notification.onclick = () => {
-            notification.style.animation = 'slideOut 0.3s ease-in';
-            setTimeout(() => notification.remove(), 300);
-        };
-    }
+    this.hud.showNotification(message, type);
+}
+	
+   
+    
 
     clearUI() {
-        this.root.innerHTML = '';
-    }
+    this.hud.clearUI();
+}
 
     setMode(mode) {
         this.clearUI();
@@ -168,123 +115,21 @@ class UIManager {
     }
 
     renderHUD() {
-        this.clearUI();
-        const hud = document.createElement('div');
-        hud.id = 'hud';
-        hud.className = 'hud-panel';
-        hud.id = 'hud-status'; // Re-using ID for styling
-
-        this.updateHUD(hud);
-        this.root.appendChild(hud);
-
-        // Interaction Prompt Container
-        const prompt = document.createElement('div');
-        prompt.id = 'interaction-prompt';
-        this.root.appendChild(prompt);
-
-        // Subscribe to state changes
-        if (this.game.state.subscribe) {
-            this.game.state.subscribe(() => {
-                const hudEl = document.getElementById('hud-status');
-                if (hudEl) this.updateHUD(hudEl);
-            });
-        }
-    }
+    this.hud.renderHUD();
+}
 
     updateHUD(element) {
-        const state = this.game.state;
-        if (!state || !state.ship) return;
-        const crewPanelsHTML = state.ship.crew.map(c => {
-            const assignment = state.ship.systems.find(s => s.assignedCrew?.id === c.id);
-            let taskStatus = 'Idle';
-            if (assignment) taskStatus = `At ${assignment.name}`;
-            const primarySkill = state.getRolePrimarySkill(c.role);
-            const primaryLevel = c.skills[primarySkill]?.level || 1;
-            return `
-                <div class="crew-panel" data-crew-id="${c.id}" style="background: rgba(0,0,0,0.4); padding: 8px; margin-bottom: 8px; cursor: pointer; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;" onmouseover="this.style.borderColor='var(--secondary)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 5px;">
-                        <div style="flex: 1; font-size: 0.75rem; font-weight: bold; color: var(--secondary);">${c.name.split(' ')[0]}</div>
-                        <div style="font-size: 0.65rem; color: var(--primary);">Lvl ${primaryLevel}</div>
-                    </div>
-                    <div style="font-size: 0.65rem; color: #aaa; margin-bottom: 3px;">${c.role}</div>
-                    <div style="display: flex; gap: 5px; margin-bottom: 3px;">
-                        <div style="flex: 1; height: 4px; background: #333; border-radius: 2px;">
-                            <div style="width: ${c.health}%; height: 100%; background: var(--success); border-radius: 2px;"></div>
-                        </div>
-                        <div style="flex: 1; height: 4px; background: #333; border-radius: 2px;">
-                            <div style="width: ${c.morale}%; height: 100%; background: ${c.morale > 70 ? 'var(--success)' : c.morale > 40 ? 'var(--warning)' : 'var(--danger)'}; border-radius: 2px;"></div>
-                        </div>
-                    </div>
-                    <div style="font-size: 0.6rem; color: var(--text-dim);">${taskStatus}</div>
-                </div>
-            `;
-        }).join('');
-        element.innerHTML = `
-            <h3>${state.ship.name}</h3>
-            <div class="stat-row"><span>CREDITS</span> <span class="stat-value">${state.credits} CR</span></div>
-            <div class="stat-row"><span>HULL</span> <span class="stat-value">${state.ship.health}%</span></div>
-            <div class="stat-row"><span>FUEL</span> <span class="stat-value">${state.ship.fuel}/${state.ship.maxFuel}</span></div>
-            <div class="stat-row"><span>CREW</span> <span class="stat-value">${state.ship.crew.length}/${state.ship.maxCrew}</span></div>
-            ${state.ship.crew.length > 0 ? `
-                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <h4 style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 10px;">CREW STATUS</h4>
-                    <div style="max-height: 300px; overflow-y: auto;">
-                        ${crewPanelsHTML}
-                    </div>
-                </div>
-            ` : ''}
-            
-            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px;">
-                <button id="btn-nav" style="flex: 1; padding: 10px; border-color: var(--primary); color: var(--primary); font-weight: bold;">NAVIGATION</button>
-                <button id="btn-dock" 
-                    ${state.currentPlanet && state.currentPlanet.hasStation ? '' : 'disabled style="opacity: 0.5; cursor: not-allowed;"'}
-                    style="flex: 1; padding: 10px; border-color: var(--success); color: var(--success); font-weight: bold;">
-                    ${state.currentPlanet && state.currentPlanet.hasStation ? 'DOCK' : 'NO STATION'}
-                </button>
-            </div>
-        `;
-
-        // Add click listeners to crew panels in HUD
-        setTimeout(() => {
-            const crewPanels = element.querySelectorAll('.crew-panel[data-crew-id]');
-            crewPanels.forEach(panel => {
-                panel.onclick = () => {
-                    const crewId = parseInt(panel.dataset.crewId);
-                    this.showCrewDetail(crewId);
-                };
-            });
-
-            const btnNav = document.getElementById('btn-nav');
-            if (btnNav) {
-                btnNav.onclick = () => {
-                    this.renderGalaxyMap();
-                };
-            }
-
-            const btnDock = document.getElementById('btn-dock');
-            if (btnDock) {
-                btnDock.onclick = () => {
-                    this.game.sceneManager.changeScene('PORT');
-                };
-            }
-        }, 100);
-    }
+    this.hud.updateHUD(element);
+}
 
 
     showInteractionPrompt(text) {
-        const prompt = document.getElementById('interaction-prompt');
-        if (prompt) {
-            prompt.innerText = text;
-            prompt.classList.add('visible');
-        }
-    }
+    this.hud.showInteractionPrompt(text);
+}
 
     hideInteractionPrompt() {
-        const prompt = document.getElementById('interaction-prompt');
-        if (prompt) {
-            prompt.classList.remove('visible');
-        }
-    }
+    this.hud.hideInteractionPrompt();
+}
 
     // --- NAVIGATION & MAPS ---
 
