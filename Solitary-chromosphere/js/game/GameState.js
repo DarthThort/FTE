@@ -169,6 +169,21 @@ class GameState {
                     }));
                 }
 
+                // Move crew to their assigned systems after load
+                this.ship.systems.forEach(system => {
+                    if (system.assignedCrew) {
+                        const crew = this.ship.crew.find(c => c.id === system.assignedCrew.id);
+                        if (crew) {
+                            crew.x = system.x * 32 + 16;
+                            crew.y = system.y * 32 + 16;
+                            crew.targetX = system.x * 32 + 16;
+                            crew.targetY = system.y * 32 + 16;
+                            crew.state = 'moving';
+                            crew.path = [];
+                        }
+                    }
+                });
+
 
                 console.log('Game Loaded');
             } catch (e) {
