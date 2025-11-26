@@ -10,6 +10,7 @@
         this.portUI = new PortUI(gameEngine, rootElement, this);
         this.shipSystemUI = new ShipSystemUI(gameEngine, rootElement, this);
         this.powerUI = new PowerUI(gameEngine, this);
+        this.weaponUI = new WeaponUI(gameEngine, this);
 
         // Link PowerUI to ShipRenderer for room overlays
         if (gameEngine.sceneManager && gameEngine.sceneManager.shipRenderer) {
@@ -145,14 +146,14 @@
             this.powerUI.attachPowerEventListeners();
             this.powerUI.attachDoorEventListeners();
 
-        // Add weapon panel
-        const weaponPanelHTML = this.weaponUI.renderWeaponsPanel();
-        if (weaponPanelHTML) {
-            const tempDiv2 = document.createElement('div');
-            tempDiv2.innerHTML = weaponPanelHTML;
-            this.root.appendChild(tempDiv2.firstElementChild);
-            this.weaponUI.attachWeaponEventListeners();
-        }
+            // Add weapon panel
+            const weaponPanelHTML = this.weaponUI.renderWeaponsPanel();
+            if (weaponPanelHTML) {
+                const tempDiv2 = document.createElement('div');
+                tempDiv2.innerHTML = weaponPanelHTML;
+                this.root.appendChild(tempDiv2.firstElementChild);
+                this.weaponUI.attachWeaponEventListeners();
+            }
         }, 100);
     }
 
