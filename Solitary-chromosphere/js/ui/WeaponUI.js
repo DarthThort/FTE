@@ -248,8 +248,19 @@ class WeaponUI {
         document.querySelectorAll('.weapon-charge-btn').forEach(btn => {
             btn.onclick = () => {
                 const weaponId = btn.dataset.weaponId;
-                this.game.state.weaponManager.chargeWeapon(weaponId);
-                this.refreshWeaponsPanel();
+                console.log('Charge button clicked for weapon:', weaponId);
+                const result = this.game.state.weaponManager.chargeWeapon(weaponId);
+                console.log('chargeWeapon result:', result);
+                if (result) {
+                    this.refreshWeaponsPanel();
+                } else {
+                    console.log('Failed to charge weapon - checking why...');
+                    const weapon = this.game.state.weaponManager.getWeapon(weaponId);
+                    console.log('Weapon state:', weapon?.state);
+                    const weaponsSystem = this.game.state.ship.systems.find(s => s.type === 'weapon');
+                    console.log('Weapons system:', weaponsSystem);
+                    console.log('Has enough power?', weaponsSystem?.currentPower >= weapon?.powerRequired);
+                }
             };
         });
 
