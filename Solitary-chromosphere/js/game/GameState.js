@@ -70,6 +70,8 @@ class GameState {
 		
 		// Initialize managers
 		this.galaxyManager = new GalaxyManager(this);
+		this.cargoManager = new CargoManager(this);
+		this.travelManager = new TravelManager(this);
 
         // Star Systems (Sol + 10 nearest real systems)
         this.galaxy = null;
@@ -448,49 +450,12 @@ class GameState {
     }
 
     travelToSystem(systemId) {
-        const targetSystem = this.galaxy.find(s => s.id === systemId);
-        if (!targetSystem) return { success: false, message: "System not found." };
-
-        // Calculate distance
-        const dx = targetSystem.x - this.currentSystem.x;
-        const dy = targetSystem.y - this.currentSystem.y;
-        // Simplified distance for grid, but realDist is for flavor/lore
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        // Use realDist if available and jumping from Sol (or relative logic)
-        // For now, let's use the grid distance as the mechanic
-
-        if (distance > this.ship.jumpRange) {
-            return { success: false, message: `Target out of jump range (${distance.toFixed(1)} LY > ${this.ship.jumpRange} LY)` };
-        }
-
-        this.currentSystem = targetSystem;
-        this.currentPlanet = null; // Reset planet when jumping systems
-
-        // Mark as visited
-        targetSystem.visited = true;
-
-        this.saveGame();
-        this.notify();
-        return { success: true, message: `Jumping to ${targetSystem.name}...` };
-    }
+		return this.travelManager.travelToSystem(systemId);
+	}
 
     travelToPlanet(planetId) {
-        const targetPlanet = this.currentSystem.planets.find(p => p.id === planetId);
-        if (!targetPlanet) return { success: false, message: "Planet not found." };
-
-        const fuelCost = 5; // Fixed cost for now
-        if (this.ship.fuel < fuelCost) {
-            return { success: false, message: "Insufficient fuel for planetary travel." };
-        }
-
-        this.ship.fuel -= fuelCost;
-        this.currentPlanet = targetPlanet;
-
-        this.saveGame();
-        this.notify();
-        return { success: true, message: `Traveling to ${targetPlanet.name}...` };
-    }
+		return this.travelManager.travelToPlanet(planetId);
+	}
 
     getSystemColor(type) {
         getSystemColor(type) {
@@ -893,97 +858,17 @@ class GameState {
     }
 	
 	// Cargo Management Methods
-    getCargoUsed() {
-        let totalVolume = 0;
-        this.ship.cargo.items.forEach(item => {
-            const commodity = Economy.getCommodity(item.commodityId);
-            if (commodity) {
-                totalVolume += commodity.volume * item.quantity;
-            }
-        });
-        return totalVolume;
-    }
-    getCargoValue() {
-        let totalValue = 0;
-        this.ship.cargo.items.forEach(item => {
-            totalValue += item.boughtPrice * item.quantity;
-        });
-        return totalValue;
-    }
-    buyCommodity(commodityId, quantity, price, stationId) {
-        const commodity = Economy.getCommodity(commodityId);
-        if (!commodity) {
-            return { success: false, message: 'Commodity not found.' };
-        }
-        // Check cargo space
-        const volumeNeeded = commodity.volume * quantity;
-        const currentVolume = this.getCargoUsed();
-        if (currentVolume + volumeNeeded > this.ship.cargo.capacity) {
-            return { success: false, message: 'Insufficient cargo space.' };
-        }
-        // Check credits
-        const totalCost = price * quantity;
-        if (this.credits < totalCost) {
-            return { success: false, message: 'Insufficient credits.' };
-        }
-        // Execute purchase
-        this.credits -= totalCost;
-        // Add to cargo
-        const existingItem = this.ship.cargo.items.find(i => i.commodityId === commodityId && i.boughtPrice === price);
-        if (existingItem) {
-            existingItem.quantity += quantity;
-        } else {
-            this.ship.cargo.items.push({
-                commodityId,
-                quantity,
-                boughtPrice: price,
-                boughtAt: stationId
-            });
-        }
-        // Update station market
-        const planet = this.currentPlanet;
-        if (planet && planet.market) {
-            const marketItem = planet.market.commodities.find(m => m.id === commodityId);
-            if (marketItem) {
-                marketItem.stock -= quantity;
-            }
-        }
-        this.saveGame();
-        this.notify();
-        return { success: true, message: `Purchased ${quantity}x ${commodity.name} for ${totalCost} CR.` };
-    }
-    sellCommodity(commodityId, quantity, price) {
-        const commodity = Economy.getCommodity(commodityId);
-        if (!commodity) {
-            return { success: false, message: 'Commodity not found.' };
-        }
-        // Find cargo item
-        const cargoItem = this.ship.cargo.items.find(i => i.commodityId === commodityId);
-        if (!cargoItem || cargoItem.quantity < quantity) {
-            return { success: false, message: 'Insufficient quantity in cargo.' };
-        }
-        // Execute sale
-        const totalValue = price * quantity;
-        this.credits += totalValue;
-        // Remove from cargo
-        cargoItem.quantity -= quantity;
-        if (cargoItem.quantity === 0) {
-            const index = this.ship.cargo.items.indexOf(cargoItem);
-            this.ship.cargo.items.splice(index, 1);
-        }
-        // Update station market
-        const planet = this.currentPlanet;
-        if (planet && planet.market) {
-            const marketItem = planet.market.commodities.find(m => m.id === commodityId);
-            if (marketItem) {
-                marketItem.stock += quantity;
-            }
-        }
-        const profit = Economy.calculateProfit(cargoItem.boughtPrice, price, quantity);
-        const profitStr = profit >= 0 ? `+${profit}` : `${profit}`;
-        this.saveGame();
-        this.notify();
-        return { success: true, message: `Sold ${quantity}x ${commodity.name} for ${totalValue} CR (${profitStr} CR profit).` };
-    }
+		getCargoUsed() {
+			return this.cargoManager.getCargoUsed();
+	}
+		getCargoValue() {
+			return this.cargoManager.getCargoValue();
+	}
+		buyCommodity(commodityId, quantity, price, stationId) {
+			return this.cargoManager.buyCommodity(commodityId, quantity, price, stationId);
+	}
+		sellCommodity(commodityId, quantity, price) {
+			return this.cargoManager.sellCommodity(commodityId, quantity, price);
+	}
 	
 }
