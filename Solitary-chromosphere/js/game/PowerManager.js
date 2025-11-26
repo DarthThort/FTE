@@ -40,12 +40,23 @@ class PowerManager {
     }
 
     addPower(systemId) {
+        console.log('addPower called for system:', systemId);
         const system = this.getSystem(systemId);
-        if (!system) return false;
+        console.log('System found:', system);
+        if (!system) {
+            console.log('System not found, returning false');
+            return false;
+        }
 
-        if (system.currentPower < system.maxPower && this.getAvailablePower() > 0) {
+        const availPower = this.getAvailablePower();
+        console.log('Available power:', availPower);
+        console.log('System current/max power:', system.currentPower, '/', system.maxPower);
+
+        if (system.currentPower < system.maxPower && availPower > 0) {
+            console.log('Adding power...');
             return this.setPowerLevel(systemId, system.currentPower + 1);
         }
+        console.log('Cannot add power - current:', system.currentPower, 'max:', system.maxPower, 'avail:', availPower);
         return false;
     }
 
@@ -156,7 +167,13 @@ class PowerManager {
 
     // Helpers
     getSystem(systemId) {
-        return this.state.ship.systems.find(s => s.id === systemId);
+        console.log('getSystem called with:', systemId);
+        console.log('this.state:', this.state);
+        console.log('this.state.ship:', this.state?.ship);
+        console.log('this.state.ship.systems:', this.state?.ship?.systems);
+        const result = this.state.ship.systems.find(s => s.id === systemId);
+        console.log('getSystem result:', result);
+        return result;
     }
 
     recalculateUsedPower() {
