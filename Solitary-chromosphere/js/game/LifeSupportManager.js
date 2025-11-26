@@ -165,57 +165,38 @@ class LifeSupportManager {
     }
 
     // Door Control
-    toggleDoor(doorId) {
-        const door = this.getDoor(doorId);
-        if (!door || door.locked) return false;
-
-        door.open = !door.open;
-        this.state.saveGame();
-        this.state.notify();
-        return true;
-    }
-
-    openDoor(doorId) {
-        const door = this.getDoor(doorId);
-        if (!door || door.locked) return false;
-
-        door.open = true;
-        this.state.saveGame();
-        this.state.notify();
-        return true;
-    }
-
-    closeDoor(doorId) {
-        const door = this.getDoor(doorId);
-        if (!door || door.locked) return false;
-
-        door.open = false;
-        this.state.saveGame();
-        this.state.notify();
-        return true;
-    }
-
+    // Simple door controls that scan entire ship layout
     openAllDoors() {
-        if (!this.state.ship.doors) return;
+        if (!this.state.ship.layout) return;
 
-        this.state.ship.doors.forEach(door => {
-            if (!door.locked) {
-                door.open = true;
+        const layout = this.state.ship.layout;
+
+        // Find all closed doors (tile value 4) and open them (set to 5)
+        for (let y = 0; y < layout.length; y++) {
+            for (let x = 0; x < layout[y].length; x++) {
+                if (layout[y][x] === 4) {
+                    layout[y][x] = 5; // Open door
+                }
             }
-        });
+        }
 
         this.state.saveGame();
         this.state.notify();
     }
 
     closeAllDoors() {
-        if (!this.state.ship.doors) return;
+        if (!this.state.ship.layout) return;
 
-        this.state.ship.doors.forEach(door => {
-            if (!door.locked) {
-                door.open = false;
+        const layout = this.state.ship.layout;
+
+        // Find all open doors (tile value 5) and close them (set to 4)
+        for (let y = 0; y < layout.length; y++) {
+            for (let x = 0; x < layout[y].length; x++) {
+                if (layout[y][x] === 5) {
+                    layout[y][x] = 4; // Close door
+                }
             }
-        });
+        }
 
         this.state.saveGame();
         this.state.notify();
