@@ -77,8 +77,11 @@ class WeaponManager {
 
     // Check if any crew member is at weapons system
     hasCrewAtWeapons() {
-        // Check if any crew member is assigned to the weapons system
-        return this.state.ship.crew.some(crew => crew.assignedSystem === 'weapon');
+        const weaponsSystem = this.state.ship.systems.find(s => s.type === 'weapon');
+        if (!weaponsSystem) return false;
+
+        // Check if the weapons system has assigned crew
+        return weaponsSystem.assignedCrew !== null && weaponsSystem.assignedCrew !== undefined;
     }
 
     // Start charging a weapon
