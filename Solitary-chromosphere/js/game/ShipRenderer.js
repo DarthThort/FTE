@@ -4,15 +4,9 @@ class ShipRenderer {
         this.tileSize = 32;
         this.offsetX = 0;
         this.offsetY = 0;
-
-        // Layout is now pulled from GameState
-
-        // Reference to PowerUI for rendering overlays
         this.powerUI = null;
-
-        // Fog of War State
-        this.explored = []; // 2D array matching layout
-        this.visible = [];  // 2D array matching layout
+        this.explored = [];
+        this.visible = [];
     }
 
     initFog(layout) {
@@ -25,21 +19,14 @@ class ShipRenderer {
     computeVisibility(player) {
         const ship = this.game.state.ship;
         if (!ship || !ship.layout) return;
-
         this.initFog(ship.layout);
-
-        // Reset visibility for this frame
         this.visible = this.visible.map(row => row.map(() => false));
-
         const playerGridX = Math.floor((player.x + player.size / 2) / this.tileSize);
         const playerGridY = Math.floor((player.y + player.size / 2) / this.tileSize);
-        const viewRadius = 8; // Tiles
-
-        // Simple Raycasting to all tiles within radius
+        const viewRadius = 8;
         for (let y = 0; y < ship.layout.length; y++) {
             for (let x = 0; x < ship.layout[0].length; x++) {
                 const dist = Math.sqrt((x - playerGridX) ** 2 + (y - playerGridY) ** 2);
-
                 if (dist <= viewRadius) {
                     if (this.hasLineOfSight(playerGridX, playerGridY, x, y, ship.layout)) {
                         this.visible[y][x] = true;
@@ -51,23 +38,16 @@ class ShipRenderer {
     }
 
     hasLineOfSight(x0, y0, x1, y1, layout) {
-        // Bresenham's Line Algorithm / Raycast
         let dx = Math.abs(x1 - x0);
         let dy = Math.abs(y1 - y0);
         let sx = (x0 < x1) ? 1 : -1;
         let sy = (y0 < y1) ? 1 : -1;
         let err = dx - dy;
-
         let x = x0;
         let y = y0;
-
         while (true) {
-            if (x === x1 && y === y1) return true; // Reached target
-
-            // Check if current tile blocks sight (Wall = 1, Closed Door = 4)
-            // We allow seeing *into* a wall, but not *through* it.
+            if (x === x1 && y === y1) return true;
             if (layout[y][x] === 1 || layout[y][x] === 4) return false;
-
             let e2 = 2 * err;
             if (e2 > -dy) {
                 err -= dy;
@@ -87,30 +67,21 @@ class ShipRenderer {
             return;
         }
         const layout = ship.layout;
-
-        // Ensure fog arrays are initialized
         this.initFog(layout);
-
-        // Center the ship
         const mapWidth = layout[0].length * this.tileSize;
         const mapHeight = layout.length * this.tileSize;
         this.offsetX = (ctx.canvas.width - mapWidth) / 2;
         this.offsetY = (ctx.canvas.height - mapHeight) / 2;
-
         ctx.save();
         ctx.translate(this.offsetX, this.offsetY);
-
         this.drawGrid(ctx, layout, ship.systems);
-
-        // Draw room overlays (O2, fire, breaches)
         if (this.powerUI) {
             this.powerUI.renderRoomOverlays(ctx, layout, 0, 0, this.tileSize);
         }
-
         this.drawCrew(ctx, ship);
         this.drawFog(ctx, layout);
-
         ctx.restore();
+        this.renderShields(ctx);
     }
 
     drawGrid(ctx, layout, systems) {
@@ -119,63 +90,40 @@ class ShipRenderer {
                 const tile = layout[y][x];
                 const posX = x * this.tileSize;
                 const posY = y * this.tileSize;
-
-                if (tile === 0) continue; // Void
-
-                // --- PROCEDURAL RENDERING ---
-
-                // 1. Floor (Base for all non-void tiles)
-                // Dark metallic floor with subtle grid
-                ctx.fillStyle = '#0b1120'; // Very dark blue-grey
+                if (tile === 0) continue;
+                ctx.fillStyle = '#0b1120';
                 ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-
-                // Subtle grid lines
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(posX, posY, this.tileSize, this.tileSize);
-
                 if (tile === 1) {
-                    // WALL: 3D Block look with Neon Edge
-                    // Top face
-                    ctx.fillStyle = '#1e293b'; // Slate 800
+                    ctx.fillStyle = '#1e293b';
                     ctx.fillRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-
-                    // Neon Border effect
                     ctx.shadowColor = '#00f0ff';
                     ctx.shadowBlur = 10;
                     ctx.strokeStyle = '#00f0ff';
                     ctx.lineWidth = 1.5;
                     ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
-                    ctx.shadowBlur = 0; // Reset
-
+                    ctx.shadowBlur = 0;
                 } else if (tile === 3) {
-                    // SLOT: Tech Crosshair
                     ctx.strokeStyle = '#334155';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
-
-                    // Corner accents
                     ctx.fillStyle = '#64748b';
                     const s = 4;
                     ctx.fillRect(posX + 4, posY + 4, s, s);
                     ctx.fillRect(posX + this.tileSize - 4 - s, posY + 4, s, s);
                     ctx.fillRect(posX + 4, posY + this.tileSize - 4 - s, s, s);
                     ctx.fillRect(posX + this.tileSize - 4 - s, posY + this.tileSize - 4 - s, s, s);
-
                 } else if (tile === 4) {
-                    // DOOR (CLOSED): Hazard Stripes
                     ctx.fillStyle = '#1e293b';
                     ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-
-                    // Stripes
                     ctx.save();
                     ctx.beginPath();
                     ctx.rect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
                     ctx.clip();
-
-                    ctx.fillStyle = '#d97706'; // Amber 600
+                    ctx.fillStyle = '#d97706';
                     ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-
                     ctx.fillStyle = '#000';
                     ctx.lineWidth = 4;
                     for (let i = -this.tileSize; i < this.tileSize * 2; i += 8) {
@@ -187,36 +135,24 @@ class ShipRenderer {
                         ctx.fill();
                     }
                     ctx.restore();
-
-                    // Frame
                     ctx.strokeStyle = '#d97706';
                     ctx.lineWidth = 2;
                     ctx.strokeRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-
                 } else if (tile === 5) {
-                    // DOOR (OPEN): Recessed Frame
                     ctx.fillStyle = '#0f172a';
                     ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-
-                    // Side Panels
-                    ctx.fillStyle = '#059669'; // Emerald 600
+                    ctx.fillStyle = '#059669';
                     ctx.fillRect(posX, posY, 6, this.tileSize);
                     ctx.fillRect(posX + this.tileSize - 6, posY, 6, this.tileSize);
-
-                    // Light strip
-                    ctx.fillStyle = '#34d399'; // Emerald 400
+                    ctx.fillStyle = '#34d399';
                     ctx.fillRect(posX + 2, posY + this.tileSize / 2 - 2, 2, 4);
                     ctx.fillRect(posX + this.tileSize - 4, posY + this.tileSize / 2 - 2, 2, 4);
                 }
             }
         }
-
-        // Draw Systems (Holographic Look)
         for (const sys of systems) {
             const posX = sys.x * this.tileSize;
             const posY = sys.y * this.tileSize;
-
-            // Base Glow
             ctx.shadowColor = sys.color;
             ctx.shadowBlur = 15;
             ctx.fillStyle = sys.color;
@@ -224,13 +160,9 @@ class ShipRenderer {
             ctx.fillRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
             ctx.globalAlpha = 1.0;
             ctx.shadowBlur = 0;
-
-            // Tech Borders
             ctx.strokeStyle = sys.color;
             ctx.lineWidth = 2;
             ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
-
-            // Label
             ctx.fillStyle = '#fff';
             ctx.font = 'bold 10px "Courier New", monospace';
             ctx.textAlign = 'center';
@@ -240,44 +172,28 @@ class ShipRenderer {
 
     drawCrew(ctx, ship) {
         if (!ship.crew || ship.crew.length === 0) return;
-
-        // Draw each crew member at their current position
         for (const crewMember of ship.crew) {
             const posX = crewMember.x || 0;
             const posY = crewMember.y || 0;
-
-            // Draw crew member as a circle
             const radius = 8;
-
-            // Outer glow
             ctx.save();
             ctx.shadowColor = this.getCrewColor(crewMember.role);
             ctx.shadowBlur = 12;
-
-            // Crew circle
             ctx.fillStyle = this.getCrewColor(crewMember.role);
             ctx.beginPath();
             ctx.arc(posX, posY, radius, 0, Math.PI * 2);
             ctx.fill();
-
-            // Inner detail
             ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
             ctx.beginPath();
             ctx.arc(posX, posY, radius - 3, 0, Math.PI * 2);
             ctx.fill();
-
-            // Core
             ctx.fillStyle = this.getCrewColor(crewMember.role);
             ctx.beginPath();
             ctx.arc(posX, posY, radius - 5, 0, Math.PI * 2);
             ctx.fill();
-
             ctx.restore();
-
-            // Name label
             const gridX = Math.floor(posX / this.tileSize);
             const gridY = Math.floor(posY / this.tileSize);
-
             if (this.visible && this.visible[gridY] && this.visible[gridY][gridX]) {
                 ctx.fillStyle = '#fff';
                 ctx.font = '9px "Courier New", monospace';
@@ -289,12 +205,12 @@ class ShipRenderer {
 
     getCrewColor(role) {
         const colors = {
-            'Engineer': '#fbbf24', // Amber
-            'Pilot': '#60a5fa',    // Blue
-            'Gunner': '#ef4444',   // Red
-            'Medic': '#34d399'     // Green
+            'Engineer': '#fbbf24',
+            'Pilot': '#60a5fa',
+            'Gunner': '#ef4444',
+            'Medic': '#34d399'
         };
-        return colors[role] || '#9ca3af'; // Gray fallback
+        return colors[role] || '#9ca3af';
     }
 
     drawFog(ctx, layout) {
@@ -302,17 +218,32 @@ class ShipRenderer {
             for (let x = 0; x < layout[0].length; x++) {
                 const posX = x * this.tileSize;
                 const posY = y * this.tileSize;
-
                 if (!this.explored[y][x]) {
-                    // Unexplored: Pitch Black
                     ctx.fillStyle = '#000000';
                     ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
                 } else if (!this.visible[y][x]) {
-                    // Explored but not visible: Dimmed (Shroud)
                     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                     ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
                 }
             }
         }
+    }
+
+    renderShields(ctx) {
+        const shields = this.game.state.ship.shields;
+        if (!shields || shields.currentLayers <= 0) return;
+        const x = this.offsetX + 320;
+        const y = this.offsetY + 288;
+        const r = 200 + Math.sin(Date.now() / 500) * 5;
+        const a = 0.15 + (shields.currentLayers / Math.max(shields.maxLayers, 1)) * 0.2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0,255,85,${a + 0.3})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = `rgba(0,255,85,${a * 0.3})`;
+        ctx.fill();
+        ctx.restore();
     }
 }
