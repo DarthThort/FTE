@@ -31,6 +31,9 @@ class SceneManager {
             if (this.game.state.weaponManager) {
                 this.game.state.weaponManager.update(dt);
             }
+            if (this.game.state.shieldManager) {
+                this.game.state.shieldManager.update(dt);
+            }
 
             this.shipRenderer.computeVisibility(this.player);
             this.handleCrewInteraction();
