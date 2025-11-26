@@ -209,4 +209,131 @@ class PortGenerator {
             { id: 3, title: "Escort Duty", description: "Protect the mining convoy.", reward: 800, difficulty: 2 }
         ];
     }
+
+    // Procedural crew generation
+    generateProceduralCrew(count, systemId, planetId) {
+        const crew = [];
+        const seed = `${systemId}-${planetId}`;
+
+        // Name pools
+        const firstNames = ['Alex', 'Sam', 'Jordan', 'Morgan', 'Casey', 'Riley', 'Taylor', 'Avery',
+            'Jin', 'Kai', 'Yuki', 'Nova', 'Zara', 'Rax', 'Luna', 'Orion', 'Atlas',
+            'Echo', 'Vega', 'Lyra', 'Phoenix', 'Drake', 'Bolt', 'Cipher', 'Ghost'];
+        const lastNames = ['Chen', 'Smith', 'Patel', 'García', 'Kim', 'Silva', 'Müller', 'O\'Brien',
+            'Tanaka', 'Swift', 'Stone', 'Rivers', 'Steele', 'Void', 'Star', 'Storm',
+            'Hawk', 'Wolf', 'Frost', 'Blaze', 'Grimm', 'Vale', 'Knight'];
+
+        const species = [
+            { name: 'Human', healthMod: 0, moraleMod: 0 },
+            { name: 'Alien', healthMod: 20, moraleMod: -10 },
+            { name: 'Robot', healthMod: 50, moraleMod: 20 },
+            { name: 'Cyborg', healthMod: 10, moraleMod: -5 }
+        ];
+
+        const genders = ['Male', 'Female', 'N/A'];
+        const roles = ['Engineer', 'Pilot', 'Gunner', 'Medic'];
+
+        for (let i = 0; i < count; i++) {
+            const randomSeed = this.hashCode(seed + i);
+            const speciesData = species[Math.abs(randomSeed) % species.length];
+            const role = roles[Math.abs(randomSeed >> 4) % roles.length];
+            const gender = speciesData.name === 'Robot' ? 'N/A' : genders[Math.abs(randomSeed >> 8) % 2];
+
+            const firstName = firstNames[Math.abs(randomSeed >> 12) % firstNames.length];
+            const lastName = lastNames[Math.abs(randomSeed >> 16) % lastNames.length];
+            const name = `${firstName} ${lastName}`;
+
+            const age = 20 + (Math.abs(randomSeed >> 20) % 40);
+            const baseCost = 100 + (Math.abs(randomSeed >> 24) % 200);
+
+            const skills = this.generateSkills(role, randomSeed);
+            const primarySkill = this.getRolePrimarySkill(role);
+            const skillBonus = (skills[primarySkill].level - 3) * 30;
+            const cost = baseCost + skillBonus;
+
+            const baseHealth = 100;
+            const health = baseHealth + speciesData.healthMod;
+            const baseMorale = 70 + (Math.abs(randomSeed >> 28) % 30);
+            const morale = Math.max(50, Math.min(100, baseMorale + speciesData.moraleMod));
+
+            crew.push({
+                id: Date.now() + randomSeed + i,
+                name: name,
+                species: speciesData.name,
+                gender: gender,
+                age: age,
+                role: role,
+                health: health,
+                maxHealth: health,
+                morale: morale,
+                cost: cost,
+                skills: skills,
+                background: this.generateBackground(role, randomSeed)
+            });
+        }
+
+        return crew;
+    }
+
+    generateSkills(role, seed) {
+        const primary = this.getRolePrimarySkill(role);
+        const primaryLevel = 3 + (Math.abs(seed) % 7); // 3-9
+        const secondaryLevel = 1 + (Math.abs(seed >> 5) % 3); // 1-3
+        const tertiaryLevel = 1 + (Math.abs(seed >> 10) % 2); // 1-2
+
+        const skills = {
+            engineering: { level: secondaryLevel, xp: 0, xpToNext: 100 },
+            piloting: { level: secondaryLevel, xp: 0, xpToNext: 100 },
+            combat: { level: tertiaryLevel, xp: 0, xpToNext: 100 },
+            medical: { level: tertiaryLevel, xp: 0, xpToNext: 100 }
+        };
+
+        // Set primary skill
+        skills[primary].level = primaryLevel;
+
+        return skills;
+    }
+
+    getRolePrimarySkill(role) {
+        const skillMap = {
+            'Engineer': 'engineering',
+            'Pilot': 'piloting',
+            'Gunner': 'combat',
+            'Medic': 'medical'
+        };
+        return skillMap[role] || 'engineering';
+    }
+
+    generateBackground(role, seed) {
+        const templates = [
+            "Former military {role} seeking new adventures.",
+            "Self-taught {role} from a backwater colony.",
+            "Experienced {role} with a mysterious past.",
+            "Young hotshot {role} looking to make a name.",
+            "Veteran {role} from the outer rim.",
+            "Freelance {role} with a checkered history.",
+            "Skilled {role} escaping a dark past.",
+            "Ambitious {role} chasing fortune and glory.",
+            "Grizzled {role} with countless missions completed.",
+            "Reformed pirate turned {role}.",
+            "Academy-trained {role} seeking real-world experience.",
+            "Corporate deserter working as a {role}.",
+            "Wandering {role} in search of purpose.",
+            "Elite {role} fallen on hard times.",
+            "Compassionate {role} helping those in need."
+        ];
+
+        const template = templates[Math.abs(seed) % templates.length];
+        return template.replace('{role}', role.toLowerCase());
+    }
+
+    hashCode(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return hash;
+    }
 }
