@@ -10,9 +10,9 @@ class GameState {
             shield: 50,
             maxShield: 50,
             cargo: {
-    capacity: 50,
-    items: []
-},
+                capacity: 50,
+                items: []
+            },
             level: 1,
             jumpRange: 6, // Light Years
             layout: [
@@ -67,12 +67,13 @@ class GameState {
             { id: 'scrap', name: 'Scrap Metal', price: 25, stock: 50 },
             { id: 'electronics', name: 'Microchips', price: 150, stock: 10 }
         ];
-		
-		// Initialize managers
-		this.galaxyManager = new GalaxyManager(this);
-		this.cargoManager = new CargoManager(this);
-		this.travelManager = new TravelManager(this);
-		this.portGenerator = new PortGenerator(this);
+
+        // Initialize managers
+        this.galaxyManager = new GalaxyManager(this);
+        this.cargoManager = new CargoManager(this);
+        this.travelManager = new TravelManager(this);
+        this.portGenerator = new PortGenerator(this);
+        this.crewManager = new CrewManager(this);
 
         // Star Systems (Sol + 10 nearest real systems)
         this.galaxy = null;
@@ -80,14 +81,14 @@ class GameState {
         this.currentPlanet = null;
         this.initializeGalaxy();
 
-		this.portGenerator.generatePortContent();
+        this.portGenerator.generatePortContent();
         this.listeners = [];
         this.loadGame();
     }
 
     generatePortContent() {
-		return this.portGenerator.generatePortContent();
-	}
+        return this.portGenerator.generatePortContent();
+    }
 
     loadGame() {
         const savedData = localStorage.getItem('spaceSimSave');
@@ -96,16 +97,16 @@ class GameState {
                 const data = JSON.parse(savedData);
                 this.credits = data.credits;
                 this.ship = { ...this.ship, ...data.ship };
-				
-				// Migrate old saves: add cargo if missing
+
+                // Migrate old saves: add cargo if missing
                 if (!this.ship.cargo) {
                     this.ship.cargo = {
                         capacity: 50,
                         items: []
                     };
                     console.log('Migrated save: added cargo system');
-				}
-				
+                }
+
                 this.port.crew = data.portCrew || this.port.crew;
                 this.port.contracts = data.contracts || this.port.contracts;
 
@@ -128,8 +129,8 @@ class GameState {
                         doorWaitTimer: 0
                     }));
                 }
-				
-				
+
+
                 console.log('Game Loaded');
             } catch (e) {
                 console.error('Failed to load save:', e);
@@ -164,8 +165,8 @@ class GameState {
     }
 
     initializeGalaxy() {
-		return this.galaxyManager.initializeGalaxy();
-	}
+        return this.galaxyManager.initializeGalaxy();
+    }
 
     subscribe(callback) {
         this.listeners.push(callback);
@@ -248,105 +249,31 @@ class GameState {
     }
 
     travelToSystem(systemId) {
-		return this.travelManager.travelToSystem(systemId);
-	}
+        return this.travelManager.travelToSystem(systemId);
+    }
 
     travelToPlanet(planetId) {
-		return this.travelManager.travelToPlanet(planetId);
-	}
+        return this.travelManager.travelToPlanet(planetId);
+    }
 
     getSystemColor(type) {
-        getSystemColor(type) {
-		return this.galaxyManager.getSystemColor(type);
-		}
+        return this.galaxyManager.getSystemColor(type);
     }
 
     hireCrew(crewId) {
-        const crew = this.port.crew.find(c => c.id === crewId);
-        if (!crew) return { success: false, message: 'Crew member not found!' };
-
-        if (this.ship.crew.length >= this.ship.maxCrew) {
-            return { success: false, message: 'Crew quarters are full!' };
-        }
-
-        if (this.credits < crew.cost) {
-            return { success: false, message: 'Insufficient credits!' };
-        }
-
-        this.credits -= crew.cost;
-        this.ship.crew.push({
-            ...crew,
-            x: 250,
-            y: 160,
-            targetX: null,
-            targetY: null,
-            path: [],
-            speed: 1.5,
-            state: 'idle',
-            wanderTimer: 0,
-            doorWaitTimer: 0
-        });
-        this.port.crew = this.port.crew.filter(c => c.id !== crewId);
-        this.saveGame();
-        this.notify();
-
-        return { success: true, message: `${crew.name} has joined your crew!` };
+        return this.crewManager.hireCrew(crewId);
     }
 
     assignCrewToSystem(crewId, systemId) {
-        const crew = this.ship.crew.find(c => c.id === crewId);
-        const system = this.ship.systems.find(s => s.id === systemId);
-
-        if (!crew || !system) {
-            return { success: false, message: 'Invalid crew or system!' };
-        }
-
-        if (system.assignedCrew) {
-            return { success: false, message: 'System already has assigned crew!' };
-        }
-
-        system.assignedCrew = crew;
-        crew.targetX = system.x * 32 + 16;
-        crew.targetY = system.y * 32 + 16;
-        crew.state = 'moving';
-        crew.path = [];
-
-        this.saveGame();
-        this.notify();
-
-        return { success: true, message: `${crew.name} assigned to ${system.name}` };
+        return this.crewManager.assignCrewToSystem(crewId, systemId);
     }
 
     unassignCrewFromSystem(systemId) {
-        const system = this.ship.systems.find(s => s.id === systemId);
-
-        if (!system || !system.assignedCrew) {
-            return { success: false, message: 'No crew assigned to this system!' };
-        }
-
-        const crew = system.assignedCrew;
-        crew.targetX = null;
-        crew.targetY = null;
-        crew.state = 'idle';
-        crew.path = [];
-        crew.wanderTimer = 0;
-
-        const crewName = system.assignedCrew.name;
-        system.assignedCrew = null;
-        this.saveGame();
-        this.notify();
-
-        return { success: true, message: `${crewName} unassigned` };
+        return this.crewManager.unassignCrewFromSystem(systemId);
     }
 
     getRolePrimarySkill(role) {
-        const skillMap = {
-            'Engineer': 'engineering',
-            'Pilot': 'piloting',
-            'Gunner': 'combat',
-            'Medic': 'medical'
-        };
-        return skillMap[role] || 'engineering';
+        return this.crewManager.getRolePrimarySkill(role);
     }
 
     updateCrewAI() {
@@ -654,19 +581,19 @@ class GameState {
             message: `Traveled to ${targetPlanet.name}. Fuel: ${this.ship.fuel}/${this.ship.maxFuel}`
         };
     }
-	
-	// Cargo Management Methods
-		getCargoUsed() {
-			return this.cargoManager.getCargoUsed();
-	}
-		getCargoValue() {
-			return this.cargoManager.getCargoValue();
-	}
-		buyCommodity(commodityId, quantity, price, stationId) {
-			return this.cargoManager.buyCommodity(commodityId, quantity, price, stationId);
-	}
-		sellCommodity(commodityId, quantity, price) {
-			return this.cargoManager.sellCommodity(commodityId, quantity, price);
-	}
-	
+
+    // Cargo Management Methods
+    getCargoUsed() {
+        return this.cargoManager.getCargoUsed();
+    }
+    getCargoValue() {
+        return this.cargoManager.getCargoValue();
+    }
+    buyCommodity(commodityId, quantity, price, stationId) {
+        return this.cargoManager.buyCommodity(commodityId, quantity, price, stationId);
+    }
+    sellCommodity(commodityId, quantity, price) {
+        return this.cargoManager.sellCommodity(commodityId, quantity, price);
+    }
+
 }
