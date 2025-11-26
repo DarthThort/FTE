@@ -244,29 +244,20 @@ class WeaponUI {
 
     // Attach event listeners
     attachWeaponEventListeners() {
-        console.log('[WeaponUI] attachWeaponEventListeners called');
 
         // Charge buttons
         const chargeBtns = document.querySelectorAll('.weapon-charge-btn');
-        console.log('[WeaponUI] Found', chargeBtns.length, 'charge buttons');
 
         chargeBtns.forEach(btn => {
-            console.log('[WeaponUI] Attaching onclick to charge button for weapon:', btn.dataset.weaponId);
-            btn.onclick = () => {
+                btn.onclick = () => {
                 const weaponId = btn.dataset.weaponId;
-                console.log('Charge button clicked for weapon:', weaponId);
                 const result = this.game.state.weaponManager.chargeWeapon(weaponId);
-                console.log('chargeWeapon result:', result);
                 if (result) {
                     this.refreshWeaponsPanel();
                 } else {
-                    console.log('Failed to charge weapon - checking why...');
-                    const weapon = this.game.state.weaponManager.getWeapon(weaponId);
-                    console.log('Weapon state:', weapon?.state);
-                    const weaponsSystem = this.game.state.ship.systems.find(s => s.type === 'weapon');
-                    console.log('Weapons system:', weaponsSystem);
-                    console.log('Has enough power?', weaponsSystem?.currentPower >= weapon?.powerRequired);
-                }
+                        const weapon = this.game.state.weaponManager.getWeapon(weaponId);
+                        const weaponsSystem = this.game.state.ship.systems.find(s => s.type === 'weapon');
+                        }
             };
         });
 
