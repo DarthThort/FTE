@@ -9,9 +9,10 @@ class GameState {
             maxHealth: 100,
             shield: 50,
             maxShield: 50,
-            cargo: 0,
-            maxCargo: 50,
-            maxCargo: 50,
+            cargo: {
+    capacity: 50,
+    items: []
+},
             level: 1,
             jumpRange: 6, // Light Years
             layout: [
@@ -292,6 +293,16 @@ class GameState {
                 const data = JSON.parse(savedData);
                 this.credits = data.credits;
                 this.ship = { ...this.ship, ...data.ship };
+				
+				// Migrate old saves: add cargo if missing
+                if (!this.ship.cargo) {
+                    this.ship.cargo = {
+                        capacity: 50,
+                        items: []
+                    };
+                    console.log('Migrated save: added cargo system');
+				}
+				
                 this.port.crew = data.portCrew || this.port.crew;
                 this.port.contracts = data.contracts || this.port.contracts;
 
@@ -314,6 +325,8 @@ class GameState {
                         doorWaitTimer: 0
                     }));
                 }
+				
+				
                 console.log('Game Loaded');
             } catch (e) {
                 console.error('Failed to load save:', e);
@@ -960,4 +973,99 @@ solSystem.planets.forEach(planet => {
             message: `Traveled to ${targetPlanet.name}. Fuel: ${this.ship.fuel}/${this.ship.maxFuel}`
         };
     }
+	
+	// Cargo Management Methods
+    getCargoUsed() {
+        let totalVolume = 0;
+        this.ship.cargo.items.forEach(item => {
+            const commodity = Economy.getCommodity(item.commodityId);
+            if (commodity) {
+                totalVolume += commodity.volume * item.quantity;
+            }
+        });
+        return totalVolume;
+    }
+    getCargoValue() {
+        let totalValue = 0;
+        this.ship.cargo.items.forEach(item => {
+            totalValue += item.boughtPrice * item.quantity;
+        });
+        return totalValue;
+    }
+    buyCommodity(commodityId, quantity, price, stationId) {
+        const commodity = Economy.getCommodity(commodityId);
+        if (!commodity) {
+            return { success: false, message: 'Commodity not found.' };
+        }
+        // Check cargo space
+        const volumeNeeded = commodity.volume * quantity;
+        const currentVolume = this.getCargoUsed();
+        if (currentVolume + volumeNeeded > this.ship.cargo.capacity) {
+            return { success: false, message: 'Insufficient cargo space.' };
+        }
+        // Check credits
+        const totalCost = price * quantity;
+        if (this.credits < totalCost) {
+            return { success: false, message: 'Insufficient credits.' };
+        }
+        // Execute purchase
+        this.credits -= totalCost;
+        // Add to cargo
+        const existingItem = this.ship.cargo.items.find(i => i.commodityId === commodityId && i.boughtPrice === price);
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            this.ship.cargo.items.push({
+                commodityId,
+                quantity,
+                boughtPrice: price,
+                boughtAt: stationId
+            });
+        }
+        // Update station market
+        const planet = this.currentPlanet;
+        if (planet && planet.market) {
+            const marketItem = planet.market.commodities.find(m => m.id === commodityId);
+            if (marketItem) {
+                marketItem.stock -= quantity;
+            }
+        }
+        this.saveGame();
+        this.notify();
+        return { success: true, message: `Purchased ${quantity}x ${commodity.name} for ${totalCost} CR.` };
+    }
+    sellCommodity(commodityId, quantity, price) {
+        const commodity = Economy.getCommodity(commodityId);
+        if (!commodity) {
+            return { success: false, message: 'Commodity not found.' };
+        }
+        // Find cargo item
+        const cargoItem = this.ship.cargo.items.find(i => i.commodityId === commodityId);
+        if (!cargoItem || cargoItem.quantity < quantity) {
+            return { success: false, message: 'Insufficient quantity in cargo.' };
+        }
+        // Execute sale
+        const totalValue = price * quantity;
+        this.credits += totalValue;
+        // Remove from cargo
+        cargoItem.quantity -= quantity;
+        if (cargoItem.quantity === 0) {
+            const index = this.ship.cargo.items.indexOf(cargoItem);
+            this.ship.cargo.items.splice(index, 1);
+        }
+        // Update station market
+        const planet = this.currentPlanet;
+        if (planet && planet.market) {
+            const marketItem = planet.market.commodities.find(m => m.id === commodityId);
+            if (marketItem) {
+                marketItem.stock += quantity;
+            }
+        }
+        const profit = Economy.calculateProfit(cargoItem.boughtPrice, price, quantity);
+        const profitStr = profit >= 0 ? `+${profit}` : `${profit}`;
+        this.saveGame();
+        this.notify();
+        return { success: true, message: `Sold ${quantity}x ${commodity.name} for ${totalValue} CR (${profitStr} CR profit).` };
+    }
+	
 }

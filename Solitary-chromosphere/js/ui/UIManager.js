@@ -776,15 +776,16 @@ class UIManager {
         container.style.background = 'rgba(0,0,0,0.8)';
 
         container.innerHTML = `
-            <h1>STATION DOCK</h1>
-            <div style="display: flex; gap: 20px;">
-                <button id="btn-shipyard">SHIPYARD</button>
-                <button id="btn-tavern">TAVERN</button>
-                <button id="btn-crew">CREW ROSTER</button>
-                <button id="btn-contracts">CONTRACTS</button>
-                <button id="btn-undock" style="border-color: var(--warning); color: var(--warning);">UNDOCK</button>
-            </div>
-        `;
+    <h1>STATION DOCK</h1>
+    <div style="display: flex; gap: 20px;">
+        <button id="btn-shipyard">SHIPYARD</button>
+        <button id="btn-tavern">TAVERN</button>
+        <button id="btn-crew">CREW ROSTER</button>
+        <button id="btn-contracts">CONTRACTS</button>
+        <button id="btn-market" style="border-color: var(--success); color: var(--success);">MARKET</button>
+        <button id="btn-undock" style="border-color: var(--warning); color: var(--warning);">UNDOCK</button>
+    </div>
+`;
 
 
         this.root.appendChild(container); // Use this.root instead of this.uiLayer for consistency
@@ -794,7 +795,8 @@ class UIManager {
         document.getElementById('btn-tavern').onclick = () => this.renderTavern();
         document.getElementById('btn-crew').onclick = () => this.renderCrewRoster();
         document.getElementById('btn-contracts').onclick = () => this.renderContracts();
-        document.getElementById('btn-undock').onclick = () => {
+        document.getElementById('btn-market').onclick = () => this.renderMarket();
+		document.getElementById('btn-undock').onclick = () => {
             this.game.sceneManager.changeScene('SHIP');
         };
     }
@@ -1236,4 +1238,134 @@ class UIManager {
             }
         }
     }
+	
+	renderMarket() {
+    const state = this.game.state;
+    const planet = state.currentPlanet;
+    
+    if (!planet || !planet.market) {
+        this.showNotification('No market available at this location!', 'error');
+        return;
+    }
+    
+    const cargoUsed = state.getCargoUsed();
+    const cargoCapacity = state.ship.cargo.capacity;
+    
+    const content = `
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <!-- Market Column -->
+            <div>
+                <h3 style="color: var(--primary); margin-bottom: 15px;">COMMODITIES MARKET</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    ${planet.market.commodities.map(item => {
+                        const commodity = Economy.getCommodity(item.id);
+                        const trend = Economy.getTrendSymbol(item.trend);
+                        const trendColor = item.trend === 'up' ? '#88ff88' : item.trend === 'down' ? '#ff8888' : '#ffaa88';
+                        
+                        return `
+                            <div style="background: rgba(255,255,255,0.05); padding: 12px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="font-size: 1.5rem;">${commodity.icon}</span>
+                                        <div>
+                                            <h4 style="color: ${commodity.color}; margin: 0;">${commodity.name}</h4>
+                                            <p style="color: #888; font-size: 0.75rem; margin: 0;">${commodity.category}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right; min-width: 120px;">
+                                    <div style="color: var(--primary); font-weight: bold;">
+                                        ${item.price} CR <span style="color: ${trendColor};">${trend}</span>
+                                    </div>
+                                    <div style="color: #888; font-size: 0.75rem;">Stock: ${item.stock}</div>
+                                </div>
+                                <div style="display: flex; gap: 5px; margin-left: 15px;">
+                                    <input type="number" min="1" max="${Math.min(item.stock, 10)}" value="1" 
+                                           id="qty-${item.id}" 
+                                           style="width: 50px; padding: 5px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center;">
+                                    <button style="padding: 5px 15px; font-size: 0.8rem;" 
+                                            onclick="game.ui.buyItem('${item.id}', ${item.price})">BUY</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+            
+            <!-- Cargo Column -->
+            <div>
+                <h3 style="color: var(--success); margin-bottom: 15px;">YOUR CARGO</h3>
+                <div style="background: rgba(0,255,100,0.1); border: 1px solid var(--success); padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Capacity:</span>
+                        <span>${cargoUsed}/${cargoCapacity}</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden;">
+                        <div style="width: ${(cargoUsed/cargoCapacity)*100}%; height: 100%; background: var(--success); transition: width 0.3s;"></div>
+                    </div>
+                </div>
+                
+                ${state.ship.cargo.items.length === 0 ? 
+                    '<p style="color: #888; text-align: center; padding: 20px;">Empty</p>' :
+                    `<div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${state.ship.cargo.items.map(cargoItem => {
+                            const commodity = Economy.getCommodity(cargoItem.commodityId);
+                            const marketItem = planet.market.commodities.find(m => m.id === cargoItem.commodityId);
+                            const currentPrice = marketItem ? marketItem.price : cargoItem.boughtPrice;
+                            const profit = Economy.calculateProfit(cargoItem.boughtPrice, currentPrice, cargoItem.quantity);
+                            const profitColor = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+                            
+                            return `
+                                <div style="background: rgba(0,0,0,0.3); padding: 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 5px;">
+                                        <div>
+                                            <span style="font-size: 1.2rem;">${commodity.icon}</span>
+                                            <strong style="color: ${commodity.color};">${commodity.name}</strong>
+                                        </div>
+                                        <span style="color: #ccc;">×${cargoItem.quantity}</span>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: #888; margin-bottom: 5px;">
+                                        Bought: ${cargoItem.boughtPrice} CR → Now: ${currentPrice} CR
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: ${profitColor}; font-size: 0.75rem; font-weight: bold;">
+                                            ${profit >= 0 ? '+' : ''}${profit} CR
+                                        </span>
+                                        <button style="padding: 4px 12px; font-size: 0.75rem; background: var(--danger); border-color: var(--danger);" 
+                                                onclick="game.ui.sellItem('${cargoItem.commodityId}', ${currentPrice})">SELL ALL</button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>`
+                }
+            </div>
+        </div>
+    `;
+    
+    this.createModal('COMMODITIES MARKET - ' + planet.name.toUpperCase(), content);
+}
+buyItem(commodityId, price) {
+    const qtyInput = document.getElementById(`qty-${commodityId}`);
+    const quantity = parseInt(qtyInput.value) || 1;
+    
+    const result = this.game.state.buyCommodity(commodityId, quantity, price, this.game.state.currentPlanet.id);
+    this.showNotification(result.message, result.success ? 'success' : 'error');
+    
+    if (result.success) {
+        this.renderMarket(); // Refresh market
+    }
+}
+sellItem(commodityId, price) {
+    const cargoItem = this.game.state.ship.cargo.items.find(i => i.commodityId === commodityId);
+    if (!cargoItem) return;
+    
+    const result = this.game.state.sellCommodity(commodityId, cargoItem.quantity, price);
+    this.showNotification(result.message, result.success ? 'success' : 'error');
+    
+    if (result.success) {
+        this.renderMarket(); // Refresh market
+    }
+}
+	
 }
