@@ -4,11 +4,12 @@ setInterval(() => {
     if (panel) {
         // Get the game instance from window
         const game = window.game;
-        if (game && game.ui && game.ui.weaponUI) {
-            console.log('[weapon-refresh] Refreshing weapon panel');
-            game.ui.weaponUI.refreshWeaponsPanel();
-        } else {
-            console.log('[weapon-refresh] Could not find game.ui.weaponUI');
+        if (game && game.ui && game.ui.weaponUI && game.state && game.state.ship && game.state.ship.weapons) {
+            // Only refresh if there are weapons that are NOT idle (charging/ready/cooldown)
+            const hasActiveWeapons = game.state.ship.weapons.some(w => w.state !== 'idle');
+            if (hasActiveWeapons) {
+                game.ui.weaponUI.refreshWeaponsPanel();
+            }
         }
     }
 }, 100);
