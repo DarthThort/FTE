@@ -17,20 +17,17 @@
     <div id="app">
         <canvas id="game-canvas"></canvas>
         <div id="ui-layer">
-            <!-- UI elements will be injected here -->
             <div id="loading-screen" class="screen active">
                 <h1>SYSTEM INITIALIZING...</h1>
                 <div class="loader"></div>
             </div>
         </div>
-        <div id="notification-container"
-            style="position: fixed; top: 20px; right: 20px; z-index: 10000; pointer-events: none;"></div>
+        <div id="notification-container" style="position:fixed;top:20px;right:20px;z-index:10000;pointer-events:none;">
+        </div>
         <div id="crew-tooltip"
-            style="position: fixed; display: none; background: rgba(10, 10, 25, 0.95); border: 2px solid #00f0ff; padding: 12px; border-radius: 8px; z-index: 9999; pointer-events: none; box-shadow: 0 0 20px rgba(0,240,255,0.3); min-width: 200px; font-family: 'Rajdhani', sans-serif;">
+            style="position:fixed;display:none;background:rgba(10,10,25,0.95);border:2px solid #00f0ff;padding:12px;border-radius:8px;z-index:9999;pointer-events:none;box-shadow:0 0 20px rgba(0,240,255,0.3);min-width:200px;font-family:'Rajdhani',sans-serif;">
         </div>
     </div>
-
-    <!-- Load scripts sequentially (Order matters!) -->
     <script src="js/game/Economy.js"></script>
     <script src="js/game/GalaxyManager.js"></script>
     <script src="js/game/CargoManager.js"></script>
@@ -40,6 +37,7 @@
     <script src="js/game/PowerManager.js"></script>
     <script src="js/game/LifeSupportManager.js"></script>
     <script src="js/game/WeaponManager.js"></script>
+    <script src="js/game/ShieldManager.js"></script>
     <script src="js/game/GameState.js"></script>
     <script src="js/game/InputHandler.js"></script>
     <script src="js/game/ShipRenderer.js"></script>
@@ -54,6 +52,8 @@
     <script src="js/ui/PowerUI.js"></script>
     <script src="js/ui/WeaponUI.js"></script>
     <script src="js/ui/weapon-refresh.js"></script>
+    <script src="js/ui/ShieldUI.js"></script>
+    <script src="js/ui/shield-refresh.js"></script>
     <script src="js/ui/UIManager.js"></script>
     <script src="js/main.js"></script>
 </body>
