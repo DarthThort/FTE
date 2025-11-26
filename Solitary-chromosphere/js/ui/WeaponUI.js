@@ -244,8 +244,14 @@ class WeaponUI {
 
     // Attach event listeners
     attachWeaponEventListeners() {
+        console.log('[WeaponUI] attachWeaponEventListeners called');
+
         // Charge buttons
-        document.querySelectorAll('.weapon-charge-btn').forEach(btn => {
+        const chargeBtns = document.querySelectorAll('.weapon-charge-btn');
+        console.log('[WeaponUI] Found', chargeBtns.length, 'charge buttons');
+
+        chargeBtns.forEach(btn => {
+            console.log('[WeaponUI] Attaching onclick to charge button for weapon:', btn.dataset.weaponId);
             btn.onclick = () => {
                 const weaponId = btn.dataset.weaponId;
                 console.log('Charge button clicked for weapon:', weaponId);
