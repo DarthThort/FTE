@@ -1,4 +1,4 @@
-﻿class UIManager {
+class UIManager {
     constructor(rootElement, gameEngine) {
         this.root = rootElement;
         this.game = gameEngine;
@@ -11,6 +11,7 @@
         this.shipSystemUI = new ShipSystemUI(gameEngine, rootElement, this);
         this.powerUI = new PowerUI(gameEngine, this);
         this.weaponUI = new WeaponUI(gameEngine, this);
+        this.shieldUI = new ShieldUI(gameEngine, this);
 
         // Link PowerUI to ShipRenderer for room overlays
         if (gameEngine.sceneManager && gameEngine.sceneManager.shipRenderer) {
@@ -34,7 +35,7 @@
         // Create OPTIONS button in top-right corner
         const optionsBtn = document.createElement('button');
         optionsBtn.id = 'btn-options';
-        optionsBtn.innerHTML = '⚙️ OPTIONS';
+        optionsBtn.innerHTML = '?? OPTIONS';
         Object.assign(optionsBtn.style, {
             position: 'fixed',
             top: '20px',
@@ -72,7 +73,7 @@
                 <div style="margin-bottom: 30px;">
                     <h3 style="color: var(--secondary); font-size: 1rem; margin-bottom: 15px;">Save Data</h3>
                     <button id="btn-reset-save-options" style="padding: 12px 24px; background: rgba(200, 0, 0, 0.2); color: #ff4444; border: 1px solid #ff4444; cursor: pointer; font-family: var(--font-tech); border-radius: 4px; font-size: 0.9rem; transition: all 0.2s;">
-                        🗑️ RESET SAVE DATA
+                        ??? RESET SAVE DATA
                     </button>
                     <p style="color: #aaa; font-size: 0.8rem; margin-top: 10px; font-style: italic;">Warning: This will erase all progress</p>
                 </div>
@@ -154,6 +155,13 @@
                 this.root.appendChild(tempDiv2.firstElementChild);
                 this.weaponUI.attachWeaponEventListeners();
             }
+            const shieldPanelHTML = this.shieldUI.renderShieldPanel();
+            if (shieldPanelHTML) {
+                const tempDiv3 = document.createElement('div');
+                tempDiv3.innerHTML = shieldPanelHTML;
+                this.root.appendChild(tempDiv3.firstElementChild);
+                this.shieldUI.attachShieldEventListeners();
+            }
         }, 100);
     }
 
@@ -218,7 +226,7 @@
             <div class="modal-window">
                 <div class="modal-header">
                     <h2>${title}</h2>
-                    <button class="modal-close">×</button>
+                    <button class="modal-close">�</button>
                 </div>
                 <div class="modal-content">
                     ${contentHTML}
