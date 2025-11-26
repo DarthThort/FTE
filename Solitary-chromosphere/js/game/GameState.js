@@ -54,7 +54,21 @@ class GameState {
                 rechargeTimer: 0,
                 powerPerLayer: 1
             },
-            weapons: [],
+            weapons: [
+                {
+                    id: 'weapon_1',
+                    name: 'Burst Laser I',
+                    type: 'burst_laser',
+                    chargeTime: 8,
+                    cooldownTime: 2,
+                    shots: 2,
+                    damagePerShot: 1,
+                    powerRequired: 1,
+                    currentCharge: 0,
+                    state: 'idle',
+                    target: null
+                }
+            ],
             rooms: [],  // Will be generated
             doors: [],  // Will be generated
             modules: [],
@@ -87,6 +101,7 @@ class GameState {
         // Initialize combat managers first
         this.powerManager = new PowerManager(this);
         this.lifeSupportManager = new LifeSupportManager(this);
+        this.weaponManager = new WeaponManager(this);
 
         // Generate rooms and doors from layout
         this.ship.rooms = this.generateRooms();

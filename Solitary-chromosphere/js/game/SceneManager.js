@@ -27,6 +27,11 @@ class SceneManager {
                 this.game.state.lifeSupportManager.tick();
             }
 
+            // Update weapon charging/cooldown
+            if (this.game.state.weaponManager) {
+                this.game.state.weaponManager.update(dt);
+            }
+
             this.shipRenderer.computeVisibility(this.player);
             this.handleCrewInteraction();
         }
