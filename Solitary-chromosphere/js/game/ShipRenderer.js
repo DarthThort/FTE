@@ -246,7 +246,10 @@ class ShipRenderer {
         
         // Calculate opacity with smooth recharge visibility
         let opacity;
-        if (status.isRecharging) {`r`n            // During recharge: smooth opacity increase including partial layer`r`n            const totalProgress = (shields.currentLayers + status.rechargeProgress) / Math.max(shields.maxLayers, 1);`r`n            opacity = totalProgress;
+        if (status.isRecharging) {
+            // During recharge: smooth opacity increase including partial layer
+            const totalProgress = (shields.currentLayers + status.rechargeProgress) / Math.max(shields.maxLayers, 1);
+            opacity = totalProgress;
         } else if (shields.currentLayers >= shields.maxLayers) {
             // Fully charged: fade out after 5 seconds
             const fadeStartTime = 5.0;
@@ -256,7 +259,10 @@ class ShipRenderer {
                 const fadeTime = status.fullChargeTime - fadeStartTime;
                 opacity = Math.max(0, 1.0 - (fadeTime / 2.0));
             }
-        } else {`r`n            // Partially charged but not recharging`r`n            const chargePercent = shields.currentLayers / Math.max(shields.maxLayers, 1);`r`n            opacity = chargePercent;
+        } else {
+            // Partially charged but not recharging
+            const chargePercent = shields.currentLayers / Math.max(shields.maxLayers, 1);
+            opacity = chargePercent;
         }
         
         if (opacity <= 0) return;
