@@ -240,7 +240,7 @@ class ShipRenderer {
         const shipCenterY = this.offsetY + (18 * this.tileSize) / 2;
         
         // Shield parameters
-        const baseRadius = 320;
+        const baseRadius = 360;
         const time = Date.now() / 1000;
         
         // Calculate opacity
@@ -264,31 +264,35 @@ class ShipRenderer {
         
         ctx.save();
         
-        // Generate mesh points around the perimeter (only on outer ring)
-        const numPoints = 36;
+        // Generate mesh points in 3 concentric rings (closer together, larger radius)
+        const numPointsPerRing = 24;
+        const rings = [
+            { radius: baseRadius, variation: 25 },        // Outer ring: 360px
+            { radius: baseRadius - 40, variation: 20 },   // Middle ring: 320px
+            { radius: baseRadius - 80, variation: 15 }    // Inner ring: 280px
+        ];
         const points = [];
-        const radiusVariation = 30; // Random variation in radius
         
-        for (let i = 0; i < numPoints; i++) {
-            const angle = (i / numPoints) * Math.PI * 2;
-            // Add rotation and chaos
-            const chaosAngle = angle + Math.sin(time * 0.3 + i * 0.5) * 0.2;
-            const chaosRadius = baseRadius + Math.sin(time * 0.5 + i * 1.2) * radiusVariation;
-            
-            const x = shipCenterX + Math.cos(chaosAngle) * chaosRadius;
-            const y = shipCenterY + Math.sin(chaosAngle) * chaosRadius;
-            
-            points.push({ x, y, index: i });
-        }
+        rings.forEach((ring, ringIndex) => {
+            for (let i = 0; i < numPointsPerRing; i++) {
+                const angle = (i / numPointsPerRing) * Math.PI * 2;
+                const chaosAngle = angle + Math.sin(time * (0.2 + ringIndex * 0.1) + i * 0.5) * 0.2;
+                const chaosRadius = ring.radius + Math.sin(time * 0.5 + i * 1.2 + ringIndex) * ring.variation;
+                
+                const x = shipCenterX + Math.cos(chaosAngle) * chaosRadius;
+                const y = shipCenterY + Math.sin(chaosAngle) * chaosRadius;
+                
+                points.push({ x, y, index: i, ring: ringIndex });
+            }
+        });
         
-        // Draw connections between nearby points (creating mesh network)
+        // Draw mesh network connections
         ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * 0.6})`;
         ctx.lineWidth = 1;
         
         for (let i = 0; i < points.length; i++) {
             const p1 = points[i];
             
-            // Find all nearby points and connect to 3-5 nearest
             const connections = [];
             for (let j = 0; j < points.length; j++) {
                 if (i === j) continue;
@@ -301,7 +305,6 @@ class ShipRenderer {
                 }
             }
             
-            // Sort by distance and connect to 3-5 nearest neighbors
             connections.sort((a, b) => a.dist - b.dist);
             const numConnections = Math.min(3 + Math.floor(Math.random() * 3), connections.length);
             
@@ -315,14 +318,12 @@ class ShipRenderer {
                 ctx.globalAlpha = 1.0;
             }
         }
-
-
-        // Draw glowing vertices at connection points
+        
+        // Draw glowing vertices
         ctx.shadowColor = `rgba(0, 255, 85, ${opacity})`;
         ctx.shadowBlur = 8;
         
         for (const point of points) {
-            // Pulsing vertices
             const pulse = Math.sin(time * 4 + point.index * 0.3) * 0.3 + 0.7;
             const size = 2 + pulse;
             
@@ -331,22 +332,6 @@ class ShipRenderer {
             ctx.fillStyle = `rgba(0, 255, 85, ${opacity * pulse})`;
             ctx.fill();
         }
-        
-        // Outer glow ring for depth
-        ctx.shadowBlur = 25;
-        ctx.beginPath();
-        ctx.arc(shipCenterX, shipCenterY, baseRadius + 15, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * 0.4})`;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Inner boundary circle (defines clear center for ship visibility)
-        ctx.shadowBlur = 15;
-        ctx.beginPath();
-        ctx.arc(shipCenterX, shipCenterY, baseRadius - 50, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * 0.2})`;
-        ctx.lineWidth = 1;
-        ctx.stroke();
         
         ctx.restore();
     }
