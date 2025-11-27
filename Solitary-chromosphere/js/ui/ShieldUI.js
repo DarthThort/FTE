@@ -28,7 +28,7 @@ class ShieldUI {
                     <div style="margin-bottom:8px;">
                         <div style="display:flex;justify-content:space-between;font-size:0.65rem;margin-bottom:3px;color:#ffaa00;">
                             <span>⚡ Recharging...</span>
-                            <span>${Math.round(status.rechargeProgress * 100)}%</span>
+                            <span><span class="shield-recharge-percent">${Math.round(status.rechargeProgress * 100)}%</span></span>
                         </div>
                         <div style="width:100%;height:6px;background:rgba(255,170,0,0.2);border-radius:3px;overflow:hidden;">
                             <div class="shield-recharge-bar" style="width:${status.rechargeProgress * 100}%;height:100%;background:#ffaa00;box-shadow:0 0 5px #ffaa00;transition:width 0.05s linear;"></div>
