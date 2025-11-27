@@ -231,19 +231,37 @@ class ShipRenderer {
 
     renderShields(ctx) {
         const shields = this.game.state.ship.shields;
-        if (!shields || shields.currentLayers <= 0) return;
-        const x = this.offsetX + 320;
-        const y = this.offsetY + 288;
-        const r = 200 + Math.sin(Date.now() / 500) * 5;
-        const a = 0.15 + (shields.currentLayers / Math.max(shields.maxLayers, 1)) * 0.2;
+        if (!shields) return;
+        
+        // Only show shield when recharging (not at full capacity)
+        const isRecharging = shields.currentLayers < shields.maxLayers;
+        if (!isRecharging || shields.maxLayers === 0) return;
+        
+        // Calculate ship center (center of 20x18 grid)
+        const shipCenterX = this.offsetX + (20 * this.tileSize) / 2;
+        const shipCenterY = this.offsetY + (18 * this.tileSize) / 2;
+        
+        // Shield radius to cover entire ship
+        const baseRadius = 320;
+        const shieldRadius = baseRadius + Math.sin(Date.now() / 500) * 5;
+        
+        // Opacity based on charge level (0% to 100%)
+        const chargePercent = shields.currentLayers / Math.max(shields.maxLayers, 1);
+        const opacity = chargePercent;
+        
         ctx.save();
         ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0,255,85,${a + 0.3})`;
-        ctx.lineWidth = 2;
+        ctx.arc(shipCenterX, shipCenterY, shieldRadius, 0, Math.PI * 2);
+        
+        // Edge stroke with charge-based opacity
+        ctx.strokeStyle = `rgba(0, 255, 85, ${opacity})`;
+        ctx.lineWidth = 3;
         ctx.stroke();
-        ctx.fillStyle = `rgba(0,255,85,${a * 0.3})`;
+        
+        // Translucent fill with charge-based opacity
+        ctx.fillStyle = `rgba(0, 255, 85, ${opacity * 0.2})`;
         ctx.fill();
+        
         ctx.restore();
     }
 }
