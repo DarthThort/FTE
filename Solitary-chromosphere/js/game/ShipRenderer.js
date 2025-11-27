@@ -235,54 +235,131 @@ class ShipRenderer {
         
         const status = this.game.state.shieldManager.getShieldStatus();
         
-        // Calculate ship center (center of 20x18 grid)
+        // Calculate ship center
         const shipCenterX = this.offsetX + (20 * this.tileSize) / 2;
         const shipCenterY = this.offsetY + (18 * this.tileSize) / 2;
         
-        // Shield radius to cover entire ship (just the edge)
+        // Shield parameters
         const baseRadius = 320;
-        const shieldRadius = baseRadius + Math.sin(Date.now() / 500) * 5;
+        const pulseRadius = baseRadius + Math.sin(Date.now() / 500) * 3;
+        const time = Date.now() / 1000; // For animations
         
-        // Calculate opacity based on state
+        // Calculate opacity with smooth recharge visibility
         let opacity;
         const chargePercent = shields.currentLayers / Math.max(shields.maxLayers, 1);
         
         if (status.isRecharging) {
-            // While recharging: opacity grows with charge level (0 to 1)
-            opacity = chargePercent;
+            // During recharge: combine charge level + recharge progress for smoother visibility
+            const rechargeBoost = status.rechargeProgress * 0.3; // Extra 30% opacity during active recharge
+            opacity = Math.min(1.0, chargePercent + rechargeBoost);
         } else if (shields.currentLayers >= shields.maxLayers) {
             // Fully charged: fade out after 5 seconds
-            const fadeStartTime = 5.0; // seconds
+            const fadeStartTime = 5.0;
             if (status.fullChargeTime < fadeStartTime) {
-                opacity = 1.0; // Full opacity for first 5 seconds
+                opacity = 1.0;
             } else {
-                // Fade out over 2 seconds
                 const fadeTime = status.fullChargeTime - fadeStartTime;
-                const fadeDuration = 2.0;
-                opacity = Math.max(0, 1.0 - (fadeTime / fadeDuration));
+                opacity = Math.max(0, 1.0 - (fadeTime / 2.0));
             }
         } else {
-            // Partially charged but not recharging: show based on charge level
             opacity = chargePercent;
         }
         
-        // Don't render if completely faded
         if (opacity <= 0) return;
         
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(shipCenterX, shipCenterY, shieldRadius, 0, Math.PI * 2);
         
-        // Only draw edge (stroke), no fill - transparent in center
+        // Draw hexagonal shield with 6 segments
+        const segments = 6;
+        const angleStep = (Math.PI * 2) / segments;
+        const rotationOffset = time * 0.1; // Slow rotation
+        
+        // Create hexagon path
+        ctx.beginPath();
+        for (let i = 0; i <= segments; i++) {
+            const angle = i * angleStep + rotationOffset;
+            const x = shipCenterX + Math.cos(angle) * pulseRadius;
+            const y = shipCenterY + Math.sin(angle) * pulseRadius;
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+        }
+        
+        // Main shield edge with glow
         ctx.strokeStyle = `rgba(0, 255, 85, ${opacity})`;
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = `rgba(0, 255, 85, ${opacity * 0.8})`;
+        ctx.shadowBlur = 20;
         ctx.stroke();
         
-        // Optional: Add subtle glow effect
-        ctx.shadowColor = `rgba(0, 255, 85, ${opacity * 0.5})`;
-        ctx.shadowBlur = 15;
-        ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * 0.8})`;
-        ctx.lineWidth = 2;
+        // Draw segment dividers with pulsing effect
+        ctx.shadowBlur = 0;
+        for (let i = 0; i < segments; i++) {
+            const angle = i * angleStep + rotationOffset;
+            const x1 = shipCenterX + Math.cos(angle) * (pulseRadius - 30);
+            const y1 = shipCenterY + Math.sin(angle) * (pulseRadius - 30);
+            const x2 = shipCenterX + Math.cos(angle) * (pulseRadius + 30);
+            const y2 = shipCenterY + Math.sin(angle) * (pulseRadius + 30);
+            
+            // Pulse effect on dividers
+            const pulse = Math.sin(time * 3 + i) * 0.3 + 0.7;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * pulse * 0.4})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        
+        // Draw vertices (glowing points at corners)
+        for (let i = 0; i < segments; i++) {
+            const angle = i * angleStep + rotationOffset;
+            const x = shipCenterX + Math.cos(angle) * pulseRadius;
+            const y = shipCenterY + Math.sin(angle) * pulseRadius;
+            
+            // Rotating glow at vertices
+            const vertexPulse = Math.sin(time * 4 + i * 0.5) * 0.3 + 0.7;
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 255, 85, ${opacity * vertexPulse})`;
+            ctx.shadowColor = `rgba(0, 255, 85, ${opacity})`;
+            ctx.shadowBlur = 15;
+            ctx.fill();
+        }
+        
+        // Energy lines during recharge (animated segments filling up)
+        if (status.isRecharging) {
+            const rechargeSegment = Math.floor(status.rechargeProgress * segments);
+            for (let i = 0; i < segments; i++) {
+                const angle1 = i * angleStep + rotationOffset;
+                const angle2 = (i + 1) * angleStep + rotationOffset;
+                
+                // Highlight segments that are "recharging"
+                if (i <= rechargeSegment) {
+                    const midAngle = (angle1 + angle2) / 2;
+                    const innerRadius = pulseRadius - 25;
+                    const outerRadius = pulseRadius - 5;
+                    
+                    ctx.beginPath();
+                    ctx.arc(shipCenterX, shipCenterY, innerRadius, angle1, angle2);
+                    ctx.arc(shipCenterX, shipCenterY, outerRadius, angle2, angle1, true);
+                    ctx.closePath();
+                    
+                    const segmentPulse = Math.sin(time * 6) * 0.2 + 0.5;
+                    ctx.fillStyle = `rgba(0, 255, 85, ${opacity * segmentPulse * 0.3})`;
+                    ctx.fill();
+                }
+            }
+        }
+        
+        // Outer glow ring
+        ctx.beginPath();
+        ctx.arc(shipCenterX, shipCenterY, pulseRadius + 8, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * 0.3})`;
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 25;
         ctx.stroke();
         
         ctx.restore();
