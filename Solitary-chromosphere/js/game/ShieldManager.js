@@ -1,6 +1,7 @@
 class ShieldManager {
     constructor(gameState) {
         this.state = gameState;
+        this.fullChargeTime = 0; // Track time since shields reached full capacity
     }
 
     update(deltaTime) {
@@ -16,6 +17,7 @@ class ShieldManager {
             shields.currentLayers = shields.maxLayers;
         }
 
+        // Recharge shields if below max and has power
         if (shields.currentLayers < shields.maxLayers && shieldSystem.currentPower > 0) {
             shields.rechargeTimer += deltaTime;
 
@@ -26,9 +28,14 @@ class ShieldManager {
                 console.log(`Shield layer regenerated! Now at ${shields.currentLayers}/${shields.maxLayers}`);
                 this.refreshUI();
             }
+
+            // Reset full charge timer while recharging
+            this.fullChargeTime = 0;
         } else {
             if (shields.currentLayers >= shields.maxLayers) {
                 shields.rechargeTimer = 0;
+                // Track time at full charge for fade out
+                this.fullChargeTime += deltaTime;
             }
         }
     }
@@ -39,6 +46,7 @@ class ShieldManager {
 
         shields.currentLayers -= layersLost;
         shields.rechargeTimer = 0;
+        this.fullChargeTime = 0; // Reset fade timer on damage
 
         const overflowDamage = amount - layersLost;
 
@@ -59,7 +67,8 @@ class ShieldManager {
             rechargeRate: shields.rechargeRate,
             systemPower: shieldSystem ? shieldSystem.currentPower : 0,
             systemMaxPower: shieldSystem ? shieldSystem.maxPower : 0,
-            isRecharging: shields.currentLayers < shields.maxLayers && shieldSystem?.currentPower > 0
+            isRecharging: shields.currentLayers < shields.maxLayers && shieldSystem?.currentPower > 0,
+            fullChargeTime: this.fullChargeTime
         };
     }
 

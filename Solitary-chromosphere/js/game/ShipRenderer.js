@@ -231,36 +231,59 @@ class ShipRenderer {
 
     renderShields(ctx) {
         const shields = this.game.state.ship.shields;
-        if (!shields) return;
+        if (!shields || shields.currentLayers <= 0) return;
         
-        // Only show shield when recharging (not at full capacity)
-        const isRecharging = shields.currentLayers < shields.maxLayers;
-        if (!isRecharging || shields.maxLayers === 0) return;
+        const status = this.game.state.shieldManager.getShieldStatus();
         
         // Calculate ship center (center of 20x18 grid)
         const shipCenterX = this.offsetX + (20 * this.tileSize) / 2;
         const shipCenterY = this.offsetY + (18 * this.tileSize) / 2;
         
-        // Shield radius to cover entire ship
+        // Shield radius to cover entire ship (just the edge)
         const baseRadius = 320;
         const shieldRadius = baseRadius + Math.sin(Date.now() / 500) * 5;
         
-        // Opacity based on charge level (0% to 100%)
+        // Calculate opacity based on state
+        let opacity;
         const chargePercent = shields.currentLayers / Math.max(shields.maxLayers, 1);
-        const opacity = chargePercent;
+        
+        if (status.isRecharging) {
+            // While recharging: opacity grows with charge level (0 to 1)
+            opacity = chargePercent;
+        } else if (shields.currentLayers >= shields.maxLayers) {
+            // Fully charged: fade out after 5 seconds
+            const fadeStartTime = 5.0; // seconds
+            if (status.fullChargeTime < fadeStartTime) {
+                opacity = 1.0; // Full opacity for first 5 seconds
+            } else {
+                // Fade out over 2 seconds
+                const fadeTime = status.fullChargeTime - fadeStartTime;
+                const fadeDuration = 2.0;
+                opacity = Math.max(0, 1.0 - (fadeTime / fadeDuration));
+            }
+        } else {
+            // Partially charged but not recharging: show based on charge level
+            opacity = chargePercent;
+        }
+        
+        // Don't render if completely faded
+        if (opacity <= 0) return;
         
         ctx.save();
         ctx.beginPath();
         ctx.arc(shipCenterX, shipCenterY, shieldRadius, 0, Math.PI * 2);
         
-        // Edge stroke with charge-based opacity
+        // Only draw edge (stroke), no fill - transparent in center
         ctx.strokeStyle = `rgba(0, 255, 85, ${opacity})`;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 4;
         ctx.stroke();
         
-        // Translucent fill with charge-based opacity
-        ctx.fillStyle = `rgba(0, 255, 85, ${opacity * 0.2})`;
-        ctx.fill();
+        // Optional: Add subtle glow effect
+        ctx.shadowColor = `rgba(0, 255, 85, ${opacity * 0.5})`;
+        ctx.shadowBlur = 15;
+        ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * 0.8})`;
+        ctx.lineWidth = 2;
+        ctx.stroke();
         
         ctx.restore();
     }
