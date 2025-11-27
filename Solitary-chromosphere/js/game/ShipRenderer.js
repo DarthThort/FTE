@@ -281,38 +281,42 @@ class ShipRenderer {
             points.push({ x, y, index: i });
         }
         
-        // Draw connections between nearby points (creating mesh)
+        // Draw connections between nearby points (creating mesh network)
         ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * 0.6})`;
         ctx.lineWidth = 1;
         
         for (let i = 0; i < points.length; i++) {
             const p1 = points[i];
             
-            // Connect to next point (ring connection)
-            const p2 = points[(i + 1) % points.length];
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.stroke();
-            
-            // Connect to nearby points (mesh connections)
-            for (let j = i + 2; j < Math.min(i + 6, points.length); j++) {
-                if (Math.random() > 0.6) { // Random connections for chaos
-                    const p3 = points[j];
-                    const dist = Math.sqrt((p3.x - p1.x) ** 2 + (p3.y - p1.y) ** 2);
-                    
-                    if (dist < 150) { // Only connect nearby points
-                        ctx.beginPath();
-                        ctx.moveTo(p1.x, p1.y);
-                        ctx.lineTo(p3.x, p3.y);
-                        ctx.globalAlpha = opacity * 0.3 * (1 - dist / 150);
-                        ctx.stroke();
-                        ctx.globalAlpha = 1.0;
-                    }
+            // Find all nearby points and connect to 3-5 nearest
+            const connections = [];
+            for (let j = 0; j < points.length; j++) {
+                if (i === j) continue;
+                
+                const p2 = points[j];
+                const dist = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
+                
+                if (dist < 180) {
+                    connections.push({ point: p2, dist: dist });
                 }
             }
+            
+            // Sort by distance and connect to 3-5 nearest neighbors
+            connections.sort((a, b) => a.dist - b.dist);
+            const numConnections = Math.min(3 + Math.floor(Math.random() * 3), connections.length);
+            
+            for (let k = 0; k < numConnections; k++) {
+                const conn = connections[k];
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(conn.point.x, conn.point.y);
+                ctx.globalAlpha = opacity * 0.4 * (1 - conn.dist / 180);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
         }
-        
+
+
         // Draw glowing vertices at connection points
         ctx.shadowColor = `rgba(0, 255, 85, ${opacity})`;
         ctx.shadowBlur = 8;
