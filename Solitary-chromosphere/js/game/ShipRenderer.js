@@ -236,8 +236,8 @@ class ShipRenderer {
         const status = this.game.state.shieldManager.getShieldStatus();
         
         // Calculate ship center
-        const shipCenterX = this.offsetX + (20 * this.tileSize) / 2;
-        const shipCenterY = this.offsetY + (18 * this.tileSize) / 2;
+        const shipCenterX = this.offsetX + (25 * this.tileSize) / 2;
+        const shipCenterY = this.offsetY + (25 * this.tileSize) / 2;
         
         // Shield parameters
         const baseRadius = 360;
