@@ -248,7 +248,7 @@ class ShipRenderer {
         let opacity;
         if (status.isRecharging) {
             // During recharge: smooth opacity increase including partial layer
-            opacity = Math.max(0.3, status.rechargeProgress); // Minimum 30% visibility during recharge
+            opacity = status.rechargeProgress; // Fade in from 0 to 100% during recharge
         } else if (shields.currentLayers >= shields.maxLayers) {
             // Fully charged: fade out after 5 seconds
             const fadeStartTime = 5.0;
