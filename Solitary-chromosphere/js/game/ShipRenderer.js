@@ -231,7 +231,7 @@ class ShipRenderer {
 
     renderShields(ctx) {
         const shields = this.game.state.ship.shields;
-        if (!shields || shields.currentLayers <= 0) return;
+        if (!shields) return;
         
         const status = this.game.state.shieldManager.getShieldStatus();
         
