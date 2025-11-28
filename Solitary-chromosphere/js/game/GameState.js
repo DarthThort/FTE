@@ -166,15 +166,30 @@ class GameState {
                 }
 
                 if (data.ship.crew) {
-                    this.ship.crew = data.ship.crew.map(c => ({
-                        ...c,
-                        targetX: null,
-                        targetY: null,
-                        path: [],
-                        state: 'idle',
-                        wanderTimer: 0,
-                        doorWaitTimer: 0
-                    }));
+                    this.ship.crew = data.ship.crew.map(c => {
+                        // Migrate crew positions from 20x18 to 25x25 grid
+                        let newX = c.x;
+                        let newY = c.y;
+
+                        // If crew is at old coordinates (< 400px), migrate them
+                        if (c.x < 400) {
+                            newX = c.x + 160;  // Add 5 tiles * 32px
+                            newY = c.y + 96;   // Add 3 tiles * 32px
+                            console.log(`Migrated ${c.name} from (${c.x}, ${c.y}) to (${newX}, ${newY})`);
+                        }
+
+                        return {
+                            ...c,
+                            x: newX,
+                            y: newY,
+                            targetX: null,
+                            targetY: null,
+                            path: [],
+                            state: 'idle',
+                            wanderTimer: 0,
+                            doorWaitTimer: 0
+                        };
+                    });
                 }
 
                 // Move crew to their assigned systems after load
