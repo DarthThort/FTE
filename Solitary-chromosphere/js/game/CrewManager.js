@@ -18,8 +18,8 @@ class CrewManager {
         this.state.credits -= crew.cost;
         this.state.ship.crew.push({
             ...crew,
-            x: 432,
-            y: 176,
+            x: 400,
+            y: 300,
             targetX: null,
             targetY: null,
             path: [],
