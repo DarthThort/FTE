@@ -79,7 +79,23 @@ class GameState {
             rooms: [],  // Will be generated
             doors: [],  // Will be generated
             modules: [],
-            crew: [],
+            crew: [{
+                id: 'captain_001',
+                name: 'Captain',
+                role: 'Captain',
+                health: 100,
+                maxHealth: 100,
+                skills: { piloting: 3, combat: 2, engineering: 1, medical: 1 },
+                x: 400,
+                y: 300,
+                targetX: null,
+                targetY: null,
+                path: [],
+                speed: 1.5,
+                state: 'idle',
+                wanderTimer: 0,
+                doorWaitTimer: 0
+            }],
             maxCrew: 6,
             fuel: 100,
             maxFuel: 100
