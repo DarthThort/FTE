@@ -198,14 +198,18 @@ class CombatManager {
                 }
             });
         }
+
         // Enemy weapons
         if (this.enemy.weapons && this.enemy.weapons.length > 0) {
             this.enemy.weapons.forEach(weapon => {
                 if (weapon.state === 'ready') {
                     // Fire at player
                     this.applyWeaponDamage(weapon, this.state.ship);
-                    weapon.state = 'cooldown';
-                    weapon.currentCharge = weapon.cooldownTime;
+                    // Enemy weapons return to idle immediately (no cooldown)
+                    weapon.state = 'idle';
+                    weapon.currentCharge = 0;
+                    // Auto-recharge
+                    this.enemy.chargeWeapon(weapon.id);
                 }
             });
         }
