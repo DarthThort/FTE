@@ -126,7 +126,7 @@ class GameState {
         this.crewManager = new CrewManager(this);
 
         // Initialize starting crew using tile coordinates
-        const captainTile = this.shipCoords.getWalkableTileInArea(this.ship.layout, 'center');
+        const captainTile = { x: 12, y: 8 }; // Center of visible ship
         const captainPixels = this.shipCoords.tileToPixel(captainTile.x, captainTile.y);
         this.ship.crew.push({
             id: 'captain_001',
