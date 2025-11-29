@@ -37,6 +37,11 @@ class SceneManager {
 
             this.shipRenderer.computeVisibility(this.player);
             this.handleCrewInteraction();
+        } else if (this.currentScene === 'COMBAT') {
+            // Combat scene update
+            if (this.game.state.combatManager) {
+                this.game.state.combatManager.tick(dt);
+            }
         }
     }
 
@@ -133,6 +138,10 @@ class SceneManager {
         } else if (this.currentScene === 'PORT') {
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        } else if (this.currentScene === 'COMBAT') {
+            // Render ship (no player control during combat)
+            this.shipRenderer.render(ctx);
+            // Combat UI is rendered via UIManager
         }
     }
 }
