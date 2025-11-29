@@ -635,38 +635,7 @@ class GameState {
         };
     }
 
-    travelToPlanet(planetId) {
-        const targetPlanet = this.currentSystem.planets.find(p => p.id === planetId);
-        if (!targetPlanet) {
-            return { success: false, message: 'Planet not found in current system' };
-        }
 
-        // Check if same planet
-        if (this.currentPlanet && this.currentPlanet.id === planetId) {
-            return { success: false, message: 'Already at this planet' };
-        }
-
-        // Check fuel
-        const fuelCost = 5;
-        if (this.ship.fuel < fuelCost) {
-            return {
-                success: false,
-                message: `Insufficient fuel. Need ${fuelCost} units, have ${this.ship.fuel}.`
-            };
-        }
-
-        // Consume fuel
-        this.ship.fuel -= fuelCost;
-        this.currentPlanet = targetPlanet;
-
-        this.saveGame();
-        this.notify();
-
-        return {
-            success: true,
-            message: `Traveled to ${targetPlanet.name}. Fuel: ${this.ship.fuel}/${this.ship.maxFuel}`
-        };
-    }
 
     // Cargo Management Methods
     getCargoUsed() {
