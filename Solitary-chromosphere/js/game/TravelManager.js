@@ -63,8 +63,8 @@ class TravelManager {
     checkForEncounterDuringTravel() {
         if (!this.state.encounterManager) return;
 
-        // Lower encounter chance for planetary travel (10% vs 30% for system jumps)
-        const encounterChance = this.isPlanetaryTravel ? 0.10 : 0.30;
+        // Encounter chance: 50% for planetary travel, 30% for system jumps
+        const encounterChance = this.isPlanetaryTravel ? 0.50 : 0.30;
         const enemy = this.state.encounterManager.checkForEncounter(encounterChance);
 
         if (enemy) {
