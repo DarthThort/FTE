@@ -117,7 +117,7 @@ class MapUI {
                     if (inRange && !isCurrent) {
                         const btnJump = document.getElementById('jump-btn');
                         btnJump.onclick = () => {
-                            const result = state.travelToSystem(sys.id);
+                            const result = state.travelManager.travelToSystem(sys.id);
                             if (result.success) {
                                 document.querySelector('.modal-overlay').remove();
                                 this.uiManager.animationUI.showTravelAnimation('WARP', () => {
