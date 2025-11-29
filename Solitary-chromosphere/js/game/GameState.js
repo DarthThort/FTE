@@ -69,7 +69,7 @@ class GameState {
                     chargeTime: 8,
                     cooldownTime: 2,
                     shots: 2,
-                    damagePerShot: 1,
+                    damagePerShot: 15,
                     powerRequired: 1,
                     currentCharge: 0,
                     state: 'idle',

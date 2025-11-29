@@ -1,0 +1,3 @@
+﻿    <script src="js/pathogen.js"></script>
+    <script src="js/disease.js"></script>
+    <script src="js/nutrients.js"></script>
