@@ -79,6 +79,7 @@ class ShipRenderer {
             this.powerUI.renderRoomOverlays(ctx, layout, 0, 0, this.tileSize);
         }
         this.drawCrew(ctx, ship);
+        this.renderOxygenBars(ctx, ship);
         this.drawFog(ctx, layout);
         ctx.restore();
         this.renderShields(ctx);
@@ -229,20 +230,81 @@ class ShipRenderer {
         }
     }
 
+    /**
+     * Render oxygen level indicators for each room
+     * Shows compact horizontal bars at room centers
+     */
+    renderOxygenBars(ctx, ship) {
+        if (!ship.rooms || ship.rooms.length === 0) return;
+
+        ship.rooms.forEach(room => {
+            const centerX = room.center.x * this.tileSize;
+            const centerY = room.center.y * this.tileSize;
+
+            // Calculate oxygen color based on level
+            let color;
+            if (room.oxygen >= 75) {
+                color = '#00ff00'; // Green
+            } else if (room.oxygen >= 50) {
+                color = '#90ff00'; // Yellow-green
+            } else if (room.oxygen >= 25) {
+                color = '#ffff00'; // Yellow
+            } else if (room.oxygen >= 10) {
+                color = '#ff8800'; // Orange
+            } else {
+                color = '#ff0000'; // Red
+            }
+
+            // Bar dimensions
+            const maxWidth = 20;
+            const barHeight = 3;
+            const width = (room.oxygen / 100) * maxWidth;
+
+            // Draw bar background (dark)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(
+                centerX - maxWidth / 2,
+                centerY - barHeight / 2 - 8,
+                maxWidth,
+                barHeight
+            );
+
+            // Draw oxygen bar
+            ctx.fillStyle = color;
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 4;
+            ctx.fillRect(
+                centerX - maxWidth / 2,
+                centerY - barHeight / 2 - 8,
+                width,
+                barHeight
+            );
+            ctx.shadowBlur = 0;
+
+            // Optional: Add warning icon for critical oxygen
+            if (room.oxygen < 25) {
+                ctx.fillStyle = color;
+                ctx.font = '10px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('!', centerX, centerY + 6);
+            }
+        });
+    }
+
     renderShields(ctx) {
         const shields = this.game.state.ship.shields;
         if (!shields) return;
-        
+
         const status = this.game.state.shieldManager.getShieldStatus();
-        
+
         // Calculate ship center
         const shipCenterX = this.offsetX + (25 * this.tileSize) / 2;
         const shipCenterY = this.offsetY + (25 * this.tileSize) / 2;
-        
+
         // Shield parameters
         const baseRadius = 360;
         const time = Date.now() / 1000;
-        
+
         // Calculate opacity
         let opacity;
         if (status.isRecharging) {
@@ -259,11 +321,11 @@ class ShipRenderer {
             const chargePercent = shields.currentLayers / Math.max(shields.maxLayers, 1);
             opacity = chargePercent;
         }
-        
+
         if (opacity <= 0) return;
-        
+
         ctx.save();
-        
+
         // Generate mesh points in 3 concentric rings (closer together, larger radius)
         const numPointsPerRing = 24;
         const rings = [
@@ -272,42 +334,42 @@ class ShipRenderer {
             { radius: baseRadius - 80, variation: 15 }    // Inner ring: 280px
         ];
         const points = [];
-        
+
         rings.forEach((ring, ringIndex) => {
             for (let i = 0; i < numPointsPerRing; i++) {
                 const angle = (i / numPointsPerRing) * Math.PI * 2;
                 const chaosAngle = angle + Math.sin(time * (0.2 + ringIndex * 0.1) + i * 0.5) * 0.2;
                 const chaosRadius = ring.radius + Math.sin(time * 0.5 + i * 1.2 + ringIndex) * ring.variation;
-                
+
                 const x = shipCenterX + Math.cos(chaosAngle) * chaosRadius;
                 const y = shipCenterY + Math.sin(chaosAngle) * chaosRadius;
-                
+
                 points.push({ x, y, index: i, ring: ringIndex });
             }
         });
-        
+
         // Draw mesh network connections
         ctx.strokeStyle = `rgba(0, 255, 85, ${opacity * 0.6})`;
         ctx.lineWidth = 1;
-        
+
         for (let i = 0; i < points.length; i++) {
             const p1 = points[i];
-            
+
             const connections = [];
             for (let j = 0; j < points.length; j++) {
                 if (i === j) continue;
-                
+
                 const p2 = points[j];
                 const dist = Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
-                
+
                 if (dist < 180) {
                     connections.push({ point: p2, dist: dist });
                 }
             }
-            
+
             connections.sort((a, b) => a.dist - b.dist);
             const numConnections = Math.min(3 + Math.floor(Math.random() * 3), connections.length);
-            
+
             for (let k = 0; k < numConnections; k++) {
                 const conn = connections[k];
                 ctx.beginPath();
@@ -318,21 +380,21 @@ class ShipRenderer {
                 ctx.globalAlpha = 1.0;
             }
         }
-        
+
         // Draw glowing vertices
         ctx.shadowColor = `rgba(0, 255, 85, ${opacity})`;
         ctx.shadowBlur = 8;
-        
+
         for (const point of points) {
             const pulse = Math.sin(time * 4 + point.index * 0.3) * 0.3 + 0.7;
             const size = 2 + pulse;
-            
+
             ctx.beginPath();
             ctx.arc(point.x, point.y, size, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(0, 255, 85, ${opacity * pulse})`;
             ctx.fill();
         }
-        
+
         ctx.restore();
     }
 }
