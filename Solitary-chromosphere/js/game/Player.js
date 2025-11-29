@@ -2,8 +2,8 @@ class Player {
     constructor(gameEngine) {
         this.game = gameEngine;
         // Start position (Center of ship)
-        this.x = 12 * 32;
-        this.y = 12 * 32;
+        this.x = 13 * 32;
+        this.y = 16 * 32;
         this.speed = 150; // Pixels per second
         this.size = 16;
         this.color = '#00f0ff';
