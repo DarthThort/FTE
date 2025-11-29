@@ -47,4 +47,61 @@ class TravelManager {
         this.state.notify();
         return { success: true, message: `Traveling to ${targetPlanet.name}...` };
     }
+
+    /**
+     * Check for random encounters during travel
+     * @param {number} dt - Delta time in seconds
+     */
+    checkForEncounters(dt) {
+        // Don't check if already in combat or at a station
+        if (this.state.currentPlanet || !this.state.encounterManager) {
+            return;
+        }
+
+        const enemy = this.state.encounterManager.checkForEncounter(dt);
+
+        if (enemy) {
+            this.triggerEncounter(enemy);
+        }
+    }
+
+    /**
+     * Trigger an encounter with an enemy ship
+     */
+    triggerEncounter(enemy) {
+        console.log(`Encounter triggered: ${enemy.name}`);
+
+        this.state.currentEnemy = enemy;
+
+        // Check if dialogue should occur
+        const showDialogue = this.state.encounterManager.shouldShowDialogue(enemy);
+
+        if (showDialogue) {
+            // Show dialogue UI (will be handled by UIManager)
+            const options = this.state.encounterManager.getDialogueOptions(enemy);
+            const message = this.state.encounterManager.getEncounterMessage(enemy);
+
+            // For now, immediately start combat (dialogue UI integration comes later)
+            this.startCombat(enemy);
+        } else {
+            // Immediate combat
+            this.startCombat(enemy);
+        }
+    }
+
+    /**
+     * Start combat with enemy
+     */
+    startCombat(enemy) {
+        console.log(`Starting combat with ${enemy.name}`);
+
+        // Create combat manager
+        this.state.combatManager = new CombatManager(this.state, enemy);
+        this.state.combatManager.start();
+
+        // Switch to combat scene
+        if (this.state.game && this.state.game.sceneManager) {
+            this.state.game.sceneManager.changeScene('COMBAT');
+        }
+    }
 }
