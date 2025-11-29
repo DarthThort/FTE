@@ -54,7 +54,13 @@ class TravelManager {
      */
     checkForEncounters(dt) {
         // Don't check if already in combat or at a station
-        if (this.state.currentPlanet || !this.state.encounterManager) {
+        if (this.state.currentPlanet) {
+            console.log('[TravelManager] Skipping encounters: at planet');
+            return;
+        }
+
+        if (!this.state.encounterManager) {
+            console.log('[TravelManager] ERROR: encounterManager not initialized!');
             return;
         }
 
