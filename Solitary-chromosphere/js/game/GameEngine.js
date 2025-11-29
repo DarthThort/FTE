@@ -47,6 +47,7 @@ class GameEngine {
 
         // Check for random encounters during travel (when not in combat or at a planet)
         if (this.sceneManager.currentScene !== 'COMBAT' && this.sceneManager.currentScene !== 'PORT') {
+            console.log('[DEBUG] Checking encounters in scene:', this.sceneManager.currentScene);
             this.state.travelManager.checkForEncounters(dt);
         }
     }
