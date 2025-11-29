@@ -125,29 +125,6 @@ class GameState {
         this.portGenerator = new PortGenerator(this);
         this.crewManager = new CrewManager(this);
 
-        // Initialize starting crew using tile coordinates
-        const captainTile = { x: 14, y: 14 }; // Center of visible ship
-        const captainPixels = this.shipCoords.tileToPixel(captainTile.x, captainTile.y);
-        this.ship.crew.push({
-            id: 'captain_001',
-            name: 'Captain',
-            role: 'Captain',
-            health: 100,
-            maxHealth: 100,
-            skills: { piloting: 3, combat: 2, engineering: 1, medical: 1 },
-            tileX: captainTile.x,
-            tileY: captainTile.y,
-            x: captainPixels.x,
-            y: captainPixels.y,
-            targetX: null,
-            targetY: null,
-            path: [],
-            speed: 1.5,
-            state: 'idle',
-            wanderTimer: 0,
-            doorWaitTimer: 0
-        });
-
         // Star Systems (Sol + 10 nearest real systems)
         this.galaxy = null;
         this.currentSystem = null;
