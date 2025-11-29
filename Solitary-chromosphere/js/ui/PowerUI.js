@@ -254,7 +254,8 @@ class PowerUI {
             );
         }
 
-        // Draw O2 percentage
+        // O2 text indicators removed - now using visual oxygen bars in ShipRenderer
+        /*
         const centerTile = room.tiles[Math.floor(room.tiles.length / 2)];
         const o2Color = room.oxygen > 50 ? '#00ff55' : room.oxygen > 20 ? '#ffaa00' : '#ff0055';
 
@@ -275,6 +276,7 @@ class PowerUI {
             offsetY + centerTile[1] * cellSize + 13
         );
         ctx.textAlign = 'left';
+        */
     }
 
     // Render door controls panel - SIMPLIFIED VERSION
