@@ -7,7 +7,9 @@ class TravelManager {
         this.travelProgress = 0;
         this.travelDuration = 5.0; // 5 seconds travel time
         this.targetSystem = null;
+        this.targetPlanet = null; // For planetary travel
         this.encounterChecked = false;
+        this.isPlanetaryTravel = false; // Flag for lower encounter chance
     }
 
     travelToSystem(systemId) {
