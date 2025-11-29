@@ -31,7 +31,7 @@ class EncounterManager {
         if (!system) return null;
 
         // Calculate encounter chance (per second)
-        const baseChance = 0.02; // 2% per second = ~1 encounter every 50 seconds
+        const baseChance = 0.30; // 30% per second for testing (was 0.02 = 2%)
         const dangerMultiplier = this.getSystemDangerLevel(system);
         const encounterChance = baseChance * dangerMultiplier * dt;
 
