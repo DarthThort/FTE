@@ -224,9 +224,16 @@ class CombatManager {
 
             // Check if shields block (for player ship)
             if (target === this.state.ship && this.state.shieldManager) {
-                const blocked = this.state.shieldManager.takeDamage(damage);
-                if (blocked) {
-                    console.log(`[Combat] Shields absorbed ${damage} damage`);
+                const overflowDamage = this.state.shieldManager.takeDamage(damage);
+                if (overflowDamage === 0) {
+                    // Shields absorbed all damage
+                    console.log(`[Combat] Shields absorbed all ${damage} damage`);
+                    continue;
+                } else {
+                    // Apply overflow damage to hull
+                    console.log(`[Combat] Shields partially blocked. ${overflowDamage} damage to hull`);
+                    target.health = Math.max(0, target.health - overflowDamage);
+                    console.log(`[Combat] Player Hull: ${target.health}/${target.maxHealth}`);
                     continue;
                 }
             }
