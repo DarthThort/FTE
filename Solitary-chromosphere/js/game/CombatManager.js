@@ -38,19 +38,27 @@ class CombatManager {
 
         console.log(`Combat started: ${this.state.ship.name} vs ${this.enemy.name}`);
 
-        // Auto-charge all player weapons
-        this.state.weaponManager.weapons.forEach(weapon => {
-            if (weapon.state === 'idle') {
-                this.state.weaponManager.startCharging(weapon.id);
-            }
-        });
+        // Auto-charge all player weapons (if available)
+        if (this.state.weaponManager && this.state.weaponManager.weapons) {
+            this.state.weaponManager.weapons.forEach(weapon => {
+                if (weapon.state === 'idle') {
+                    this.state.weaponManager.startCharging(weapon.id);
+                }
+            });
+        } else {
+            console.warn('[Combat] No player weapons available');
+        }
 
         // Auto-charge all enemy weapons
-        this.enemy.weapons.forEach(weapon => {
-            if (weapon.state === 'idle') {
-                this.enemy.chargeWeapon(weapon.id);
-            }
-        });
+        if (this.enemy.weapons && this.enemy.weapons.length > 0) {
+            this.enemy.weapons.forEach(weapon => {
+                if (weapon.state === 'idle') {
+                    this.enemy.chargeWeapon(weapon.id);
+                }
+            });
+        } else {
+            console.warn('[Combat] No enemy weapons available');
+        }
     }
 
     /**
