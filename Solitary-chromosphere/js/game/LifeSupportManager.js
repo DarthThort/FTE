@@ -4,6 +4,92 @@ class LifeSupportManager {
         this.lastUpdate = Date.now();
     }
 
+    /**
+     * Detect rooms in ship layout using flood-fill algorithm
+     * A room is a connected area of walkable tiles (floor, systems, open doors)
+     * enclosed by walls and closed doors
+     */
+    detectRooms() {
+        const layout = this.state.ship.layout;
+        if (!layout || layout.length === 0) return [];
+
+        const visited = Array(layout.length).fill().map(() =>
+            Array(layout[0].length).fill(false)
+        );
+        const rooms = [];
+        let roomId = 0;
+
+        // Helper to check if a tile is walkable
+        const isWalkable = (x, y) => {
+            const tile = layout[y]?.[x];
+            return tile === 2 || tile === 3 || tile === 5; // floor, system, open door
+        };
+
+        // Flood-fill to find connected walkable tiles
+        const floodFill = (startX, startY) => {
+            const tiles = [];
+            const queue = [[startX, startY]];
+            visited[startY][startX] = true;
+
+            while (queue.length > 0) {
+                const [x, y] = queue.shift();
+                tiles.push([x, y]);
+
+                // Check 4-directional neighbors
+                const neighbors = [
+                    [x + 1, y], [x - 1, y],
+                    [x, y + 1], [x, y - 1]
+                ];
+
+                for (const [nx, ny] of neighbors) {
+                    if (nx >= 0 && nx < layout[0].length &&
+                        ny >= 0 && ny < layout.length &&
+                        !visited[ny][nx] && isWalkable(nx, ny)) {
+                        visited[ny][nx] = true;
+                        queue.push([nx, ny]);
+                    }
+                }
+            }
+
+            return tiles;
+        };
+
+        // Calculate center of room (average of all tile positions)
+        const calculateCenter = (tiles) => {
+            const sumX = tiles.reduce((sum, [x, y]) => sum + x, 0);
+            const sumY = tiles.reduce((sum, [x, y]) => sum + y, 0);
+            return {
+                x: Math.round(sumX / tiles.length),
+                y: Math.round(sumY / tiles.length)
+            };
+        };
+
+        // Scan layout for rooms
+        for (let y = 0; y < layout.length; y++) {
+            for (let x = 0; x < layout[0].length; x++) {
+                if (!visited[y][x] && isWalkable(x, y)) {
+                    const tiles = floodFill(x, y);
+
+                    // Only create room if it has at least 2 tiles
+                    if (tiles.length >= 2) {
+                        rooms.push({
+                            id: `room_${roomId++}`,
+                            tiles: tiles,
+                            center: calculateCenter(tiles),
+                            oxygen: 100,
+                            onFire: false,
+                            fireIntensity: 0,
+                            breached: false,
+                            doors: {}
+                        });
+                    }
+                }
+            }
+        }
+
+        return rooms;
+    }
+
     // Main Update Loop
     tick() {
         const now = Date.now();

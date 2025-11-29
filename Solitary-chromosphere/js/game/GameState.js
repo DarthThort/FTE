@@ -111,7 +111,13 @@ class GameState {
         // Initialize combat managers first
         this.powerManager = new PowerManager(this);
         this.lifeSupportManager = new LifeSupportManager(this);
+
+        // Detect and initialize rooms
+        this.ship.rooms = this.lifeSupportManager.detectRooms();
+        console.log(`Detected ${this.ship.rooms.length} rooms in ship`);
+
         this.weaponManager = new WeaponManager(this);
+
         this.shieldManager = new ShieldManager(this);
 
         // Generate rooms and doors from layout
