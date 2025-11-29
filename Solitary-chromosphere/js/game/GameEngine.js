@@ -38,6 +38,21 @@ class GameEngine {
 
         this.update(deltaTime);
         this.render();
+
+        requestAnimationFrame((time) => this.loop(time));
+    }
+
+    update(dt) {
+        this.sceneManager.update(dt);
+
+        // Check for encounters during active FTL travel
+        if (this.state.travelManager.isTraveling) {
+            this.state.travelManager.updateTravel(dt);
+        }
+    }
+
+    render() {
+        this.ctx.fillStyle = '#05050a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.sceneManager.render(this.ctx);
