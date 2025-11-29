@@ -56,6 +56,43 @@ class GameEngine {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.sceneManager.render(this.ctx);
+
+        // Render CombatUI if in combat
+        if (this.sceneManager.currentScene === 'COMBAT' && this.state.combatManager) {
+            this.renderCombatUI();
+        }
+    }
+
+    renderCombatUI() {
+        // Create/update combat UI
+        let combatUIContainer = document.getElementById('combat-ui-container');
+
+        if (!combatUIContainer) {
+            combatUIContainer = document.createElement('div');
+            combatUIContainer.id = 'combat-ui-container';
+            document.body.appendChild(combatUIContainer);
+        }
+
+        // Create CombatUI if not exists
+        if (!this.combatUI) {
+            this.combatUI = new CombatUI(this);
+        }
+
+        // Initialize with current combat manager
+        if (this.state.combatManager && this.state.combatManager.active) {
+            this.combatUI.initialize(this.state.combatManager);
+            combatUIContainer.innerHTML = this.combatUI.render();
+            this.combatUI.attachEventListeners();
+        } else if (this.state.combatManager && this.state.combatManager.victor) {
+            // Show victory/defeat screen
+            const status = this.state.combatManager.getStatus();
+            if (status.victor === 'player') {
+                combatUIContainer.innerHTML = this.combatUI.showVictoryScreen(status.rewards);
+            } else {
+                combatUIContainer.innerHTML = this.combatUI.showDefeatScreen();
+            }
+            this.combatUI.attachEventListeners();
+        }
     }
 
     drawGrid() {
