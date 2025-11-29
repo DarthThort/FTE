@@ -238,6 +238,12 @@ class ShipRenderer {
         if (!ship.rooms || ship.rooms.length === 0) return;
 
         ship.rooms.forEach(room => {
+            // Safety check: ensure room has center
+            if (!room.center || typeof room.center.x === 'undefined' || typeof room.center.y === 'undefined') {
+                console.warn('Room missing center coordinates:', room);
+                return;
+            }
+
             const centerX = room.center.x * this.tileSize;
             const centerY = room.center.y * this.tileSize;
 
