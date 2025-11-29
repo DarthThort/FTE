@@ -39,12 +39,13 @@ class CombatManager {
         console.log(`Combat started: ${this.state.ship.name} vs ${this.enemy.name}`);
 
         // Auto-charge all player weapons (if available)
-        if (this.state.weaponManager && this.state.weaponManager.weapons) {
-            this.state.weaponManager.weapons.forEach(weapon => {
+        if (this.state.ship.weapons && this.state.ship.weapons.length > 0) {
+            this.state.ship.weapons.forEach(weapon => {
                 if (weapon.state === 'idle') {
-                    this.state.weaponManager.startCharging(weapon.id);
+                    this.state.weaponManager.chargeWeapon(weapon.id);
                 }
             });
+            console.log(`[Combat] Charging ${this.state.ship.weapons.length} player weapons`);
         } else {
             console.warn('[Combat] No player weapons available');
         }
@@ -84,15 +85,14 @@ class CombatManager {
         if (!this.active || this.paused) return;
 
         // Update weapons
-        // TODO: Fix weaponManager integration
-        // this.state.weaponManager.tick(dt);
+        this.state.weaponManager.update(dt);
         this.enemy.tickWeapons(dt);
 
         // Update enemy AI
         this.tickEnemyAI(dt);
 
-        // Auto-fire ready weapons (disabled until weaponManager works)
-        // this.autoFireWeapons();
+        // Auto-fire ready weapons
+        this.autoFireWeapons();
 
         // Check for combat end
         if (this.checkCombatEnd()) {
