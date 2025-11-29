@@ -181,23 +181,55 @@ class CombatManager {
     /**
      * Auto-fire ready weapons
      */
+    /**
+     * Auto-fire all ready weapons
+     */
     autoFireWeapons() {
-        // Player weapons (disabled - weaponManager integration needed)
-        /* 
-        this.state.weaponManager.weapons.forEach(weapon => {
-            if (weapon.state === 'ready') {
-                this.firePlayerWeapon(weapon.id);
-            }
-        });
-        */
-
+        // Player weapons
+        if (this.state.ship.weapons && this.state.ship.weapons.length > 0) {
+            this.state.ship.weapons.forEach(weapon => {
+                if (weapon.state === 'ready') {
+                    // Fire at enemy
+                    const fired = this.state.weaponManager.fireWeapon(weapon.id, this.enemy);
+                    if (fired) {
+                        // Apply damage to enemy
+                        this.applyWeaponDamage(weapon, this.enemy);
+                    }
+                }
+            });
+        }
         // Enemy weapons
         if (this.enemy.weapons && this.enemy.weapons.length > 0) {
             this.enemy.weapons.forEach(weapon => {
                 if (weapon.state === 'ready') {
-                    this.fireEnemyWeapon(weapon.id);
+                    // Fire at player
+                    this.applyWeaponDamage(weapon, this.state.ship);
+                    weapon.state = 'cooldown';
+                    weapon.currentCharge = weapon.cooldownTime;
                 }
             });
+        }
+    }
+
+    /**
+     * Apply weapon damage to target
+     */
+    applyWeaponDamage(weapon, target) {
+        for (let i = 0; i < weapon.shots; i++) {
+            const damage = weapon.damagePerShot || weapon.damage || 10;
+
+            // Check if shields block (for player ship)
+            if (target === this.state.ship && this.state.shieldManager) {
+                const blocked = this.state.shieldManager.takeDamage(damage);
+                if (blocked) {
+                    console.log(`[Combat] Shields absorbed ${damage} damage`);
+                    continue;
+                }
+            }
+
+            // Apply hull damage
+            target.health = Math.max(0, target.health - damage);
+            console.log(`[Combat] ${damage} damage to ${target.name || 'target'}! Health: ${target.health}`);
         }
     }
 
