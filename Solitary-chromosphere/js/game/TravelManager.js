@@ -97,14 +97,22 @@ class TravelManager {
      * Complete travel successfully
      */
     completeTravel() {
-        console.log(`Arrived at ${this.targetSystem.name}`);
-
-        this.state.currentSystem = this.targetSystem;
-        this.state.currentPlanet = null;
-        this.targetSystem.visited = true;
+        if (this.targetSystem) {
+            // System jump
+            console.log(`Arrived at ${this.targetSystem.name}`);
+            this.state.currentSystem = this.targetSystem;
+            this.state.currentPlanet = null;
+            this.targetSystem.visited = true;
+        } else if (this.targetPlanet) {
+            // Planetary travel
+            console.log(`Arrived at ${this.targetPlanet.name}`);
+            this.state.currentPlanet = this.targetPlanet;
+        }
 
         this.isTraveling = false;
         this.targetSystem = null;
+        this.targetPlanet = null;
+        this.isPlanetaryTravel = false;
 
         this.state.saveGame();
         this.state.notify();
