@@ -111,9 +111,20 @@ class GameState {
         // Initialize combat managers first
         this.powerManager = new PowerManager(this);
         this.lifeSupportManager = new LifeSupportManager(this);
+        this.weaponManager = new WeaponManager(this);
+        this.shieldManager = new ShieldManager(this);
+
+        // Initialize other managers
+        this.galaxyManager = new GalaxyManager(this);
+        this.cargoManager = new CargoManager(this);
         this.travelManager = new TravelManager(this);
         this.portGenerator = new PortGenerator(this);
         this.crewManager = new CrewManager(this);
+
+        // Detect and initialize rooms AFTER all managers are created
+        this.ship.rooms = this.lifeSupportManager.detectRooms();
+        this.ship.doors = this.generateDoors();
+        console.log(`Detected ${this.ship.rooms.length} rooms in ship`);
 
         // Star Systems (Sol + 10 nearest real systems)
         this.galaxy = null;
