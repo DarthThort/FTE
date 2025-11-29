@@ -136,10 +136,18 @@ class TravelManager {
         }
 
         this.state.ship.fuel -= fuelCost;
-        this.state.currentPlanet = targetPlanet;
 
-        this.state.saveGame();
-        this.state.notify();
+        // Start planetary travel (shorter duration, lower encounter chance)
+        this.isTraveling = true;
+        this.travelProgress = 0;
+        this.travelDuration = 3.0; // 3 seconds for planetary travel
+        this.targetPlanet = targetPlanet;
+        this.targetSystem = null; // Mark as planetary travel
+        this.encounterChecked = false;
+        this.isPlanetaryTravel = true; // Flag for lower encounter chance
+
+        console.log(`[TRAVEL] Starting planetary travel to ${targetPlanet.name}...`);
+
         return { success: true, message: `Traveling to ${targetPlanet.name}...` };
     }
 }
