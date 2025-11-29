@@ -24,18 +24,25 @@ class EncounterManager {
         // Cooldown between encounters (minimum 30 seconds)
         if (this.encounterCooldown > 0) {
             this.encounterCooldown -= dt;
+            console.log('[Encounter] Cooldown active:', this.encounterCooldown.toFixed(1), 's remaining');
             return null;
         }
 
         const system = this.state.currentSystem;
-        if (!system) return null;
+        if (!system) {
+            console.log('[Encounter] No current system!');
+            return null;
+        }
 
         // Calculate encounter chance (per second)
         const baseChance = 0.30; // 30% per second for testing (was 0.02 = 2%)
         const dangerMultiplier = this.getSystemDangerLevel(system);
         const encounterChance = baseChance * dangerMultiplier * dt;
+        const roll = Math.random();
 
-        if (Math.random() < encounterChance) {
+        console.log(`[Encounter] Roll: ${roll.toFixed(3)} vs ${encounterChance.toFixed(3)} (base ${baseChance} × danger ${dangerMultiplier.toFixed(2)} × dt ${dt.toFixed(3)})`);
+
+        if (roll < encounterChance) {
             this.encounterCooldown = 30; // 30 second cooldown
             return this.spawnEnemy(system);
         }
