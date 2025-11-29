@@ -84,14 +84,15 @@ class CombatManager {
         if (!this.active || this.paused) return;
 
         // Update weapons
-        this.state.weaponManager.tick(dt);
+        // TODO: Fix weaponManager integration
+        // this.state.weaponManager.tick(dt);
         this.enemy.tickWeapons(dt);
 
         // Update enemy AI
         this.tickEnemyAI(dt);
 
-        // Auto-fire ready weapons
-        this.autoFireWeapons();
+        // Auto-fire ready weapons (disabled until weaponManager works)
+        // this.autoFireWeapons();
 
         // Check for combat end
         if (this.checkCombatEnd()) {
@@ -181,19 +182,23 @@ class CombatManager {
      * Auto-fire ready weapons
      */
     autoFireWeapons() {
-        // Player weapons
+        // Player weapons (disabled - weaponManager integration needed)
+        /* 
         this.state.weaponManager.weapons.forEach(weapon => {
             if (weapon.state === 'ready') {
                 this.firePlayerWeapon(weapon.id);
             }
         });
+        */
 
         // Enemy weapons
-        this.enemy.weapons.forEach(weapon => {
-            if (weapon.state === 'ready') {
-                this.fireEnemyWeapon(weapon.id);
-            }
-        });
+        if (this.enemy.weapons && this.enemy.weapons.length > 0) {
+            this.enemy.weapons.forEach(weapon => {
+                if (weapon.state === 'ready') {
+                    this.fireEnemyWeapon(weapon.id);
+                }
+            });
+        }
     }
 
     /**
