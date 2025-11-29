@@ -79,23 +79,7 @@ class GameState {
             rooms: [],  // Will be generated
             doors: [],  // Will be generated
             modules: [],
-            crew: [{
-                id: 'captain_001',
-                name: 'Captain',
-                role: 'Captain',
-                health: 100,
-                maxHealth: 100,
-                skills: { piloting: 3, combat: 2, engineering: 1, medical: 1 },
-                x: 464,
-                y: 656,
-                targetX: null,
-                targetY: null,
-                path: [],
-                speed: 1.5,
-                state: 'idle',
-                wanderTimer: 0,
-                doorWaitTimer: 0
-            }],
+            crew: [],  // Will be populated after shipCoords is initialized
             maxCrew: 6,
             fuel: 100,
             maxFuel: 100
@@ -121,6 +105,9 @@ class GameState {
             { id: 'electronics', name: 'Microchips', price: 150, stock: 10 }
         ];
 
+        // Initialize coordinate system
+        this.shipCoords = new ShipCoordinates(32);
+
         // Initialize combat managers first
         this.powerManager = new PowerManager(this);
         this.lifeSupportManager = new LifeSupportManager(this);
@@ -137,6 +124,29 @@ class GameState {
         this.travelManager = new TravelManager(this);
         this.portGenerator = new PortGenerator(this);
         this.crewManager = new CrewManager(this);
+
+        // Initialize starting crew using tile coordinates
+        const captainTile = this.shipCoords.getWalkableTileInArea(this.ship.layout, 'center');
+        const captainPixels = this.shipCoords.tileToPixel(captainTile.x, captainTile.y);
+        this.ship.crew.push({
+            id: 'captain_001',
+            name: 'Captain',
+            role: 'Captain',
+            health: 100,
+            maxHealth: 100,
+            skills: { piloting: 3, combat: 2, engineering: 1, medical: 1 },
+            tileX: captainTile.x,
+            tileY: captainTile.y,
+            x: captainPixels.x,
+            y: captainPixels.y,
+            targetX: null,
+            targetY: null,
+            path: [],
+            speed: 1.5,
+            state: 'idle',
+            wanderTimer: 0,
+            doorWaitTimer: 0
+        });
 
         // Star Systems (Sol + 10 nearest real systems)
         this.galaxy = null;
