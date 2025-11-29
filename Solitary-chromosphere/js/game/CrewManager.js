@@ -16,10 +16,17 @@ class CrewManager {
         }
 
         this.state.credits -= crew.cost;
+
+        // Use tile-based spawning for hired crew
+        const spawnTile = this.state.shipCoords.getRandomWalkableTile(this.state.ship.layout);
+        const spawnPixels = this.state.shipCoords.tileToPixel(spawnTile.x, spawnTile.y);
+
         this.state.ship.crew.push({
             ...crew,
-            x: 464,
-            y: 336,
+            tileX: spawnTile.x,
+            tileY: spawnTile.y,
+            x: spawnPixels.x,
+            y: spawnPixels.y,
             targetX: null,
             targetY: null,
             path: [],
