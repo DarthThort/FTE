@@ -227,9 +227,14 @@ class CombatManager {
                 }
             }
 
-            // Apply hull damage
-            target.health = Math.max(0, target.health - damage);
-            console.log(`[Combat] ${damage} damage to ${target.name || 'target'}! Health: ${target.health}`);
+            // Apply hull damage (enemy uses .hull, player uses .health)
+            if (target === this.enemy) {
+                target.hull = Math.max(0, target.hull - damage);
+                console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.hull}/${target.maxHull}`);
+            } else {
+                target.health = Math.max(0, target.health - damage);
+                console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.health}/${target.maxHealth}`);
+            }
         }
     }
 
