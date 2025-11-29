@@ -6,6 +6,7 @@ class GameEngine {
         this.lastTime = 0;
 
         this.state = new GameState();
+        this.state.game = this; // Give GameState reference to game engine
         this.input = new InputHandler(canvas);
         this.sceneManager = new SceneManager(this);
 
@@ -43,6 +44,11 @@ class GameEngine {
 
     update(dt) {
         this.sceneManager.update(dt);
+
+        // Check for random encounters during travel (when not in combat or at a planet)
+        if (this.sceneManager.currentScene !== 'COMBAT' && this.sceneManager.currentScene !== 'PORT') {
+            this.state.travelManager.checkForEncounters(dt);
+        }
     }
 
     render() {
