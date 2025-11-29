@@ -17,32 +17,30 @@ class EncounterManager {
 
     /**
      * Check if an encounter should occur during travel
-     * @param {number} dt - Delta time in seconds
+     * @param {number} customChance - Optional custom encounter chance (0.0-1.0)
      * @returns {EnemyShip|null} Enemy ship if encounter triggered
      */
-    checkForEncounter(dt) {
+    checkForEncounter(customChance = null) {
         // Cooldown between encounters (minimum 30 seconds)
         if (this.encounterCooldown > 0) {
-            this.encounterCooldown -= dt;
-            console.log('[Encounter] Cooldown active:', this.encounterCooldown.toFixed(1), 's remaining');
+            this.encounterCooldown -= 1.0;
             return null;
         }
 
         const system = this.state.currentSystem;
-        if (!system) {
-            console.log('[Encounter] No current system!');
-            return null;
+        if (!system) return null;
+
+        // Use custom chance if provided, otherwise calculate based on system danger
+        let encounterChance;
+        if (customChance !== null) {
+            encounterChance = customChance;
+        } else {
+            const baseChance = 0.30;
+            const dangerMultiplier = this.getSystemDangerLevel(system);
+            encounterChance = baseChance * dangerMultiplier * 0.016;
         }
 
-        // Calculate encounter chance (per second)
-        const baseChance = 0.30; // 30% per second for testing (was 0.02 = 2%)
-        const dangerMultiplier = this.getSystemDangerLevel(system);
-        const encounterChance = baseChance * dangerMultiplier * dt;
-        const roll = Math.random();
-
-        console.log(`[Encounter] Roll: ${roll.toFixed(3)} vs ${encounterChance.toFixed(3)} (base ${baseChance} × danger ${dangerMultiplier.toFixed(2)} × dt ${dt.toFixed(3)})`);
-
-        if (roll < encounterChance) {
+        if (Math.random() < encounterChance) {
             this.encounterCooldown = 30; // 30 second cooldown
             return this.spawnEnemy(system);
         }
