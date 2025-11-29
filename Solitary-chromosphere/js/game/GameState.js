@@ -121,6 +121,11 @@ class GameState {
         this.portGenerator = new PortGenerator(this);
         this.crewManager = new CrewManager(this);
 
+        // Combat system managers
+        this.encounterManager = new EncounterManager(this);
+        this.combatManager = null; // Created when combat starts
+        this.currentEnemy = null; // Current enemy ship in combat
+
         // Detect and initialize rooms AFTER all managers are created
         this.ship.rooms = this.lifeSupportManager.detectRooms();
         this.ship.doors = this.generateDoors();
