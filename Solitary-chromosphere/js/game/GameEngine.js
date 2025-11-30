@@ -78,10 +78,20 @@ class GameEngine {
             this.combatUI = new CombatUI(this);
         }
 
+        // Create EnemyShipOverlay if not exists
+        if (!this.enemyOverlay) {
+            this.enemyOverlay = new EnemyShipOverlay(this);
+        }
+
         // Initialize with current combat manager
         if (this.state.combatManager && this.state.combatManager.active) {
             this.combatUI.initialize(this.state.combatManager);
-            combatUIContainer.innerHTML = this.combatUI.render();
+
+            // Initialize enemy overlay
+            this.enemyOverlay.initialize(this.state.combatManager.enemy);
+
+            // Render both UIs
+            combatUIContainer.innerHTML = this.combatUI.render() + this.enemyOverlay.render();
             this.combatUI.attachEventListeners();
         } else if (this.state.combatManager && this.state.combatManager.victor) {
             // Show victory/defeat screen
