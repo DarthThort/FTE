@@ -63,7 +63,7 @@ class GameEngine {
 
         // Update damage numbers
         this.damageNumbers.update(dt);
-        
+
         // Update combat effects
         this.combatEffects.update(dt);
     }
@@ -88,7 +88,7 @@ class GameEngine {
 
         // Render damage numbers
         this.damageNumbers.render();
-        
+
         // Render combat effects (projectiles, particles, hit markers)
         this.combatEffects.render(this.ctx);
     }
@@ -100,6 +100,7 @@ class GameEngine {
         if (!combatUIContainer) {
             combatUIContainer = document.createElement('div');
             combatUIContainer.id = 'combat-ui-container';
+            combatUIContainer.style.pointerEvents = 'auto';
             document.body.appendChild(combatUIContainer);
         }
 
