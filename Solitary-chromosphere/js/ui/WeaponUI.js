@@ -278,6 +278,26 @@ class WeaponUI {
                 // Check if in combat
                 const combatManager = this.game.state.combatManager;
                 if (combatManager && combatManager.active && combatManager.enemy) {
+                    // Fire at enemy during combat
+                    const weapon = this.game.state.weaponManager.getWeapon(weaponId);
+                    if (weapon && weapon.state === 'ready') {
+                        const fired = this.game.state.weaponManager.fireWeapon(weaponId, combatManager.enemy);
+                        if (fired) {
+                            // Flash button on fire using CSS class
+                            btn.classList.add('weapon-fired');
+                            setTimeout(() => {
+                                btn.classList.remove('weapon-fired');
+                            }, 200);
+
+                            // Apply damage via combat manager
+                            combatManager.applyWeaponDamage(weapon, combatManager.enemy);
+                            console.log(`[Manual Fire] ${weapon.name} fired at ${combatManager.enemy.name}!`);
+                        }
+                    }
+                } else {
+                    // Normal targeting (outside combat)
+                    const targetSelect = document.querySelector(`.weapon-target-select[data-weapon-id="${weaponId}"]`);
+                    const target = targetSelect ? targetSelect.value : 'hull';
                     this.game.state.weaponManager.fireWeapon(weaponId, target);
                 }
 
