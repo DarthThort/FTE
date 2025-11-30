@@ -31,7 +31,6 @@ class CombatUI {
         }
 
         const status = this.combatManager.getStatus();
-        const enemy = this.combatManager.enemy;
 
         const content = `
             <div id="combat-ui" style="
@@ -41,199 +40,41 @@ class CombatUI {
                 transform: translateX(-50%);
                 background: rgba(10, 10, 25, 0.95);
                 border: 2px solid var(--warning);
-                border-radius: 12px;
-                padding: 20px;
-                min-width: 500px;
+                border-radius: 8px;
+                padding: 12px 24px;
                 z-index: 1000;
                 font-family: var(--font-tech);
-                box-shadow: 0 0 30px rgba(255,0,85,0.5);
+                box-shadow: 0 0 20px rgba(255,0,85,0.3);
+                display: flex;
+                align-items: center;
+                gap: 20px;
             ">
-                <!-- Header -->
+                <!-- Combat Status -->
                 <div style="
-                    text-align: center;
-                    margin-bottom: 15px;
-                    padding-bottom: 15px;
-                    border-bottom: 2px solid var(--warning);
-                ">
-                    <h2 style="
-                        margin: 0;
-                        color: var(--warning);
-                        font-size: 1.5rem;
-                        text-transform: uppercase;
-                        letter-spacing: 2px;
-                    ">⚔️ COMBAT ⚔️</h2>
-                    <div style="
-                        margin-top: 8px;
-                        font-size: 0.9rem;
-                        color: #aaa;
-                    ">
-                        ${this.game.state.ship.name} vs ${enemy.name}
-                    </div>
-                </div>
+                    color: var(--warning);
+                    font-weight: bold;
+                    font-size: 1rem;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                ">⚔️ COMBAT ACTIVE</div>
                 
-                <!-- Ships Status -->
-                <div style="
-                    display: flex;
-                    justify-content: space-between;
-                    gap: 30px;
-                    margin-bottom: 20px;
-                ">
-                    <!-- Player Ship -->
-                    <div style="flex: 1;">
-                        <div style="
-                            font-size: 0.9rem;
-                            color: var(--primary);
-                            font-weight: bold;
-                            margin-bottom: 8px;
-                            text-align: center;
-                        ">YOUR SHIP</div>
-                        
-                        <!-- Hull -->
-                        <div style="margin-bottom: 8px;">
-                            <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                font-size: 0.8rem;
-                                margin-bottom: 4px;
-                            ">
-                                <span>❤️ HULL</span>
-                                <span>${Math.round(status.playerHull)}/${status.playerMaxHull}</span>
-                            </div>
-                            <div style="
-                                width: 100%;
-                                height: 16px;
-                                background: rgba(255,255,255,0.1);
-                                border-radius: 4px;
-                                overflow: hidden;
-                            ">
-                                <div style="
-                                    width: ${(status.playerHull / status.playerMaxHull) * 100}%;
-                                    height: 100%;
-                                    background: linear-gradient(90deg, #00ff55, #00aa33);
-                                    transition: width 0.3s;
-                                "></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Shields -->
-                        <div>
-                            <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                font-size: 0.8rem;
-                                margin-bottom: 4px;
-                            ">
-                                <span>🛡️ SHIELDS</span>
-                                <span>${status.playerShields} layers</span>
-                            </div>
-                            <div style="display: flex; gap: 4px;">
-                                ${this.renderShieldLayers(status.playerShields, this.game.state.ship.shields.maxLayers)}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- VS -->
-                    <div style="
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-size: 2rem;
-                        color: var(--warning);
-                        font-weight: bold;
-                    ">VS</div>
-                    
-                    <!-- Enemy Ship -->
-                    <div style="flex: 1;">
-                        <div style="
-                            font-size: 0.9rem;
-                            color: var(--warning);
-                            font-weight: bold;
-                            margin-bottom: 8px;
-                            text-align: center;
-                        ">ENEMY SHIP</div>
-                        
-                        <!-- Hull -->
-                        <div style="margin-bottom: 8px;">
-                            <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                font-size: 0.8rem;
-                                margin-bottom: 4px;
-                            ">
-                                <span>❤️ HULL</span>
-                                <span>${Math.round(status.enemyHull)}/${Math.round(status.enemyMaxHull)}</span>
-                            </div>
-                            <div style="
-                                width: 100%;
-                                height: 16px;
-                                background: rgba(255,255,255,0.1);
-                                border-radius: 4px;
-                                overflow: hidden;
-                            ">
-                                <div style="
-                                    width: ${(status.enemyHull / status.enemyMaxHull) * 100}%;
-                                    height: 100%;
-                                    background: linear-gradient(90deg, #ff0055, #aa0033);
-                                    transition: width 0.3s;
-                                "></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Shields -->
-                        <div>
-                            <div style="
-                                display: flex;
-                                justify-content: space-between;
-                                font-size: 0.8rem;
-                                margin-bottom: 4px;
-                            ">
-                                <span>🛡️ SHIELDS</span>
-                                <span>${status.enemyShields} layers</span>
-                            </div>
-                            <div style="display: flex; gap: 4px;">
-                                ${this.renderShieldLayers(status.enemyShields, enemy.maxShields)}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Controls -->
-                <div style="
-                    display: flex;
-                    gap: 10px;
-                    justify-content: center;
-                ">
-                    <button id="combat-pause-btn" style="
-                        padding: 12px 24px;
-                        font-size: 1rem;
-                        background: ${status.paused ? 'rgba(0,255,85,0.2)' : 'rgba(255,170,0,0.2)'};
-                        border: 2px solid ${status.paused ? '#00ff55' : '#ffaa00'};
-                        color: ${status.paused ? '#00ff55' : '#ffaa00'};
-                        border-radius: 6px;
-                        cursor: pointer;
-                        font-family: var(--font-tech);
-                        font-weight: bold;
-                        text-transform: uppercase;
-                        transition: all 0.2s;
-                    " onmouseover="this.style.transform='scale(1.05)'" 
-                       onmouseout="this.style.transform='scale(1)'">
-                        ${status.paused ? '▶️ RESUME' : '⏸️ PAUSE'}
-                    </button>
-                </div>
-                
-                <!-- Target Info -->
-                ${status.playerTarget ? `
-                    <div style="
-                        margin-top: 15px;
-                        padding-top: 15px;
-                        border-top: 1px solid rgba(255,255,255,0.1);
-                        text-align: center;
-                        font-size: 0.85rem;
-                        color: var(--primary);
-                    ">
-                        🎯 Target: ${status.playerTarget.name}
-                    </div>
-                ` : ''}
+                <!-- Pause Button -->
+                <button id="combat-pause-btn" style="
+                    padding: 8px 16px;
+                    font-size: 0.9rem;
+                    background: ${status.paused ? 'rgba(0,255,85,0.2)' : 'rgba(255,170,0,0.2)'};
+                    border: 2px solid ${status.paused ? '#00ff55' : '#ffaa00'};
+                    color: ${status.paused ? '#00ff55' : '#ffaa00'};
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-family: var(--font-tech);
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    transition: all 0.2s;
+                " onmouseover="this.style.transform='scale(1.05)'" 
+                   onmouseout="this.style.transform='scale(1)'">
+                    ${status.paused ? '▶️ RESUME' : '⏸️ PAUSE'}
+                </button>
             </div>
         `;
 
