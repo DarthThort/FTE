@@ -119,10 +119,11 @@ class CombatUI {
                 border-radius: 12px;
                 padding: 40px;
                 min-width: 400px;
-                z-index: 2000;
+                z-index: 999999;
                 font-family: var(--font-tech);
                 text-align: center;
                 box-shadow: 0 0 50px rgba(0,255,85,0.5);
+                pointer-events: auto;
             ">
                 <h1 style="
                     margin: 0 0 20px 0;
@@ -166,7 +167,12 @@ class CombatUI {
                     </div>
                 </div>
                 
-                <button id="combat-continue-btn" style="
+                <button onclick="
+                    const combatUI = document.getElementById('combat-ui');
+                    const resultUI = document.getElementById('combat-result');
+                    if (combatUI) combatUI.remove();
+                    if (resultUI) resultUI.remove();
+                " style="
                     padding: 15px 40px;
                     font-size: 1.2rem;
                     background: rgba(0,255,85,0.2);
