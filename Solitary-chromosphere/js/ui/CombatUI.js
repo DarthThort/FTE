@@ -203,6 +203,7 @@ class CombatUI {
                 font-family: var(--font-tech);
                 text-align: center;
                 box-shadow: 0 0 50px rgba(255,0,85,0.5);
+                pointer-events: auto;
             ">
                 <h1 style="
                     margin: 0 0 20px 0;
