@@ -147,32 +147,6 @@ class GameState {
     }
 
     loadGame() {
-        // Check for pre-travel save first (for combat retry)
-        const preTravelData = localStorage.getItem('pre_travel_save');
-        if (preTravelData) {
-            try {
-                const saveData = JSON.parse(preTravelData);
-                console.log('[Save] Loading pre-travel save...', saveData);
-
-                // Restore critical values from pre-travel save
-                this.credits = saveData.credits;
-                this.ship.health = saveData.shipHealth;
-                this.ship.fuel = saveData.shipFuel;
-
-                if (saveData.currentPlanet) this.currentPlanet = saveData.currentPlanet;
-                if (saveData.currentSystem) this.currentSystem = saveData.currentSystem;
-
-                // Clear pre-travel save after loading it once
-                localStorage.removeItem('pre_travel_save');
-                console.log('[Save] Pre-travel state restored');
-
-                // Continue with normal save loading to get everything else
-            } catch (e) {
-                console.error('[Save] Failed to load pre-travel save:', e);
-                localStorage.removeItem('pre_travel_save');
-            }
-        }
-
         const savedData = localStorage.getItem('spaceSimSave');
         if (savedData) {
             try {
@@ -250,6 +224,21 @@ class GameState {
             }
         } else {
             this.galaxyManager.initializeGalaxy();
+        }
+
+        // Load pre-travel save LAST to override hull health
+        const preTravelData = localStorage.getItem('pre_travel_save');
+        if (preTravelData) {
+            try {
+                const saveData = JSON.parse(preTravelData);
+                console.log('[RETRY] Restoring hull from pre-travel save:', saveData.shipHealth);
+                this.ship.health = saveData.shipHealth;
+                localStorage.removeItem('pre_travel_save');
+                console.log('[RETRY] Hull restored to:', this.ship.health);
+            } catch (e) {
+                console.error('[RETRY] Failed to load pre-travel save:', e);
+                localStorage.removeItem('pre_travel_save');
+            }
         }
     }
 
