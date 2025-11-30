@@ -68,6 +68,33 @@ class HUD {
                         <span>Fuel</span>
                         <span class="stat-value">${state.ship.fuel}/${state.ship.maxFuel}</span>
                     </div>
+                    
+                    <!-- Hull Health Bar -->
+                    <div style="margin: 10px 0;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="font-size: 0.85rem; color: var(--text-main);">Hull</span>
+                            <span style="font-size: 0.85rem; color: ${state.ship.health / state.ship.maxHealth > 0.5 ? '#00ff55' : state.ship.health / state.ship.maxHealth > 0.25 ? '#ffaa00' : '#ff0055'};">
+                                ${state.ship.health}/${state.ship.maxHealth}
+                            </span>
+                        </div>
+                        <div style="
+                            width: 100%;
+                            height: 12px;
+                            background: rgba(255,255,255,0.1);
+                            border-radius: 6px;
+                            overflow: hidden;
+                            border: 1px solid rgba(255,255,255,0.2);
+                        ">
+                            <div style="
+                                width: ${(state.ship.health / state.ship.maxHealth) * 100}%;
+                                height: 100%;
+                                background: ${state.ship.health / state.ship.maxHealth > 0.5 ? '#00ff55' : state.ship.health / state.ship.maxHealth > 0.25 ? '#ffaa00' : '#ff0055'};
+                                box-shadow: 0 0 8px ${state.ship.health / state.ship.maxHealth > 0.5 ? '#00ff55' : state.ship.health / state.ship.maxHealth > 0.25 ? '#ffaa00' : '#ff0055'};
+                                transition: width 0.3s ease, background 0.3s ease;
+                            "></div>
+                        </div>
+                    </div>
+                    
                     <div class="stat-row">
                         <span>Location</span>
                         <span class="stat-value">${state.currentPlanet?.name || 'Unknown'}</span>
