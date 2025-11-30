@@ -272,16 +272,16 @@ class CombatManager {
                 if (this.state.game && this.state.game.damageNumbers) {
                     // Enemy overlay is at top-left (left: 20px, top: 80px)
                     // We'll spawn numbers around there
-                    this.state.game.damageNumbers.add(150, 150, damage, '#ff0055');
+                    this.state.game.damageNumbers.add(405, 80, damage, '#ff0055');
                 }
 
                 // Add visual effects
                 if (this.state.game && this.state.game.combatEffects) {
                     // Hit marker at enemy position
-                    this.state.game.combatEffects.addHitMarker(150, 150, '#fff');
+                    this.state.game.combatEffects.addHitMarker(405, 80, '#fff');
 
                     // Impact particles
-                    this.state.game.combatEffects.addImpactParticles(150, 150, 8, '#ff0055');
+                    this.state.game.combatEffects.addImpactParticles(405, 80, 8, '#ff0055');
 
                     // Impact sound
                     this.state.game.combatEffects.playImpactSound();
