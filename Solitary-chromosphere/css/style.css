@@ -345,19 +345,35 @@ button:hover {
 }
 /* Combat Visual Effects */
 @keyframes enemy-hit-flash {
-    0% { border-color: #fff; box-shadow: 0 0 30px #ff0055; }
-    100% { border-color: var(--warning); box-shadow: 0 0 20px rgba(255,0,85,0.3); }
+    0% { 
+        border-color: #fff !important; 
+        box-shadow: 0 0 40px #ff0055 !important;
+        transform: scale(1.05);
+    }
+    100% { 
+        border-color: var(--warning) !important; 
+        box-shadow: 0 0 20px rgba(255,0,85,0.3) !important;
+        transform: scale(1);
+    }
 }
 
 @keyframes weapon-fire-flash {
-    0% { background: rgba(0,255,85,0.8); box-shadow: 0 0 20px #00ff55; }
-    100% { background: ''; box-shadow: ''; }
+    0% { 
+        background: rgba(0,255,85,0.9) !important; 
+        box-shadow: 0 0 30px #00ff55 !important;
+        transform: scale(1.1);
+    }
+    100% { 
+        background: rgba(255,80,0,0.3) !important; 
+        box-shadow: 0 0 10px #ff5000 !important;
+        transform: scale(1);
+    }
 }
 
 .enemy-hit {
-    animation: enemy-hit-flash 0.15s ease-out;
+    animation: enemy-hit-flash 0.2s ease-out !important;
 }
 
 .weapon-fired {
-    animation: weapon-fire-flash 0.2s ease-out;
+    animation: weapon-fire-flash 0.25s ease-out !important;
 }
