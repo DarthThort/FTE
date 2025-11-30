@@ -119,13 +119,13 @@ class EnemyShip {
 
     getWeaponDamage(type, threatLevel) {
         const baseDamage = {
-            basic_laser_1: 15,
-            burst_laser_1: 12,
-            missile_1: 25,
-            beam_laser_1: 8
+            basic_laser_1: 7,   // Reduced from 15
+            burst_laser_1: 6,   // Reduced from 12
+            missile_1: 12,      // Reduced from 25
+            beam_laser_1: 4     // Reduced from 8
         };
 
-        return Math.floor((baseDamage[type] || 10) * (1 + threatLevel * 0.1));
+        return Math.floor((baseDamage[type] || 5) * (1 + threatLevel * 0.1));
     }
 
     getWeaponShots(type) {
