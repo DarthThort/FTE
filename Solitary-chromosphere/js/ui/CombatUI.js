@@ -199,7 +199,7 @@ class CombatUI {
                 border-radius: 12px;
                 padding: 40px;
                 min-width: 400px;
-                z-index: 2000;
+                z-index: 999999;
                 font-family: var(--font-tech);
                 text-align: center;
                 box-shadow: 0 0 50px rgba(255,0,85,0.5);

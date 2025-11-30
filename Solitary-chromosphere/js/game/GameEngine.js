@@ -101,6 +101,8 @@ class GameEngine {
             combatUIContainer = document.createElement('div');
             combatUIContainer.id = 'combat-ui-container';
             combatUIContainer.style.pointerEvents = 'auto';
+            combatUIContainer.style.zIndex = '999998';
+            combatUIContainer.style.position = 'relative';
             document.body.appendChild(combatUIContainer);
         }
 
