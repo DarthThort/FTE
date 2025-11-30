@@ -49,6 +49,11 @@ class GameEngine {
         if (this.state.travelManager.isTraveling) {
             this.state.travelManager.updateTravel(dt);
         }
+
+        // Update combat if active
+        if (this.state.combatManager && this.state.combatManager.active) {
+            this.state.combatManager.tick(dt);
+        }
     }
 
     render() {

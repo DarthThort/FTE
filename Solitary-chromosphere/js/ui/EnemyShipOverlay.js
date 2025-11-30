@@ -32,8 +32,8 @@ class EnemyShipOverlay {
         return `
             <div id="enemy-ship-overlay" style="
                 position: fixed;
-                top: 20px;
-                right: 20px;
+                top: 80px;
+                left: 20px;
                 background: rgba(10, 10, 25, 0.95);
                 border: 2px solid var(--warning);
                 border-radius: 12px;
