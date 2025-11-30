@@ -9,6 +9,7 @@ class GameEngine {
         this.state.game = this; // Give GameState reference to game engine
         this.input = new InputHandler(canvas);
         this.sceneManager = new SceneManager(this);
+        this.screenEffects = new ScreenEffects();
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
@@ -54,13 +55,23 @@ class GameEngine {
         if (this.state.combatManager && this.state.combatManager.active) {
             this.state.combatManager.tick(dt);
         }
+
+        // Update screen effects
+        this.screenEffects.update(dt);
     }
 
     render() {
         this.ctx.fillStyle = '#05050a';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
+        // Apply screen shake offset
+        const shake = this.screenEffects.getOffset();
+        this.ctx.save();
+        this.ctx.translate(shake.x, shake.y);
+
         this.sceneManager.render(this.ctx);
+
+        this.ctx.restore();
 
         // Render CombatUI as overlay if combat is active (regardless of scene)
         if (this.state.combatManager && (this.state.combatManager.active || this.state.combatManager.victor)) {

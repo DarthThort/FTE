@@ -232,10 +232,15 @@ class CombatManager {
                     console.log(`[Combat] Shields absorbed all ${damage} damage`);
                     continue;
                 } else {
-                    // Apply overflow damage to hull
+                    // Apply overflow damage to hull + screen shake
                     console.log(`[Combat] Shields partially blocked. ${overflowDamage} damage to hull`);
                     target.health = Math.max(0, target.health - overflowDamage);
                     console.log(`[Combat] Player Hull: ${target.health}/${target.maxHealth}`);
+
+                    // Trigger screen shake on hull damage
+                    if (this.state.game && this.state.game.screenEffects) {
+                        this.state.game.screenEffects.shake(8, 0.3);
+                    }
                     continue;
                 }
             }
@@ -247,6 +252,11 @@ class CombatManager {
             } else {
                 target.health = Math.max(0, target.health - damage);
                 console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.health}/${target.maxHealth}`);
+
+                // Screen shake on player damage
+                if (this.state.game && this.state.game.screenEffects) {
+                    this.state.game.screenEffects.shake(10, 0.4);
+                }
             }
         }
     }
