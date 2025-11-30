@@ -127,14 +127,17 @@ class GameEngine {
             combatUIContainer.innerHTML = this.combatUI.render() + this.enemyOverlay.render();
             this.combatUI.attachEventListeners();
         } else if (this.state.combatManager && this.state.combatManager.victor) {
-            // Show victory/defeat screen
-            const status = this.state.combatManager.getStatus();
-            if (status.victor === 'player') {
-                combatUIContainer.innerHTML = this.combatUI.showVictoryScreen(status.rewards);
-            } else {
-                combatUIContainer.innerHTML = this.combatUI.showDefeatScreen();
+            // Show victory/defeat screen (only render once)
+            const existingResult = document.getElementById('combat-result');
+            if (!existingResult) {
+                const status = this.state.combatManager.getStatus();
+                if (status.victor === 'player') {
+                    combatUIContainer.innerHTML = this.combatUI.showVictoryScreen(status.rewards);
+                } else {
+                    combatUIContainer.innerHTML = this.combatUI.showDefeatScreen();
+                }
+                this.combatUI.attachEventListeners();
             }
-            this.combatUI.attachEventListeners();
         }
     }
 
