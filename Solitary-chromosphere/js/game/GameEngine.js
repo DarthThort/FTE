@@ -10,6 +10,7 @@ class GameEngine {
         this.input = new InputHandler(canvas);
         this.sceneManager = new SceneManager(this);
         this.screenEffects = new ScreenEffects();
+        this.damageNumbers = new DamageNumbers(this);
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
@@ -58,6 +59,9 @@ class GameEngine {
 
         // Update screen effects
         this.screenEffects.update(dt);
+
+        // Update damage numbers
+        this.damageNumbers.update(dt);
     }
 
     render() {
@@ -77,6 +81,9 @@ class GameEngine {
         if (this.state.combatManager && (this.state.combatManager.active || this.state.combatManager.victor)) {
             this.renderCombatUI();
         }
+
+        // Render damage numbers
+        this.damageNumbers.render();
     }
 
     renderCombatUI() {

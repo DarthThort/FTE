@@ -222,283 +222,237 @@ class CombatManager {
      */
     applyWeaponDamage(weapon, target) {
         for (let i = 0; i < weapon.shots; i++) {
-            const damage = weapon.damagePerShot || weapon.damage || 10;
+        }
+    }
+}
 
-            // Check if shields block (for player ship)
-            if (target === this.state.ship && this.state.shieldManager) {
-                const overflowDamage = this.state.shieldManager.takeDamage(damage);
-                if (overflowDamage === 0) {
-                    // Shields absorbed all damage
-                    console.log(`[Combat] Shields absorbed all ${damage} damage`);
-                    continue;
-                } else {
-                    // Apply overflow damage to hull + screen shake
-                    console.log(`[Combat] Shields partially blocked. ${overflowDamage} damage to hull`);
-                    target.health = Math.max(0, target.health - overflowDamage);
-                    console.log(`[Combat] Player Hull: ${target.health}/${target.maxHealth}`);
+/**
+ * Fire player weapon
+ */
+firePlayerWeapon(weaponId) {
+    const weaponFire = this.state.weaponManager.fire(weaponId);
+    if (!weaponFire) return;
 
-                    // Trigger screen shake on hull damage
-                    if (this.state.game && this.state.game.screenEffects) {
-                        this.state.game.screenEffects.shake(8, 0.3);
-                    }
-                    continue;
-                }
-            }
+    console.log(`Player fires ${weaponFire.name}!`);
 
-            // Apply hull damage (enemy uses .hull, player uses .health)
-            if (target === this.enemy) {
-                target.hull = Math.max(0, target.hull - damage);
-                console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.hull}/${target.maxHull}`);
+    // Determine hit or miss
+    for (let i = 0; i < weaponFire.shots; i++) {
+        const result = this.enemy.takeDamage(weaponFire.damage);
 
-                // Flash enemy overlay on hit
-                const overlay = document.getElementById('enemy-ship-overlay');
-                if (overlay) {
-                    overlay.style.borderColor = '#fff';
-                    overlay.style.boxShadow = '0 0 30px #ff0055';
-                    setTimeout(() => {
-                        overlay.style.borderColor = '';
-                        overlay.style.boxShadow = '';
-                    }, 150);
-                }
-            } else {
-                target.health = Math.max(0, target.health - damage);
-                console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.health}/${target.maxHealth}`);
+        if (result.evaded) {
+            console.log('Enemy evaded!');
+        } else if (result.absorbed > 0) {
+            console.log(`Hit! Shield absorbed ${result.absorbed} damage`);
+        } else if (result.hullDamage > 0) {
+            console.log(`Hit! ${result.hullDamage} hull damage to enemy`);
 
-                // Screen shake on player damage
-                if (this.state.game && this.state.game.screenEffects) {
-                    this.state.game.screenEffects.shake(10, 0.4);
-                }
+            // Damage targeted system
+            if (this.playerTarget) {
+                this.enemy.damageSystem(this.playerTarget.id, weaponFire.damage);
+                console.log(`${this.playerTarget.name} damaged!`);
             }
         }
     }
 
-    /**
-     * Fire player weapon
-     */
-    firePlayerWeapon(weaponId) {
-        const weaponFire = this.state.weaponManager.fire(weaponId);
-        if (!weaponFire) return;
+    // Auto-recharge
+    this.state.weaponManager.startCharging(weaponId);
+}
 
-        console.log(`Player fires ${weaponFire.name}!`);
+/**
+ * Fire enemy weapon
+ */
+fireEnemyWeapon(weaponId) {
+    const weaponFire = this.enemy.fireWeapon(weaponId);
+    if (!weaponFire) return;
 
-        // Determine hit or miss
-        for (let i = 0; i < weaponFire.shots; i++) {
-            const result = this.enemy.takeDamage(weaponFire.damage);
+    console.log(`Enemy fires weapon!`);
 
-            if (result.evaded) {
-                console.log('Enemy evaded!');
-            } else if (result.absorbed > 0) {
-                console.log(`Hit! Shield absorbed ${result.absorbed} damage`);
-            } else if (result.hullDamage > 0) {
-                console.log(`Hit! ${result.hullDamage} hull damage to enemy`);
+    // Check if player shields block
+    for (let i = 0; i < weaponFire.shots; i++) {
+        const shieldBlocked = this.state.shieldManager.takeDamage(weaponFire.damage);
 
-                // Damage targeted system
-                if (this.playerTarget) {
-                    this.enemy.damageSystem(this.playerTarget.id, weaponFire.damage);
-                    console.log(`${this.playerTarget.name} damaged!`);
-                }
-            }
-        }
-
-        // Auto-recharge
-        this.state.weaponManager.startCharging(weaponId);
-    }
-
-    /**
-     * Fire enemy weapon
-     */
-    fireEnemyWeapon(weaponId) {
-        const weaponFire = this.enemy.fireWeapon(weaponId);
-        if (!weaponFire) return;
-
-        console.log(`Enemy fires weapon!`);
-
-        // Check if player shields block
-        for (let i = 0; i < weaponFire.shots; i++) {
-            const shieldBlocked = this.state.shieldManager.takeDamage(weaponFire.damage);
-
-            if (shieldBlocked) {
-                console.log('Shields absorbed hit!');
-            } else {
-                // Damage player ship/system
-                console.log(`Player hit! ${weaponFire.damage} damage`);
-
-                if (this.enemyTarget) {
-                    this.state.powerManager.damageSystem(this.enemyTarget.id, weaponFire.damage);
-                    console.log(`${this.enemyTarget.name} damaged!`);
-                } else {
-                    // Random system damage
-                    const randomSystem = this.state.ship.systems[
-                        Math.floor(Math.random() * this.state.ship.systems.length)
-                    ];
-                    this.state.powerManager.damageSystem(randomSystem.id, weaponFire.damage);
-                }
-
-                // Hull damage
-                this.state.ship.health = Math.max(0, this.state.ship.health - weaponFire.damage);
-            }
-        }
-
-        // Auto-recharge enemy weapon
-        this.enemy.chargeWeapon(weaponId);
-    }
-
-    /**
-     * Player sets target
-     */
-    setPlayerTarget(systemId) {
-        const system = this.enemy.systems.find(s => s.id === systemId);
-        this.playerTarget = system || null;
-        console.log(`Target set: ${this.playerTarget ? this.playerTarget.name : 'none'}`);
-    }
-
-    /**
-     * Attempt enemy flee
-     */
-    attemptEnemyFlee() {
-        const fleeChance = 0.6; // 60% base chance
-
-        if (Math.random() < fleeChance) {
-            console.log(`${this.enemy.name} has fled!`);
-            this.victor = 'player';
-            this.rewards = this.calculateRewards(false); // Partial rewards for flee
-            this.endCombat();
+        if (shieldBlocked) {
+            console.log('Shields absorbed hit!');
         } else {
-            console.log(`${this.enemy.name} failed to flee!`);
-            this.enemy.aiState = 'defensive';
+            // Damage player ship/system
+            console.log(`Player hit! ${weaponFire.damage} damage`);
+
+            if (this.enemyTarget) {
+                this.state.powerManager.damageSystem(this.enemyTarget.id, weaponFire.damage);
+                console.log(`${this.enemyTarget.name} damaged!`);
+            } else {
+                // Random system damage
+                const randomSystem = this.state.ship.systems[
+                    Math.floor(Math.random() * this.state.ship.systems.length)
+                ];
+                this.state.powerManager.damageSystem(randomSystem.id, weaponFire.damage);
+            }
+
+            // Hull damage
+            this.state.ship.health = Math.max(0, this.state.ship.health - weaponFire.damage);
         }
     }
 
-    /**
-     * Enemy surrender
-     */
-    enemySurrender() {
-        console.log(`${this.enemy.name} surrenders!`);
+    // Auto-recharge enemy weapon
+    this.enemy.chargeWeapon(weaponId);
+}
+
+/**
+ * Player sets target
+ */
+setPlayerTarget(systemId) {
+    const system = this.enemy.systems.find(s => s.id === systemId);
+    this.playerTarget = system || null;
+    console.log(`Target set: ${this.playerTarget ? this.playerTarget.name : 'none'}`);
+}
+
+/**
+ * Attempt enemy flee
+ */
+attemptEnemyFlee() {
+    const fleeChance = 0.6; // 60% base chance
+
+    if (Math.random() < fleeChance) {
+        console.log(`${this.enemy.name} has fled!`);
         this.victor = 'player';
-        this.rewards = this.calculateRewards(true); // Full rewards + bonus
+        this.rewards = this.calculateRewards(false); // Partial rewards for flee
         this.endCombat();
+    } else {
+        console.log(`${this.enemy.name} failed to flee!`);
+        this.enemy.aiState = 'defensive';
+    }
+}
+
+/**
+ * Enemy surrender
+ */
+enemySurrender() {
+    console.log(`${this.enemy.name} surrenders!`);
+    this.victor = 'player';
+    this.rewards = this.calculateRewards(true); // Full rewards + bonus
+    this.endCombat();
+}
+
+/**
+ * Check if combat should end
+ */
+checkCombatEnd() {
+    // Player destroyed
+    if (this.state.ship.health <= 0) {
+        this.victor = 'enemy';
+        return true;
     }
 
-    /**
-     * Check if combat should end
-     */
-    checkCombatEnd() {
-        // Player destroyed
-        if (this.state.ship.health <= 0) {
-            this.victor = 'enemy';
-            return true;
-        }
-
-        // Enemy destroyed
-        if (this.enemy.isDestroyed()) {
-            this.victor = 'player';
-            this.rewards = this.calculateRewards(true);
-            return true;
-        }
-
-        return false;
+    // Enemy destroyed
+    if (this.enemy.isDestroyed()) {
+        this.victor = 'player';
+        this.rewards = this.calculateRewards(true);
+        return true;
     }
 
-    /**
-     * Calculate rewards
-     */
-    calculateRewards(fullRewards) {
-        const base = {
-            credits: this.enemy.creditReward,
-            scrap: this.enemy.scrapValue,
-            systems: []
-        };
+    return false;
+}
 
-        if (!fullRewards) {
-            // Partial rewards for flee
-            base.credits = Math.floor(base.credits * 0.3);
-            base.scrap = Math.floor(base.scrap * 0.3);
-        } else {
-            // Chance for system salvage (10%)
-            if (Math.random() < 0.1) {
-                const salvageableSystem = this.enemy.systems.find(s => !s.offline);
-                if (salvageableSystem) {
-                    base.systems.push({
-                        type: salvageableSystem.type,
-                        name: `Salvaged ${salvageableSystem.name}`,
-                        level: salvageableSystem.level
-                    });
-                }
+/**
+ * Calculate rewards
+ */
+calculateRewards(fullRewards) {
+    const base = {
+        credits: this.enemy.creditReward,
+        scrap: this.enemy.scrapValue,
+        systems: []
+    };
+
+    if (!fullRewards) {
+        // Partial rewards for flee
+        base.credits = Math.floor(base.credits * 0.3);
+        base.scrap = Math.floor(base.scrap * 0.3);
+    } else {
+        // Chance for system salvage (10%)
+        if (Math.random() < 0.1) {
+            const salvageableSystem = this.enemy.systems.find(s => !s.offline);
+            if (salvageableSystem) {
+                base.systems.push({
+                    type: salvageableSystem.type,
+                    name: `Salvaged ${salvageableSystem.name}`,
+                    level: salvageableSystem.level
+                });
             }
         }
-
-        return base;
     }
 
-    /**
-     * End combat
-     */
-    endCombat() {
-        this.active = false;
+    return base;
+}
 
-        console.log(`Combat ended! Victor: ${this.victor}`);
+/**
+ * End combat
+ */
+endCombat() {
+    this.active = false;
 
-        if (this.victor === 'player') {
-            console.log('Rewards:', this.rewards);
-            this.applyRewards();
-        } else {
-            console.log('Defeat!');
-            // Game over or emergency FTL
-        }
+    console.log(`Combat ended! Victor: ${this.victor}`);
 
-        this.state.saveGame();
+    if (this.victor === 'player') {
+        console.log('Rewards:', this.rewards);
+        this.applyRewards();
+    } else {
+        console.log('Defeat!');
+        // Game over or emergency FTL
     }
 
-    /**
-     * Apply rewards to player
-     */
-    applyRewards() {
-        if (!this.rewards) return;
+    this.state.saveGame();
+}
 
-        // Credits
-        this.state.credits += this.rewards.credits;
+/**
+ * Apply rewards to player
+ */
+applyRewards() {
+    if (!this.rewards) return;
 
-        // Scrap
-        const scrapItem = this.state.inventory.find(i => i.id === 'scrap');
-        if (scrapItem) {
-            scrapItem.quantity += this.rewards.scrap;
-        } else {
-            this.state.inventory.push({
-                id: 'scrap',
-                name: 'Scrap Metal',
-                quantity: this.rewards.scrap,
-                value: 25
-            });
-        }
+    // Credits
+    this.state.credits += this.rewards.credits;
 
-        // Systems
-        this.rewards.systems.forEach(system => {
-            this.state.inventory.push({
-                id: `system_${Date.now()}`,
-                ...system,
-                type: 'module',
-                systemType: system.type
-            });
+    // Scrap
+    const scrapItem = this.state.inventory.find(i => i.id === 'scrap');
+    if (scrapItem) {
+        scrapItem.quantity += this.rewards.scrap;
+    } else {
+        this.state.inventory.push({
+            id: 'scrap',
+            name: 'Scrap Metal',
+            quantity: this.rewards.scrap,
+            value: 25
         });
     }
 
-    /**
-     * Get combat status for UI
-     */
-    getStatus() {
-        return {
-            active: this.active,
-            paused: this.paused,
-            playerTarget: this.playerTarget,
-            enemyTarget: this.enemyTarget,
-            playerHull: this.state.ship.health,
-            playerMaxHull: this.state.ship.maxHealth,
-            playerShields: this.state.ship.shields.currentLayers,
-            enemyHull: this.enemy.hull,
-            enemyMaxHull: this.enemy.maxHull,
-            enemyShields: this.enemy.shields,
-            victor: this.victor,
-            rewards: this.rewards
-        };
-    }
+    // Systems
+    this.rewards.systems.forEach(system => {
+        this.state.inventory.push({
+            id: `system_${Date.now()}`,
+            ...system,
+            type: 'module',
+            systemType: system.type
+        });
+    });
+}
+
+/**
+ * Get combat status for UI
+ */
+getStatus() {
+    return {
+        active: this.active,
+        paused: this.paused,
+        playerTarget: this.playerTarget,
+        enemyTarget: this.enemyTarget,
+        playerHull: this.state.ship.health,
+        playerMaxHull: this.state.ship.maxHealth,
+        playerShields: this.state.ship.shields.currentLayers,
+        enemyHull: this.enemy.hull,
+        enemyMaxHull: this.enemy.maxHull,
+        enemyShields: this.enemy.shields,
+        victor: this.victor,
+        rewards: this.rewards
+    };
+}
 }
