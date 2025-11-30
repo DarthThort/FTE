@@ -275,6 +275,18 @@ class CombatManager {
                     this.state.game.damageNumbers.add(150, 150, damage, '#ff0055');
                 }
 
+                // Add visual effects
+                if (this.state.game && this.state.game.combatEffects) {
+                    // Hit marker at enemy position
+                    this.state.game.combatEffects.addHitMarker(150, 150, '#fff');
+
+                    // Impact particles
+                    this.state.game.combatEffects.addImpactParticles(150, 150, 8, '#ff0055');
+
+                    // Impact sound
+                    this.state.game.combatEffects.playImpactSound();
+                }
+
                 // Flash enemy overlay on hit
                 const overlay = document.getElementById('enemy-ship-overlay');
                 if (overlay) {

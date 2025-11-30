@@ -283,11 +283,16 @@ class WeaponUI {
                     if (weapon && weapon.state === 'ready') {
                         const fired = this.game.state.weaponManager.fireWeapon(weaponId, combatManager.enemy);
                         if (fired) {
-                            // Flash button on fire using CSS class
-                            btn.classList.add('weapon-fired');
-                            setTimeout(() => {
-                                btn.classList.remove('weapon-fired');
-                            }, 200);
+                            // Add projectile trail from ship to enemy
+                            if (this.game.combatEffects) {
+                                const shipX = this.game.canvas.width / 2;
+                                const shipY = this.game.canvas.height / 2;
+                                const enemyX = 150;
+                                const enemyY = 150;
+
+                                this.game.combatEffects.addProjectile(shipX, shipY, enemyX, enemyY, '#00ff55');
+                                this.game.combatEffects.playLaserSound();
+                            }
 
                             // Apply damage via combat manager
                             combatManager.applyWeaponDamage(weapon, combatManager.enemy);
