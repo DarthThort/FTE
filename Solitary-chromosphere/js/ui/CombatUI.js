@@ -226,14 +226,7 @@ class CombatUI {
                     gap: 15px;
                     justify-content: center;
                 ">
-                    <button onclick="
-                        const state = window.game?.state;
-                        if (state && state.loadPreTravelSave) {
-                            state.loadPreTravelSave();
-                        } else {
-                            location.reload();
-                        }
-                    " style="
+                    <button onclick="alert('RETRY clicked'); location.reload();" style="
                         padding: 15px 30px;
                         font-size: 1.1rem;
                         background: rgba(0,240,255,0.2);
@@ -246,10 +239,7 @@ class CombatUI {
                         text-transform: uppercase;
                     ">RETRY</button>
                     
-                    <button onclick="
-                        localStorage.clear();
-                        location.reload();
-                    " style="
+                    <button onclick="alert('NEW GAME clicked'); localStorage.clear(); location.reload();" style="
                         padding: 15px 30px;
                         font-size: 1.1rem;
                         background: rgba(255,0,85,0.2);
