@@ -249,6 +249,17 @@ class CombatManager {
             if (target === this.enemy) {
                 target.hull = Math.max(0, target.hull - damage);
                 console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.hull}/${target.maxHull}`);
+
+                // Flash enemy overlay on hit
+                const overlay = document.getElementById('enemy-ship-overlay');
+                if (overlay) {
+                    overlay.style.borderColor = '#fff';
+                    overlay.style.boxShadow = '0 0 30px #ff0055';
+                    setTimeout(() => {
+                        overlay.style.borderColor = '';
+                        overlay.style.boxShadow = '';
+                    }, 150);
+                }
             } else {
                 target.health = Math.max(0, target.health - damage);
                 console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.health}/${target.maxHealth}`);
