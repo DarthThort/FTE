@@ -277,7 +277,6 @@ class WeaponUI {
 
                 // Check if in combat
                 const combatManager = this.game.state.combatManager;
-                console.log('[DEBUG FIRE] combatManager:', !!combatManager, 'active:', combatManager?.active, 'enemy:', !!combatManager?.enemy);
                 if (combatManager && combatManager.active && combatManager.enemy) {
                     // Fire at enemy during combat
                     const weapon = this.game.state.weaponManager.getWeapon(weaponId);
