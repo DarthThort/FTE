@@ -287,7 +287,8 @@ class WeaponUI {
                             if (this.game.combatEffects) {
                                 const shipX = this.game.canvas.width / 2;
                                 const shipY = this.game.canvas.height / 2;
-                                const enemyX = 405;`r`n                                const enemyY = 80;
+                                const enemyX = 405;
+                                const enemyY = 80;
 
                                 this.game.combatEffects.addProjectile(shipX, shipY, enemyX, enemyY, '#00ff55');
                                 this.game.combatEffects.playLaserSound();
