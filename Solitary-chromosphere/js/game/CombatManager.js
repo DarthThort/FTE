@@ -246,6 +246,8 @@ class CombatManager {
                     // Apply overflow damage to hull + screen shake
                     console.log(`[Combat] Shields partially blocked. ${overflowDamage} damage to hull`);
                     target.health = Math.max(0, target.health - overflowDamage);
+                    // Notify state change to update HUD
+                    if (this.state.notifyChange) this.state.notifyChange();
                     console.log(`[Combat] Player Hull: ${target.health}/${target.maxHealth}`);
 
                     // Show hull damage number (Red)
@@ -297,6 +299,9 @@ class CombatManager {
                 }
             } else {
                 target.health = Math.max(0, target.health - damage);
+                console.log
+                // Notify state change to update HUD
+                if (this.state.notifyChange) this.state.notifyChange();
                 console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.health}/${target.maxHealth}`);
 
                 // Show hull damage number on player (Red)
