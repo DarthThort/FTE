@@ -11,6 +11,7 @@ class GameEngine {
         this.sceneManager = new SceneManager(this);
         this.screenEffects = new ScreenEffects();
         this.damageNumbers = new DamageNumbers(this);
+        this.combatEffects = new CombatEffects(this);
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
@@ -62,6 +63,9 @@ class GameEngine {
 
         // Update damage numbers
         this.damageNumbers.update(dt);
+        
+        // Update combat effects
+        this.combatEffects.update(dt);
     }
 
     render() {
@@ -84,6 +88,9 @@ class GameEngine {
 
         // Render damage numbers
         this.damageNumbers.render();
+        
+        // Render combat effects (projectiles, particles, hit markers)
+        this.combatEffects.render(this.ctx);
     }
 
     renderCombatUI() {
