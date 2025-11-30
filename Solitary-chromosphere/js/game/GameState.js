@@ -147,6 +147,32 @@ class GameState {
     }
 
     loadGame() {
+        // Check for pre-travel save first (for combat retry)
+        const preTravelData = localStorage.getItem('pre_travel_save');
+        if (preTravelData) {
+            try {
+                const saveData = JSON.parse(preTravelData);
+                console.log('[Save] Loading pre-travel save...', saveData);
+
+                // Restore critical values from pre-travel save
+                this.credits = saveData.credits;
+                this.ship.health = saveData.shipHealth;
+                this.ship.fuel = saveData.shipFuel;
+
+                if (saveData.currentPlanet) this.currentPlanet = saveData.currentPlanet;
+                if (saveData.currentSystem) this.currentSystem = saveData.currentSystem;
+
+                // Clear pre-travel save after loading it once
+                localStorage.removeItem('pre_travel_save');
+                console.log('[Save] Pre-travel state restored');
+
+                // Continue with normal save loading to get everything else
+            } catch (e) {
+                console.error('[Save] Failed to load pre-travel save:', e);
+                localStorage.removeItem('pre_travel_save');
+            }
+        }
+
         const savedData = localStorage.getItem('spaceSimSave');
         if (savedData) {
             try {
@@ -750,40 +776,9 @@ class GameState {
 
     /**
      * Load pre-travel save (retry combat)
-     */
-    loadPreTravelSave() {
-        try {
-            const saveData = JSON.parse(localStorage.getItem('pre_travel_save'));
-            if (!saveData) {
-                console.warn('[Save] No pre-travel save found');
-                location.reload();
-                return;
-            }
-
-            // Restore saved values
-            this.credits = saveData.credits;
-            this.ship.health = saveData.shipHealth;
-            this.ship.fuel = saveData.shipFuel;
-            this.currentPlanet = saveData.currentPlanet;
-            this.currentSystem = saveData.currentSystem;
-
-            // Restore crew and weapons
-            if (saveData.crew) {
-                this.ship.crew = saveData.crew;
-            }
-            if (saveData.weapons) {
-                this.ship.weapons = saveData.weapons;
-            }
-
-            console.log('[Save] Pre-travel state loaded');
-
-            // Notify to update UI and reload
-            this.notify();
-            location.reload();
-        } catch (e) {
-            console.error('[Save] Failed to load pre-travel state:', e);
-            location.reload();
-        }
+     */    loadPreTravelSave() {
+        // Just reload - loadGame() will check for pre_travel_save and restore it
+        location.reload();
     }
 
 }
