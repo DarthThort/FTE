@@ -185,21 +185,23 @@ class CombatManager {
      * Auto-fire all ready weapons
      */
     autoFireWeapons() {
-        // Player weapons
+        // Player weapons - only auto-fire if crew assigned
         if (this.state.ship.weapons && this.state.ship.weapons.length > 0) {
             this.state.ship.weapons.forEach(weapon => {
-                if (weapon.state === 'ready') {
-                    // Fire at enemy
+                if (weapon.state === 'ready' && weapon.autofire) {
+                    // Only fire if autofire is enabled (crew assigned)
                     const fired = this.state.weaponManager.fireWeapon(weapon.id, this.enemy);
                     if (fired) {
                         // Apply damage to enemy
                         this.applyWeaponDamage(weapon, this.enemy);
+                        console.log(`[Auto-Fire] ${weapon.name} fired automatically (crew assigned)`);
                     }
                 }
+                // If no crew (autofire = false), require manual click
             });
         }
 
-        // Enemy weapons
+        // Enemy weapons - always auto-fire
         if (this.enemy.weapons && this.enemy.weapons.length > 0) {
             this.enemy.weapons.forEach(weapon => {
                 if (weapon.state === 'ready') {
