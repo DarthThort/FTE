@@ -279,24 +279,6 @@ class WeaponUI {
                 const combatManager = this.game.state.combatManager;
                 if (combatManager && combatManager.active && combatManager.enemy) {
                     // Fire at enemy during combat
-                    const weapon = this.game.state.weaponManager.getWeapon(weaponId);
-                    if (weapon && weapon.state === 'ready') {
-                        const fired = this.game.state.weaponManager.fireWeapon(weaponId, combatManager.enemy);
-                        if (fired) {
-                            // Flash button on fire
-                            btn.style.background = 'rgba(0,255,85,0.8)';
-                            btn.style.boxShadow = '0 0 20px #00ff55';
-                            setTimeout(() => {
-                                btn.style.background = '';
-                                btn.style.boxShadow = '';
-                            }, 200);
-
-                            // Apply damage via combat manager
-                            combatManager.applyWeaponDamage(weapon, combatManager.enemy);
-                            console.log(`[Manual Fire] ${weapon.name} fired at ${combatManager.enemy.name}!`);
-                        }
-                    }
-                } else {
                     // Normal targeting (outside combat)
                     const targetSelect = document.querySelector(`.weapon-target-select[data-weapon-id="${weaponId}"]`);
                     const target = targetSelect ? targetSelect.value : 'hull';

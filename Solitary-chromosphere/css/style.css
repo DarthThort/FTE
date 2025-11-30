@@ -343,3 +343,21 @@ button:hover {
     color: var(--text-dim);
     font-size: 0.8rem;
 }
+/* Combat Visual Effects */
+@keyframes enemy-hit-flash {
+    0% { border-color: #fff; box-shadow: 0 0 30px #ff0055; }
+    100% { border-color: var(--warning); box-shadow: 0 0 20px rgba(255,0,85,0.3); }
+}
+
+@keyframes weapon-fire-flash {
+    0% { background: rgba(0,255,85,0.8); box-shadow: 0 0 20px #00ff55; }
+    100% { background: ''; box-shadow: ''; }
+}
+
+.enemy-hit {
+    animation: enemy-hit-flash 0.15s ease-out;
+}
+
+.weapon-fired {
+    animation: weapon-fire-flash 0.2s ease-out;
+}

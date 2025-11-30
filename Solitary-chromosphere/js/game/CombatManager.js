@@ -278,11 +278,9 @@ class CombatManager {
                 // Flash enemy overlay on hit
                 const overlay = document.getElementById('enemy-ship-overlay');
                 if (overlay) {
-                    overlay.style.borderColor = '#fff';
-                    overlay.style.boxShadow = '0 0 30px #ff0055';
+                    overlay.classList.add('enemy-hit');
                     setTimeout(() => {
-                        overlay.style.borderColor = '';
-                        overlay.style.boxShadow = '';
+                        overlay.classList.remove('enemy-hit');
                     }, 150);
                 }
             } else {
