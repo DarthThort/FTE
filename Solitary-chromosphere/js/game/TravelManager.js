@@ -151,6 +151,14 @@ class TravelManager {
             return { success: false, message: "Insufficient fuel for planetary travel." };
         }
 
+        // Save state before travel (for retry if combat is lost)
+        console.log('[TRAVEL] About to save pre-travel state (planetary), method exists:', typeof this.state.savePreTravelState);
+        if (this.state.savePreTravelState) {
+            this.state.savePreTravelState();
+        } else {
+            console.error('[TRAVEL] savePreTravelState method not found!');
+        }
+
         this.state.ship.fuel -= fuelCost;
 
         // Start planetary travel (shorter duration, lower encounter chance)
