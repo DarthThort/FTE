@@ -26,8 +26,11 @@ class TravelManager {
         }
 
         // Save state before travel (for retry if combat is lost)
+        console.log('[TRAVEL] About to save pre-travel state, method exists:', typeof this.state.savePreTravelState);
         if (this.state.savePreTravelState) {
             this.state.savePreTravelState();
+        } else {
+            console.error('[TRAVEL] savePreTravelState method not found!');
         }
 
         // Start FTL travel
