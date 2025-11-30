@@ -57,8 +57,8 @@ class GameEngine {
 
         this.sceneManager.render(this.ctx);
 
-        // Render CombatUI if in combat
-        if (this.sceneManager.currentScene === 'COMBAT' && this.state.combatManager) {
+        // Render CombatUI as overlay if combat is active (regardless of scene)
+        if (this.state.combatManager && (this.state.combatManager.active || this.state.combatManager.victor)) {
             this.renderCombatUI();
         }
     }

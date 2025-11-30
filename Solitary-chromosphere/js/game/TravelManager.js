@@ -130,10 +130,8 @@ class TravelManager {
         this.state.combatManager = new CombatManager(this.state, enemy);
         this.state.combatManager.start();
 
-        // Switch to combat scene
-        if (this.state.game && this.state.game.sceneManager) {
-            this.state.game.sceneManager.changeScene('COMBAT');
-        }
+        // Combat renders as overlay in SHIP scene (no scene change)
+        console.log('[Combat] Combat active - rendering as overlay');
     }
 
     travelToPlanet(planetId) {

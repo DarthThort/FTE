@@ -453,8 +453,8 @@ class CombatUI {
         if (combatUI) combatUI.remove();
         if (resultUI) resultUI.remove();
 
-        // Return to normal game state
-        this.game.sceneManager.switchToScene('SHIP');
+        // Combat overlay removed - already in SHIP scene
+        console.log('[Combat] Combat UI closed');
     }
 
     /**
