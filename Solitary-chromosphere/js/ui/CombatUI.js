@@ -235,19 +235,21 @@ class CombatUI {
                         cursor: pointer;
                         font-family: var(--font-tech);
                         font-weight: bold;
-                    ">LOAD SAVE</button>
+                        text-transform: uppercase;
+                    ">RETRY</button>
                     
                     <button id="combat-menu-btn" style="
                         padding: 15px 30px;
                         font-size: 1.1rem;
-                        background: rgba(255,255,255,0.1);
-                        border: 2px solid #888;
-                        color: #888;
+                        background: rgba(255,0,85,0.2);
+                        border: 2px solid #ff0055;
+                        color: #ff0055;
                         border-radius: 8px;
                         cursor: pointer;
                         font-family: var(--font-tech);
                         font-weight: bold;
-                    ">MAIN MENU</button>
+                        text-transform: uppercase;
+                    ">NEW GAME</button>
                 </div>
             </div>
         `;
@@ -280,6 +282,20 @@ class CombatUI {
         const retryBtn = document.getElementById('combat-retry-btn');
         if (retryBtn) {
             retryBtn.onclick = () => {
+                // Load pre-travel save
+                if (this.game.state.loadPreTravelSave) {
+                    this.game.state.loadPreTravelSave();
+                } else {
+                    location.reload();
+                }
+            };
+        }
+
+        const newGameBtn = document.getElementById('combat-menu-btn');
+        if (newGameBtn) {
+            newGameBtn.onclick = () => {
+                // Clear all saves and restart
+                localStorage.clear();
                 location.reload();
             };
         }

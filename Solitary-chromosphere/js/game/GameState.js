@@ -724,4 +724,66 @@ class GameState {
         ];
     }
 
+    /**
+     * Save state before travel (for retry on defeat)
+     */
+    savePreTravelState() {
+        try {
+            const saveData = {
+                credits: this.credits,
+                shipHealth: this.ship.health,
+                shipFuel: this.ship.fuel,
+                currentPlanet: this.currentPlanet,
+                currentSystem: this.currentSystem,
+                crew: this.ship.crew.map(c => ({ ...c })),
+                weapons: this.ship.weapons.map(w => ({ ...w })),
+                // Don't save complex objects like managers
+                timestamp: Date.now()
+            };
+
+            localStorage.setItem('pre_travel_save', JSON.stringify(saveData));
+            console.log('[Save] Pre-travel state saved');
+        } catch (e) {
+            console.error('[Save] Failed to save pre-travel state:', e);
+        }
+    }
+
+    /**
+     * Load pre-travel save (retry combat)
+     */
+    loadPreTravelSave() {
+        try {
+            const saveData = JSON.parse(localStorage.getItem('pre_travel_save'));
+            if (!saveData) {
+                console.warn('[Save] No pre-travel save found');
+                location.reload();
+                return;
+            }
+
+            // Restore saved values
+            this.credits = saveData.credits;
+            this.ship.health = saveData.shipHealth;
+            this.ship.fuel = saveData.shipFuel;
+            this.currentPlanet = saveData.currentPlanet;
+            this.currentSystem = saveData.currentSystem;
+
+            // Restore crew and weapons
+            if (saveData.crew) {
+                this.ship.crew = saveData.crew;
+            }
+            if (saveData.weapons) {
+                this.ship.weapons = saveData.weapons;
+            }
+
+            console.log('[Save] Pre-travel state loaded');
+
+            // Notify to update UI and reload
+            this.notify();
+            location.reload();
+        } catch (e) {
+            console.error('[Save] Failed to load pre-travel state:', e);
+            location.reload();
+        }
+    }
+
 }

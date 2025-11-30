@@ -25,6 +25,11 @@ class TravelManager {
             return { success: false, message: `Target out of jump range (${distance.toFixed(1)} LY > ${this.state.ship.jumpRange} LY)` };
         }
 
+        // Save state before travel (for retry if combat is lost)
+        if (this.state.savePreTravelState) {
+            this.state.savePreTravelState();
+        }
+
         // Start FTL travel
         this.isTraveling = true;
         this.travelProgress = 0;
