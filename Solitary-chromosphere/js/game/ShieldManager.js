@@ -120,50 +120,33 @@ class ShieldManager {
                 shields.currentLayerHP = 0;
             }
 
-            console.log(`[Shields] Penetrated layer! ${shields.currentLayers} layers remaining`);
         }
 
-        // Reset recharge timer on damage
-        shields.rechargeTimer = 0;
-        this.fullChargeTime = 0;
+        getShieldStatus() {
+            const shields = this.state.ship.shields;
+            const shieldSystem = this.state.ship.systems.find(s => s.type === 'shield');
 
-        // Trigger impact visual effects
-        this.impactFlashTime = 0.15; // Flash for 150ms
-        this.impactWaveProgress = 0.01; // Start wave animation
+            return {
+                currentLayers: shields.currentLayers,
+                maxLayers: shields.maxLayers,
+                layerHP: shields.layerHP,
+                currentLayerHP: shields.currentLayerHP,
+                rechargeProgress: shields.rechargeTimer / shields.rechargeRate,
+                rechargeRate: shields.rechargeRate,
+                systemPower: shieldSystem ? shieldSystem.currentPower : 0,
+                systemMaxPower: shieldSystem ? shieldSystem.maxPower : 0,
+                isRecharging: shields.currentLayers < shields.maxLayers && shieldSystem?.currentPower > 0,
+                fullChargeTime: this.fullChargeTime
+            };
+        }
 
-        this.refreshUI();
+        hasActiveShields() {
+            return this.state.ship.shields.currentLayers > 0;
+        }
 
-        // Return overflow damage to hull
-        const overflow = Math.max(0, remainingDamage);
-        console.log(`[Shields] Absorbed ${amount - overflow} damage. ${overflow} damage to hull.`);
-        return overflow;
-    }
-
-    getShieldStatus() {
-        const shields = this.state.ship.shields;
-        const shieldSystem = this.state.ship.systems.find(s => s.type === 'shield');
-
-        return {
-            currentLayers: shields.currentLayers,
-            maxLayers: shields.maxLayers,
-            layerHP: shields.layerHP,
-            currentLayerHP: shields.currentLayerHP,
-            rechargeProgress: shields.rechargeTimer / shields.rechargeRate,
-            rechargeRate: shields.rechargeRate,
-            systemPower: shieldSystem ? shieldSystem.currentPower : 0,
-            systemMaxPower: shieldSystem ? shieldSystem.maxPower : 0,
-            isRecharging: shields.currentLayers < shields.maxLayers && shieldSystem?.currentPower > 0,
-            fullChargeTime: this.fullChargeTime
-        };
-    }
-
-    hasActiveShields() {
-        return this.state.ship.shields.currentLayers > 0;
-    }
-
-    refreshUI() {
-        if (window.game && window.game.ui && window.game.ui.shieldUI) {
-            window.game.ui.shieldUI.refreshShieldPanel();
+        refreshUI() {
+            if (window.game && window.game.ui && window.game.ui.shieldUI) {
+                window.game.ui.shieldUI.refreshShieldPanel();
+            }
         }
     }
-}
