@@ -19,40 +19,63 @@ class WeaponManager {
             // No power - reset weapon to idle
             if (weapon.state !== 'idle') {
                 weapon.state = 'idle';
-                this.refreshUI();
+                weapon.currentCharge = 0;
+            }
+            return;
+        }
 
-                // Auto-fire if crew is manning weapons system
-                if (this.hasCrewAtWeapons()) {
-                    const fired = this.fireWeapon(weapon.id);
+        // Get effectiveness multiplier (affects charge speed)
+        const effectiveness = weaponsSystem.effectiveness || 1.0;
 
-                    // Apply damage if in combat
-                    if (fired && this.state.combatManager && this.state.combatManager.active && this.state.combatManager.enemy) {
-                        this.state.combatManager.applyWeaponDamage(weapon, this.state.combatManager.enemy);
-                        console.log(`[Auto-Fire] ${weapon.name} fired at ${this.state.combatManager.enemy.name}!`);
+        // Power scaling: more power = faster charge
+        // 1 power = 0.5x, 2 power = 1.0x, 3 power = 1.5x, 4 power = 2.0x
+        const powerMultiplier = weaponsSystem.currentPower / 2;
+        const chargeSpeed = effectiveness * powerMultiplier;
+
+        switch (weapon.state) {
+            case 'charging':
+                // Increase charge based on effectiveness AND power level
+                weapon.currentCharge += deltaTime * chargeSpeed;
+
+                if (weapon.currentCharge >= weapon.chargeTime) {
+                    weapon.currentCharge = weapon.chargeTime;
+                    weapon.state = 'ready';
+
+                    // Refresh UI when state changes
+                    this.refreshUI();
+
+                    // Auto-fire if crew is manning weapons system
+                    if (this.hasCrewAtWeapons()) {
+                        const fired = this.fireWeapon(weapon.id);
+
+                        // Apply damage if in combat
+                        if (fired && this.state.combatManager && this.state.combatManager.active && this.state.combatManager.enemy) {
+                            this.state.combatManager.applyWeaponDamage(weapon, this.state.combatManager.enemy);
+                            console.log(`[Auto-Fire] ${weapon.name} fired at ${this.state.combatManager.enemy.name}!`);
+                        }
                     }
                 }
-            }
-            break;
+                break;
 
             case 'cooldown':
-            weapon.currentCharge -= deltaTime;
+                weapon.currentCharge -= deltaTime;
 
-            if (weapon.currentCharge <= 0) {
-                weapon.currentCharge = 0;
-                weapon.state = 'idle';
+                if (weapon.currentCharge <= 0) {
+                    weapon.currentCharge = 0;
+                    weapon.state = 'idle';
 
-                // Refresh UI when state changes
-                this.refreshUI();
-            }
-            break;
+                    // Refresh UI when state changes
+                    this.refreshUI();
+                }
+                break;
 
             case 'ready':
-            // Stay ready until manually fired or power lost
-            break;
+                // Stay ready until manually fired or power lost
+                break;
 
             case 'idle':
-            // Waiting to be charged
-            break;
+                // Waiting to be charged
+                break;
         }
     }
 
