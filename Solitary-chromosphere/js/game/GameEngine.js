@@ -116,6 +116,11 @@ class GameEngine {
             this.enemyOverlay = new EnemyShipOverlay(this);
         }
 
+        // Create CombatPauseButton if not exists
+        if (!this.pauseButton) {
+            this.pauseButton = new CombatPauseButton(this);
+        }
+
         // Initialize with current combat manager
         if (this.state.combatManager && this.state.combatManager.active) {
             this.combatUI.initialize(this.state.combatManager);
@@ -126,6 +131,9 @@ class GameEngine {
             // Render both UIs
             combatUIContainer.innerHTML = this.combatUI.render() + this.enemyOverlay.render();
             this.combatUI.attachEventListeners();
+
+            // Show pause button
+            this.pauseButton.show();
         } else if (this.state.combatManager && this.state.combatManager.victor) {
             // Show victory/defeat screen (only render once)
             const existingResult = document.getElementById('combat-result');
