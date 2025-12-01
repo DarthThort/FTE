@@ -23,6 +23,19 @@ class CombatUI {
     }
 
     /**
+     * Handle pause button click
+     */
+    handlePauseClick() {
+        console.log('[CombatUI] Pause button clicked!');
+        if (this.combatManager) {
+            this.combatManager.togglePause();
+            this.refresh();
+        } else {
+            console.error('[CombatUI] No combatManager available!');
+        }
+    }
+
+    /**
      * Render combat UI
      */
     render() {
@@ -60,7 +73,9 @@ class CombatUI {
                 ">⚔️ COMBAT ACTIVE</div>
                 
                 <!-- Pause Button -->
-                <button id="combat-pause-btn" style="
+                <button id="combat-pause-btn" 
+                    onclick="window.game.ui.combatUI.handlePauseClick()"
+                    style="
                     padding: 8px 16px;
                     font-size: 0.9rem;
                     background: ${status.paused ? 'rgba(0,255,85,0.2)' : 'rgba(255,170,0,0.2)'};
