@@ -105,6 +105,7 @@ class CombatUI {
                     font-weight: bold;
                     text-transform: uppercase;
                     transition: all 0.2s;
+                    pointer-events: auto;
                 " onmouseover="this.style.transform='scale(1.05)'" 
                    onmouseout="this.style.transform='scale(1)'">
                     ${status.paused ? '▶️ RESUME' : '⏸️ PAUSE'}

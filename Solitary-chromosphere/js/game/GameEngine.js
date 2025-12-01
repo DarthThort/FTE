@@ -100,7 +100,7 @@ class GameEngine {
         if (!combatUIContainer) {
             combatUIContainer = document.createElement('div');
             combatUIContainer.id = 'combat-ui-container';
-            combatUIContainer.style.pointerEvents = 'auto';
+            combatUIContainer.style.pointerEvents = 'none'; // Allow clicks to pass through
             combatUIContainer.style.zIndex = '999998';
             combatUIContainer.style.position = 'relative';
             document.body.appendChild(combatUIContainer);
