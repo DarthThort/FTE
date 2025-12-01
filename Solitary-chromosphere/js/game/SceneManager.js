@@ -12,12 +12,6 @@ class SceneManager {
         console.log(`SceneManager: Switching to scene: ${sceneName}`);
         this.currentScene = sceneName;
 
-        // Clear planet when entering ship view (for encounters to work)
-        if (sceneName === 'SHIP') {
-            this.game.state.currentPlanet = null;
-            console.log('[SceneManager] Cleared currentPlanet for space travel');
-        }
-
         if (this.game.ui) {
             this.game.ui.setMode(sceneName);
         }
