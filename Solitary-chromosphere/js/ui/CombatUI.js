@@ -73,27 +73,7 @@ class CombatUI {
                 ">⚔️ COMBAT ACTIVE</div>
                 
                 <!-- Pause Button -->
-                <button id="combat-pause-btn" onclick="
-                    console.log('[PAUSE] Button clicked!');
-                    if (window.game && window.game.state.combatManager) {
-                        window.game.state.combatManager.togglePause();
-                        console.log('[PAUSE] Toggled, paused is now:', window.game.state.combatManager.paused);
-                        
-                        // Manually update button text and color
-                        const btn = document.getElementById('combat-pause-btn');
-                        if (window.game.state.combatManager.paused) {
-                            btn.textContent = '▶️ RESUME';
-                            btn.style.background = 'rgba(0,255,85,0.2)';
-                            btn.style.borderColor = '#00ff55';
-                            btn.style.color = '#00ff55';
-                        } else {
-                            btn.textContent = '⏸️ PAUSE';
-                            btn.style.background = 'rgba(255,170,0,0.2)';
-                            btn.style.borderColor = '#ffaa00';
-                            btn.style.color = '#ffaa00';
-                        }
-                    }
-                " style="
+                <button id="combat-pause-btn" style="
                     padding: 8px 16px;
                     font-size: 0.9rem;
                     background: ${status.paused ? 'rgba(0,255,85,0.2)' : 'rgba(255,170,0,0.2)'};
@@ -324,13 +304,17 @@ class CombatUI {
         // Pause button
         const pauseBtn = document.getElementById('combat-pause-btn');
         if (pauseBtn && this.combatManager) {
-            const manager = this.combatManager; // Capture in closure
-            pauseBtn.onclick = () => {
-                console.log('[CombatUI] Pause button clicked, paused was:', manager.paused);
-                manager.togglePause();
-                console.log('[CombatUI] After toggle, paused is now:', manager.paused);
+            // Remove any existing listeners by cloning
+            const newBtn = pauseBtn.cloneNode(true);
+            pauseBtn.parentNode.replaceChild(newBtn, pauseBtn);
+
+            // Add fresh event listener
+            newBtn.addEventListener('click', () => {
+                console.log('[CombatUI] Pause button clicked!');
+                this.combatManager.togglePause();
+                console.log('[CombatUI] Paused is now:', this.combatManager.paused);
                 this.refresh();
-            };
+            }, false);
         }
 
         // Victory continue
