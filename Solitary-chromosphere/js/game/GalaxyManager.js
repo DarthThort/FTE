@@ -83,6 +83,8 @@ class GalaxyManager {
         this.state.currentSystem = solSystem;
         this.state.currentPlanet = solSystem.planets.find(p => p.id === 'earth'); // Start at Earth
 
+        console.log('[GalaxyManager] Galaxy initialized - currentPlanet:', this.state.currentPlanet?.name);
+
         return systems;
     }
 
