@@ -341,6 +341,45 @@ class ShipRenderer {
         if (waveProgress > 0 || flashTime > 0) {
             console.log('[ShipRenderer] Impact effects:', { waveProgress, flashTime, opacity });
         }
+
+        if (waveProgress > 0 && waveProgress < 1.0) {
+            ctx.save();
+            const waveRadius = baseRadius + (waveProgress * 100); // Expands 100px
+            const waveOpacity = (1.0 - waveProgress); // Fades out as it expands, independent of shield opacity
+
+            ctx.beginPath();
+            ctx.arc(shipCenterX, shipCenterY, waveRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(0, 255, 85, ${waveOpacity})`; // Green wave (matches shields)
+            ctx.lineWidth = 3;
+            ctx.shadowColor = `rgba(0, 255, 85, ${waveOpacity})`;
+            ctx.shadowBlur = 15;
+            ctx.stroke();
+
+            // Energy particles dispersing with randomness
+            const numParticles = 12;
+            for (let i = 0; i < numParticles; i++) {
+                const baseAngle = (i / numParticles) * Math.PI * 2;
+                const angleVariation = (Math.random() - 0.5) * 0.4; // Random angle offset
+                const angle = baseAngle + angleVariation;
+
+                const distanceVariation = (Math.random() - 0.5) * 50; // Random distance variation
+                const particleDistance = waveRadius - 30 + distanceVariation;
+
+                const px = shipCenterX + Math.cos(angle) * particleDistance;
+                const py = shipCenterY + Math.sin(angle) * particleDistance;
+
+                const sizeVariation = Math.random() * 2 + 1; // Size between 1-3x base
+                const particleSize = (1.0 - waveProgress) * 4 * sizeVariation;
+
+                ctx.beginPath();
+                ctx.arc(px, py, particleSize, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 255, 85, ${waveOpacity})`; // Green particles
+                ctx.shadowBlur = 10;
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
         if (opacity <= 0) return;
 
         ctx.save();
