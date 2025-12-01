@@ -17,7 +17,7 @@ class CombatPauseButton {
         this.container.id = 'combat-pause-overlay';
         this.container.style.cssText = `
             position: fixed;
-            top: 20px;
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 9999999;
@@ -27,7 +27,7 @@ class CombatPauseButton {
         // Create button
         this.button = document.createElement('button');
         this.button.id = 'pause-btn-new';
-        this.button.textContent = '⏸️ PAUSE';
+        this.button.textContent = '⏸️ PAUSE [SPACE]';
         this.button.style.cssText = `
             padding: 12px 24px;
             font-size: 1.1rem;
@@ -55,6 +55,15 @@ class CombatPauseButton {
             this.button.style.boxShadow = '0 0 20px rgba(255, 170, 0, 0.5)';
         });
 
+        // Add keyboard listener for SPACE
+        this.keyListener = (e) => {
+            if (e.code === 'Space' && this.game.state.combatManager && this.game.state.combatManager.active) {
+                e.preventDefault();
+                this.handleClick();
+            }
+        };
+        document.addEventListener('keydown', this.keyListener);
+
         this.container.appendChild(this.button);
         document.body.appendChild(this.container);
 
@@ -66,6 +75,13 @@ class CombatPauseButton {
             this.container.remove();
             this.container = null;
             this.button = null;
+
+            // Remove keyboard listener
+            if (this.keyListener) {
+                document.removeEventListener('keydown', this.keyListener);
+                this.keyListener = null;
+            }
+
             console.log('[CombatPauseButton] Button hidden');
         }
     }
@@ -85,13 +101,13 @@ class CombatPauseButton {
 
         // Update button appearance
         if (paused) {
-            this.button.textContent = '▶️ RESUME';
+            this.button.textContent = '▶️ RESUME [SPACE]';
             this.button.style.background = 'rgba(0, 255, 85, 0.3)';
             this.button.style.borderColor = '#00ff55';
             this.button.style.color = '#00ff55';
             this.button.style.boxShadow = '0 0 20px rgba(0, 255, 85, 0.5)';
         } else {
-            this.button.textContent = '⏸️ PAUSE';
+            this.button.textContent = '⏸️ PAUSE [SPACE]';
             this.button.style.background = 'rgba(255, 170, 0, 0.3)';
             this.button.style.borderColor = '#ffaa00';
             this.button.style.color = '#ffaa00';

@@ -27,6 +27,11 @@ class WeaponManager {
         // Get effectiveness multiplier (affects charge speed)
         const effectiveness = weaponsSystem.effectiveness || 1.0;
 
+        // Don't charge weapons if combat is paused
+        if (this.state.combatManager && this.state.combatManager.paused) {
+            return;
+        }
+
         // Power scaling: more power = faster charge
         // 1 power = 0.5x, 2 power = 1.0x, 3 power = 1.5x, 4 power = 2.0x
         const powerMultiplier = weaponsSystem.currentPower / 2;
