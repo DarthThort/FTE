@@ -416,6 +416,13 @@ class ShipRenderer {
 
         // Draw impact wave (expanding ring)
         const waveProgress = this.game.state.shieldManager.impactWaveProgress;
+        const flashTime = this.game.state.shieldManager.impactFlashTime;
+
+        // DEBUG: Log effect values when they're active
+        if (waveProgress > 0 || flashTime > 0) {
+            console.log('[ShipRenderer] Impact effects:', { waveProgress, flashTime });
+        }
+
         if (waveProgress > 0 && waveProgress < 1.0) {
             const waveRadius = baseRadius + (waveProgress * 100); // Expands 100px
             const waveOpacity = (1.0 - waveProgress) * opacity; // Fades out as it expands
