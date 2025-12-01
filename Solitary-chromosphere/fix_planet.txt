@@ -1,0 +1,12 @@
+FIX for "Location: Unknown" bug:
+
+In GameState.js constructor (around line 140), REMOVE this line:
+        this.initializeGalaxy();
+
+The galaxy initialization should ONLY happen in loadGame(), not in the constructor.
+
+This is causing the galaxy to initialize twice:
+1. First in constructor line 140 - sets currentPlanet to Earth
+2. Again in loadGame() line 238 if no save exists - OVERWRITES everything
+
+By removing line 140, the galaxy will only initialize once in loadGame().
