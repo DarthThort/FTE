@@ -55,9 +55,11 @@ class GameState {
             },
             shields: {
                 level: 2,
-                maxLayers: 1,  // Based on current power (1)
-                currentLayers: 1,
-                rechargeRate: 2.0,
+                maxLayers: 2,  // Will be calculated: level + (crew ? 1 : 0)
+                currentLayers: 2,
+                layerHP: 10,  // Damage each layer can absorb
+                currentLayerHP: 10,  // HP of topmost layer
+                rechargeRate: 1.0,  // Base recharge rate
                 rechargeTimer: 0,
                 powerPerLayer: 1
             },
