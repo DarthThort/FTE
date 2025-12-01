@@ -454,44 +454,6 @@ class ShipRenderer {
             ctx.fill();
         }
 
-        // Draw impact wave (expanding ring)
-        const waveProgress = this.game.state.shieldManager.impactWaveProgress;
-        const flashTime = this.game.state.shieldManager.impactFlashTime;
-
-        // DEBUG: Log effect values when they're active
-        if (waveProgress > 0 || flashTime > 0) {
-            console.log('[ShipRenderer] Impact effects:', { waveProgress, flashTime });
-        }
-
-        if (waveProgress > 0 && waveProgress < 1.0) {
-            const waveRadius = baseRadius + (waveProgress * 100); // Expands 100px
-            const waveOpacity = (1.0 - waveProgress) * opacity; // Fades out as it expands
-
-            ctx.beginPath();
-            ctx.arc(shipCenterX, shipCenterY, waveRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(0, 255, 255, ${waveOpacity})`; // Cyan wave
-            ctx.lineWidth = 3;
-            ctx.shadowColor = `rgba(0, 255, 255, ${waveOpacity})`;
-            ctx.shadowBlur = 15;
-            ctx.stroke();
-
-            // Energy particles dispersing
-            const numParticles = 12;
-            for (let i = 0; i < numParticles; i++) {
-                const angle = (i / numParticles) * Math.PI * 2;
-                const particleDistance = waveRadius - 30; // Just behind the wave
-                const px = shipCenterX + Math.cos(angle) * particleDistance;
-                const py = shipCenterY + Math.sin(angle) * particleDistance;
-                const particleSize = (1.0 - waveProgress) * 4; // Shrinks as wave expands
-
-                ctx.beginPath();
-                ctx.arc(px, py, particleSize, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(0, 255, 255, ${waveOpacity})`;
-                ctx.shadowBlur = 10;
-                ctx.fill();
-            }
-        }
-
         ctx.restore();
     }
 }
