@@ -205,8 +205,21 @@ class CombatManager {
         if (this.enemy.weapons && this.enemy.weapons.length > 0) {
             this.enemy.weapons.forEach(weapon => {
                 if (weapon.state === 'ready') {
+                    // Add visual effects for enemy firing
+                    if (this.state.game && this.state.game.combatEffects) {
+                        const enemyX = 405;  // Enemy overlay position
+                        const enemyY = 80;
+                        const playerX = this.state.game.canvas.width / 2;
+                        const playerY = this.state.game.canvas.height / 2;
+
+                        // Red projectile from enemy to player
+                        this.state.game.combatEffects.addProjectile(enemyX, enemyY, playerX, playerY, '#ff0055');
+                        this.state.game.combatEffects.playLaserSound();
+                    }
+
                     // Fire at player
                     this.applyWeaponDamage(weapon, this.state.ship);
+
                     // Enemy weapons return to idle immediately (no cooldown)
                     weapon.state = 'idle';
                     weapon.currentCharge = 0;
