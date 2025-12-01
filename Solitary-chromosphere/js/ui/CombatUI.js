@@ -172,6 +172,9 @@ class CombatUI {
                     if (window.game && window.game.state.combatManager) {
                         window.game.state.combatManager = null;
                     }
+                    if (window.game && window.game.state.currentEnemy) {
+                        window.game.state.currentEnemy = null;
+                    }
                     
                     // Remove UI elements
                     const combatUIContainer = document.getElementById('combat-ui-container');
