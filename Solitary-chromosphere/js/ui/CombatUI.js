@@ -289,9 +289,12 @@ class CombatUI {
     attachEventListeners() {
         // Pause button
         const pauseBtn = document.getElementById('combat-pause-btn');
-        if (pauseBtn) {
+        if (pauseBtn && this.combatManager) {
+            const manager = this.combatManager; // Capture in closure
             pauseBtn.onclick = () => {
-                this.combatManager.togglePause();
+                console.log('[CombatUI] Pause button clicked, paused was:', manager.paused);
+                manager.togglePause();
+                console.log('[CombatUI] After toggle, paused is now:', manager.paused);
                 this.refresh();
             };
         }
