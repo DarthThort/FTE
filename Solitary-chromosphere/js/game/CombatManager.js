@@ -271,9 +271,10 @@ class CombatManager {
                     }
 
                     // Trigger screen shake on hull damage
-                    if (this.state.game && this.state.game.screenEffects) {
-                        this.state.game.screenEffects.shake(8, 0.3);
-                    }
+                    // DISABLED: Screen shake was decentering ship
+                    // if (this.state.game && this.state.game.screenEffects) {
+                    //     this.state.game.screenEffects.shake(8, 0.3);
+                    // }
                     continue;
                 }
             }
@@ -325,9 +326,10 @@ class CombatManager {
                 }
 
                 // Screen shake on player damage
-                if (this.state.game && this.state.game.screenEffects) {
-                    this.state.game.screenEffects.shake(10, 0.4);
-                }
+                // DISABLED: Screen shake was decentering ship
+                // if (this.state.game && this.state.game.screenEffects) {
+                //     this.state.game.screenEffects.shake(10, 0.4);
+                // }
             }
         }
     }
