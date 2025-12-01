@@ -168,6 +168,12 @@ class CombatUI {
                 </div>
                 
                 <button onclick="
+                    // Clear combat state
+                    if (window.game && window.game.state.combatManager) {
+                        window.game.state.combatManager = null;
+                    }
+                    
+                    // Remove UI elements
                     const combatUIContainer = document.getElementById('combat-ui-container');
                     const resultUI = document.getElementById('combat-result');
                     if (combatUIContainer) combatUIContainer.remove();
