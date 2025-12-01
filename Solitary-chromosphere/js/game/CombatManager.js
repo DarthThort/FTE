@@ -527,6 +527,11 @@ class CombatManager {
                 systemType: system.type
             });
         });
+
+        // Update UI and save game
+        this.state.notify();
+        this.state.saveGame();
+        console.log('[Combat] Rewards applied and game saved');
     }
 
     /**
