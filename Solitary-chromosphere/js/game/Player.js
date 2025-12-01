@@ -10,6 +10,11 @@ class Player {
     }
 
     update(dt) {
+        // Don't allow movement if combat is paused
+        if (this.game.state.combatManager && this.game.state.combatManager.paused) {
+            return;
+        }
+
         const input = this.game.input;
         let dx = 0;
         let dy = 0;
