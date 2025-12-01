@@ -57,8 +57,8 @@ class GameState {
                 level: 2,
                 maxLayers: 2,  // Will be calculated: level + (crew ? 1 : 0)
                 currentLayers: 2,
-                layerHP: 10,  // Damage each layer can absorb
-                currentLayerHP: 10,  // HP of topmost layer
+                layerHP: 5,  // Damage each layer can absorb
+                currentLayerHP: 5,  // HP of topmost layer
                 rechargeRate: 1.0,  // Base recharge rate
                 rechargeTimer: 0,
                 powerPerLayer: 1
