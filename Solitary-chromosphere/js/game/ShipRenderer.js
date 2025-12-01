@@ -332,13 +332,21 @@ class ShipRenderer {
 
         ctx.save();
 
-        // Generate mesh points in 3 concentric rings (closer together, larger radius)
+        // Generate mesh points for active shield layers only
         const numPointsPerRing = 24;
-        const rings = [
-            { radius: baseRadius, variation: 25 },        // Outer ring: 360px
-            { radius: baseRadius - 40, variation: 20 },   // Middle ring: 320px
-            { radius: baseRadius - 80, variation: 15 }    // Inner ring: 280px
-        ];
+        const numActiveLayers = Math.min(shields.currentLayers, 4); // Max 4 visual rings
+
+        // Only create rings for active layers
+        const rings = [];
+        for (let i = 0; i < numActiveLayers; i++) {
+            rings.push({
+                radius: baseRadius - (i * 40),  // Each layer 40px smaller
+                variation: 25 - (i * 5)          // Less variation for inner rings
+            });
+        }
+
+        if (rings.length === 0) return; // No shields active
+
         const points = [];
 
         rings.forEach((ring, ringIndex) => {
