@@ -80,6 +80,14 @@ class ShieldManager {
 
     takeDamage(amount) {
         const shields = this.state.ship.shields;
+
+        // Trigger impact visual effects FIRST (even if shields get destroyed)
+        if (shields.currentLayers > 0) {
+            this.impactFlashTime = 0.15; // Flash for 150ms
+            this.impactWaveProgress = 0.01; // Start wave animation
+            console.log('[ShieldManager] Impact effects triggered!', { flash: this.impactFlashTime, wave: this.impactWaveProgress });
+        }
+
         if (shields.currentLayers === 0) {
             return amount; // No shields, all damage passes through
         }
@@ -126,11 +134,6 @@ class ShieldManager {
         // Reset recharge timer on damage
         shields.rechargeTimer = 0;
         this.fullChargeTime = 0;
-
-        // Trigger impact visual effects
-        this.impactFlashTime = 0.15; // Flash for 150ms
-        this.impactWaveProgress = 0.01; // Start wave animation
-
         this.refreshUI();
 
         // Return overflow damage to hull
