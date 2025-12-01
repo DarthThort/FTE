@@ -168,9 +168,9 @@ class CombatUI {
                 </div>
                 
                 <button onclick="
-                    const combatUI = document.getElementById('combat-ui');
+                    const combatUIContainer = document.getElementById('combat-ui-container');
                     const resultUI = document.getElementById('combat-result');
-                    if (combatUI) combatUI.remove();
+                    if (combatUIContainer) combatUIContainer.remove();
                     if (resultUI) resultUI.remove();
                 " style="
                     padding: 15px 40px;
