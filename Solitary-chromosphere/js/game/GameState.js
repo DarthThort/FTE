@@ -171,7 +171,17 @@ class GameState {
                 if (data.galaxy) {
                     this.galaxy = data.galaxy;
                     this.currentSystem = data.currentSystem || this.galaxy[0];
-                    this.currentPlanet = data.currentPlanet || (this.currentSystem.planets && this.currentSystem.planets[0]);
+
+                    // Find currentPlanet by ID in the system
+                    if (data.currentPlanet && data.currentPlanet.id) {
+                        this.currentPlanet = this.currentSystem.planets?.find(p => p.id === data.currentPlanet.id);
+                    }
+
+                    // Fallback to first planet if not found
+                    if (!this.currentPlanet && this.currentSystem.planets && this.currentSystem.planets.length > 0) {
+                        this.currentPlanet = this.currentSystem.planets[0];
+                        console.log('[GameState] currentPlanet not found in save, defaulting to first planet');
+                    }
                 } else {
                     this.initializeGalaxy();
                 }
