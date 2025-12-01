@@ -113,16 +113,14 @@ class EnemyShipOverlay {
         let html = '';
         for (let i = 0; i < max; i++) {
             const active = i < current;
+            // Use hex symbols: ⬡ (active) and ⬢ (inactive)
             html += `
-                <div style="
-                    width: 20px;
-                    height: 20px;
-                    border-radius: 50%;
-                    border: 2px solid ${active ? '#ff0055' : 'rgba(255,255,255,0.2)'};
-                    background: ${active ? 'rgba(255,0,85,0.2)' : 'transparent'};
-                    box-shadow: ${active ? '0 0 6px #ff0055' : 'none'};
+                <span style="
+                    font-size: 1.2rem;
+                    color: ${active ? '#ff0055' : 'rgba(255,255,255,0.3)'};
+                    text-shadow: ${active ? '0 0 8px #ff0055' : 'none'};
                     transition: all 0.2s;
-                "></div>
+                ">${active ? '⬢' : '⬡'}</span>
             `;
         }
         return html;
