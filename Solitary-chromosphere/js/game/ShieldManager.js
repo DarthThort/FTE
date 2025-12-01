@@ -2,6 +2,8 @@ class ShieldManager {
     constructor(gameState) {
         this.state = gameState;
         this.fullChargeTime = 0; // Track time since shields reached full capacity
+        this.impactFlashTime = 0; // Time since last impact (for flash effect)
+        this.impactWaveProgress = 0; // 0-1 progress of impact wave animation
     }
 
     update(deltaTime) {
@@ -63,6 +65,17 @@ class ShieldManager {
                 shields.currentLayerHP = 0;
             }
         }
+
+        // Update impact effect timers
+        if (this.impactFlashTime > 0) {
+            this.impactFlashTime = Math.max(0, this.impactFlashTime - deltaTime);
+        }
+        if (this.impactWaveProgress > 0) {
+            this.impactWaveProgress = Math.min(1.0, this.impactWaveProgress + (deltaTime * 4)); // Wave completes in 0.25s
+            if (this.impactWaveProgress >= 1.0) {
+                this.impactWaveProgress = 0; // Reset after complete
+            }
+        }
     }
 
     takeDamage(amount) {
@@ -113,6 +126,11 @@ class ShieldManager {
         // Reset recharge timer on damage
         shields.rechargeTimer = 0;
         this.fullChargeTime = 0;
+
+        // Trigger impact visual effects
+        this.impactFlashTime = 0.15; // Flash for 150ms
+        this.impactWaveProgress = 0.01; // Start wave animation
+
         this.refreshUI();
 
         // Return overflow damage to hull
