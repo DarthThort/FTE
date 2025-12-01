@@ -12,6 +12,11 @@ class ShieldManager {
 
         if (!shieldSystem) return;
 
+        // Don't recharge shields if combat is paused
+        if (this.state.combatManager && this.state.combatManager.paused) {
+            return;
+        }
+
         // Calculate max layers: system level + crew bonus (max 4)
         const baseLayers = shieldSystem.level || 1;  // 1-3 layers from system level
         const crewBonus = shieldSystem.assignedCrew ? 1 : 0;

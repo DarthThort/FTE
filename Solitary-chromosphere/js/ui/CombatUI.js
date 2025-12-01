@@ -71,25 +71,6 @@ class CombatUI {
                     text-transform: uppercase;
                     letter-spacing: 1px;
                 ">⚔️ COMBAT ACTIVE</div>
-                
-                <!-- Pause Button -->
-                <button id="combat-pause-btn" style="
-                    padding: 8px 16px;
-                    font-size: 0.9rem;
-                    background: ${status.paused ? 'rgba(0,255,85,0.2)' : 'rgba(255,170,0,0.2)'};
-                    border: 2px solid ${status.paused ? '#00ff55' : '#ffaa00'};
-                    color: ${status.paused ? '#00ff55' : '#ffaa00'};
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-family: var(--font-tech);
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    transition: all 0.2s;
-                    pointer-events: auto;
-                " onmouseover="this.style.transform='scale(1.05)'" 
-                   onmouseout="this.style.transform='scale(1)'">
-                    ${status.paused ? '▶️ RESUME' : '⏸️ PAUSE'}
-                </button>
             </div>
         `;
 
