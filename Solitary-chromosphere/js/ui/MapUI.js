@@ -27,6 +27,15 @@ class MapUI {
             const inRange = dist <= state.ship.jumpRange;
             const isCurrent = sys.id === currentSystem.id;
 
+            // Threat level indicator
+            const threatLevel = sys.threatLevel ?? 0;
+            const threatColor = threatLevel === 0 ? '#00ff55' :
+                threatLevel <= 2 ? '#ffaa00' :
+                    '#ff0055';
+            const threatText = threatLevel === 0 ? '🟢' :
+                threatLevel <= 2 ? '🟡' :
+                    '🔴';
+
             return `
                             <div class="star-system" 
                                  data-system-id="${sys.id}"
@@ -34,6 +43,7 @@ class MapUI {
                                 <div style="width: ${isCurrent ? 20 : 12}px; height: ${isCurrent ? 20 : 12}px; background: ${sys.color}; border-radius: 50%; box-shadow: 0 0 ${isCurrent ? 20 : 10}px ${sys.color}; margin: 0 auto; border: ${isCurrent ? '2px solid #fff' : 'none'};"></div>
                                 <div style="color: ${inRange ? '#fff' : '#666'}; font-size: 0.7rem; margin-top: 5px; white-space: nowrap; text-shadow: 0 0 2px #000;">${sys.name}</div>
                                 ${!isCurrent ? `<div style="color: #aaa; font-size: 0.6rem;">${dist.toFixed(1)} LY</div>` : ''}
+                                <div style="font-size: 0.65rem; color: ${threatColor}; margin-top: 2px;" title="Threat Level ${threatLevel}">${threatText} T${threatLevel}</div>
                             </div>
                         `;
         }).join('')}

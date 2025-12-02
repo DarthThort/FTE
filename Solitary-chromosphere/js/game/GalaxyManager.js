@@ -18,12 +18,28 @@ class GalaxyManager {
             { id: 'epsilon_eridani', name: 'Epsilon Eridani', x: 7, y: 7, type: 'Yellow Star', color: '#ffdd44', realDist: 10.52 }
         ];
 
-        const systems = REAL_STARS.map(star => ({
-            ...star,
-            visited: star.id === 'sol',
-            planets: [], // Will be populated below
-            resources: Math.random() > 0.5 ? ['Iron', 'Ice'] : ['Gold', 'Titanium']
-        }));
+        const systems = REAL_STARS.map(star => {
+            // Calculate threat level based on distance from Sol (0,0)
+            const distanceFromSol = Math.sqrt(star.x * star.x + star.y * star.y);
+            let threatLevel = 0;
+
+            // Sol is safest (threat 0)
+            if (star.id === 'sol') {
+                threatLevel = 0;
+            } else {
+                // Threat increases with distance
+                // ~2 units distance = +1 threat level
+                threatLevel = Math.min(5, Math.floor(distanceFromSol / 2));
+            }
+
+            return {
+                ...star,
+                visited: star.id === 'sol',
+                planets: [], // Will be populated below
+                resources: Math.random() > 0.5 ? ['Iron', 'Ice'] : ['Gold', 'Titanium'],
+                threatLevel: threatLevel
+            };
+        });
 
         // Populate Sol System
         const solSystem = systems.find(s => s.id === 'sol');
