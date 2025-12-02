@@ -389,6 +389,11 @@ class GameState {
     }
 
     updateCrewAI() {
+        // Don't move crew if combat is paused
+        if (this.combatManager && this.combatManager.paused) {
+            return;
+        }
+
         for (const crew of this.ship.crew) {
             if (crew.state === 'idle' && (!crew.targetX || !crew.targetY)) {
                 if (!crew.wanderTimer || crew.wanderTimer <= 0) {
