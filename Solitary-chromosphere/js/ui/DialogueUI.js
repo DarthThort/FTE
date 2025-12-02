@@ -443,7 +443,7 @@ class DialogueUI {
         for (const outcome of encounter.outcomes) {
             random -= outcome.chance;
             if (random <= 0) {
-                this.processAnomaly Outcome(outcome);
+                this.processAnomalyOutcome(outcome);
                 break;
             }
         }
