@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Sim RPG</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <canvas id="game-canvas"></canvas>
+        <div id="ui-layer">
+            <div id="loading-screen" class="screen active">
+                <h1>SYSTEM INITIALIZING...</h1>
+                <div class="loader"></div>
+            </div>
+        </div>
+        <div id="notification-container" style="position:fixed;top:20px;right:20px;z-index:10000;pointer-events:none;">
+        </div>
+        <div id="crew-tooltip"
+            style="position:fixed;display:none;background:rgba(10,10,25,0.95);border:2px solid #00f0ff;padding:12px;border-radius:8px;z-index:9999;pointer-events:none;box-shadow:0 0 20px rgba(0,240,255,0.3);min-width:200px;font-family:'Rajdhani',sans-serif;">
+        </div>
+    </div>
+    <script src="js/game/Economy.js"></script>
+    <script src="js/game/GalaxyManager.js"></script>
+    <script src="js/game/CargoManager.js"></script>
+    <script src="js/game/TravelManager.js"></script>
+    <script src="js/game/PortGenerator.js"></script>
+    <script src="js/game/CrewManager.js"></script>
+    <script src="js/game/PowerManager.js"></script>
+    <script src="js/game/LifeSupportManager.js"></script>
+    <script src="js/game/WeaponManager.js"></script>
+    <script src="js/game/ShieldManager.js"></script>
+    <script src="js/game/EnemyShip.js"></script>
+    <script src="js/game/EncounterTypes.js"></script>
+    <script src="js/game/EncounterManager.js"></script>
+    <script src="js/game/CombatManager.js"></script>
+    <script src="js/utils/ScreenEffects.js"></script>
+    <script src="js/utils/CombatEffects.js"></script>
+    <script src="js/utils/ShipCoordinates.js"></script>
+    <script src="js/game/GameState.js"></script>
+    <script src="js/game/InputHandler.js"></script>
+    <script src="js/game/ShipRenderer.js"></script>
+    <script src="js/game/Player.js"></script>
+    <script src="js/game/SceneManager.js"></script>
+    <script src="js/game/GameEngine.js"></script>
+    <script src="js/ui/HUD.js"></script>
+    <script src="js/ui/AnimationUI.js"></script>
+    <script src="js/ui/MapUI.js"></script>
+    <script src="js/ui/PortUI.js"></script>
+    <script src="js/ui/ShipSystemUI.js"></script>
+    <script src="js/ui/PowerUI.js"></script>
+    <script src="js/ui/WeaponUI.js"></script>
+    <script src="js/ui/weapon-refresh.js"></script>
+    <script src="js/ui/ShieldUI.js"></script>
+    <script src="js/ui/CombatUI.js"></script>
+    <script src="js/ui/DialogueUI.js"></script>
+    <script src="js/ui/CombatPauseButton.js"></script>
+    <script src="js/ui/DamageNumbers.js"></script>
+    <script src="js/ui/EnemyShipOverlay.js"></script>
+    <script src="js/ui/shield-refresh.js"></script>
+    <script src="js/ui/UIManager.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>
