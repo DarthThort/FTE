@@ -25,22 +25,22 @@ class EncounterManager {
 
         // Calculate encounter chance based on threat level
         const threatLevel = system.threatLevel ?? 0;
-        let encounterChance = 0.10; // Base 10% (doubled)
+        let encounterChance = 0.20; // Base 20% (quadrupled from original)
 
         // Threat modifier: 0-5 adds 0-10%
-        encounterChance += (threatLevel * 0.04); // 4% per threat level (doubled)
+        encounterChance += (threatLevel * 0.08); // 8% per threat level (quadrupled)
 
         // Near stations = safer
         const hasStation = system.planets?.some(p => p.hasStation);
         if (hasStation) {
-            encounterChance *= 0.5; // Halve chance near stations
+            encounterChance *= 0.7; // Reduce 30% near stations (less reduction)
         }
 
         console.log(`[Encounter] Threat: ${threatLevel}, Chance: ${(encounterChance * 100).toFixed(1)}%`);
 
         if (Math.random() < encounterChance) {
-            // Set cooldown to 3-5 travels
-            this.encounterCooldown = Math.floor(Math.random() * 3) + 3;
+            // Set cooldown to 1-2 travels (reduced for more encounters)
+            this.encounterCooldown = Math.floor(Math.random() * 2) + 1;
 
             // Generate encounter
             return this.generateEncounter(system);
