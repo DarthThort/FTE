@@ -139,40 +139,14 @@ class EncounterManager {
      * Create pirate raider (aggressive)
      */
     createPirateRaider(threatLevel) {
-        return new EnemyShip({
-            name: 'Pirate Raider',
-            type: 'pirate_raider',
-            health: 60 + (threatLevel * 10),
-            maxHealth: 60 + (threatLevel * 10),
-            shields: {
-                maxLayers: Math.min(2 + Math.floor(threatLevel / 2), 3),
-                currentLayers: Math.min(2 + Math.floor(threatLevel / 2), 3),
-                layerHP: 5,
-                currentLayerHP: 5
-            },
-            weapons: this.generateWeapons(threatLevel, 2), // 2 weapons
-            aiAggressiveness: 0.8
-        });
+        return new EnemyShip('pirate_raider', threatLevel);
     }
 
     /**
      * Create pirate scout (lighter)
      */
     createPirateScout(threatLevel) {
-        return new EnemyShip({
-            name: 'Pirate Scout',
-            type: 'pirate_scout',
-            health: 40 + (threatLevel * 8),
-            maxHealth: 40 + (threatLevel * 8),
-            shields: {
-                maxLayers: Math.min(1 + Math.floor(threatLevel / 2), 2),
-                currentLayers: Math.min(1 + Math.floor(threatLevel / 2), 2),
-                layerHP: 5,
-                currentLayerHP: 5
-            },
-            weapons: this.generateWeapons(threatLevel, 1), // 1 weapon
-            aiAggressiveness: 0.6
-        });
+        return new EnemyShip('pirate_scout', threatLevel);
     }
 
     /**
