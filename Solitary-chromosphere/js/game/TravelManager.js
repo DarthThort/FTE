@@ -62,74 +62,109 @@ class TravelManager {
         }
     }
 
-}
+    /**
+     * Check for encounter during FTL travel
+     */
+    checkForEncounterDuringTravel() {
+        if (!this.state.encounterManager) return;
 
-/**
- * Complete travel successfully
- */
-completeTravel() {
-    if (this.targetSystem) {
-        // System jump
-        console.log(`Arrived at ${this.targetSystem.name}`);
-        this.state.currentSystem = this.targetSystem;
-        this.state.currentPlanet = null;
-        this.targetSystem.visited = true;
-    } else if (this.targetPlanet) {
-        // Planetary travel
-        console.log(`Arrived at ${this.targetPlanet.name}`);
-        this.state.currentPlanet = this.targetPlanet;
+        // Check for encounter using new threat-based system
+        const encounter = this.state.encounterManager.checkForEncounter();
+
+        if (encounter) {
+            // Encounter! Interrupt travel
+            this.interruptTravel(encounter);
+        }
     }
 
-    this.isTraveling = false;
-    this.targetSystem = null;
-    this.targetPlanet = null;
-    this.isPlanetaryTravel = false;
+    /**
+     * Interrupt travel with an encounter
+     */
+    interruptTravel(encounter) {
+        console.log(`Travel interrupted by ${encounter.id}!`);
 
-    this.state.saveGame();
-    this.state.notify();
-}
+        // Stop travel
+        this.stopTravel();
 
-/**
- * Start combat with enemy
- */
-startCombat(enemy) {
-    console.log(`Starting combat with ${enemy.name}`);
-
-    // Create combat manager
-    this.state.combatManager = new CombatManager(this.state, enemy);
-    this.state.combatManager.start();
-
-    // Combat renders as overlay in SHIP scene (no scene change)
-    console.log('[Combat] Combat active - rendering as overlay');
-}
-
-travelToPlanet(planetId) {
-    const targetPlanet = this.state.currentSystem.planets.find(p => p.id === planetId);
-    if (!targetPlanet) return { success: false, message: "Planet not found." };
-
-    const fuelCost = 5; // Fixed cost for now
-    if (this.state.ship.fuel < fuelCost) {
-        return { success: false, message: "Insufficient fuel for planetary travel." };
+        // Trigger encounter (shows dialogue or starts combat)
+        if (this.state.encounterManager) {
+            this.state.encounterManager.triggerEncounter(encounter);
+        }
     }
 
-    // Save state before travel (for retry if combat is lost)
-    if (this.state.savePreTravelState) {
-        this.state.savePreTravelState();
+    /**
+     * Stop travel
+     */
+    stopTravel() {
+        this.isTraveling = false;
     }
 
-    this.state.ship.fuel -= fuelCost;
+    /**
+     * Complete travel successfully
+     */
+    completeTravel() {
+        if (this.targetSystem) {
+            // System jump
+            console.log(`Arrived at ${this.targetSystem.name}`);
+            this.state.currentSystem = this.targetSystem;
+            this.state.currentPlanet = null;
+            this.targetSystem.visited = true;
+        } else if (this.targetPlanet) {
+            // Planetary travel
+            console.log(`Arrived at ${this.targetPlanet.name}`);
+            this.state.currentPlanet = this.targetPlanet;
+        }
 
-    // Start planetary travel (shorter duration, lower encounter chance)
-    this.isTraveling = true;
-    this.travelProgress = 0;
-    this.travelDuration = 3.0; // 3 seconds for planetary travel
-    this.targetPlanet = targetPlanet;
-    this.targetSystem = null; // Mark as planetary travel
-    this.encounterChecked = false;
-    this.isPlanetaryTravel = true; // Flag for lower encounter chance
+        this.isTraveling = false;
+        this.targetSystem = null;
+        this.targetPlanet = null;
+        this.isPlanetaryTravel = false;
 
-    console.log(`[TRAVEL] Starting planetary travel to ${targetPlanet.name}...`);
+        this.state.saveGame();
+        this.state.notify();
+    }
 
-    return { success: true, message: `Traveling to ${targetPlanet.name}...` };
-}
+    /**
+     * Start combat with enemy
+     */
+    startCombat(enemy) {
+        console.log(`Starting combat with ${enemy.name}`);
+
+        // Create combat manager
+        this.state.combatManager = new CombatManager(this.state, enemy);
+        this.state.combatManager.start();
+
+        // Combat renders as overlay in SHIP scene (no scene change)
+        console.log('[Combat] Combat active - rendering as overlay');
+    }
+
+    travelToPlanet(planetId) {
+        const targetPlanet = this.state.currentSystem.planets.find(p => p.id === planetId);
+        if (!targetPlanet) return { success: false, message: "Planet not found." };
+
+        const fuelCost = 5; // Fixed cost for now
+        if (this.state.ship.fuel < fuelCost) {
+            return { success: false, message: "Insufficient fuel for planetary travel." };
+        }
+
+        // Save state before travel (for retry if combat is lost)
+        if (this.state.savePreTravelState) {
+            this.state.savePreTravelState();
+        }
+
+        this.state.ship.fuel -= fuelCost;
+
+        // Start planetary travel (shorter duration, lower encounter chance)
+        this.isTraveling = true;
+        this.travelProgress = 0;
+        this.travelDuration = 3.0; // 3 seconds for planetary travel
+        this.targetPlanet = targetPlanet;
+        this.targetSystem = null; // Mark as planetary travel
+        this.encounterChecked = false;
+        this.isPlanetaryTravel = true; // Flag for lower encounter chance
+
+        console.log(`[TRAVEL] Starting planetary travel to ${targetPlanet.name}...`);
+
+        return { success: true, message: `Traveling to ${targetPlanet.name}...` };
+    }
 }
