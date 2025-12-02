@@ -135,6 +135,11 @@ class GameEngine {
             // Show pause button
             this.pauseButton.show();
         } else if (this.state.combatManager && this.state.combatManager.victor) {
+            // Hide pause button when combat ends
+            if (this.pauseButton) {
+                this.pauseButton.hide();
+            }
+
             // Show victory/defeat screen (only render once)
             const existingResult = document.getElementById('combat-result');
             if (!existingResult) {
