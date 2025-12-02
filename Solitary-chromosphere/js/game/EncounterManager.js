@@ -25,10 +25,10 @@ class EncounterManager {
 
         // Calculate encounter chance based on threat level
         const threatLevel = system.threatLevel ?? 0;
-        let encounterChance = 0.05; // Base 5%
+        let encounterChance = 0.10; // Base 10% (doubled)
 
         // Threat modifier: 0-5 adds 0-10%
-        encounterChance += (threatLevel * 0.02);
+        encounterChance += (threatLevel * 0.04); // 4% per threat level (doubled)
 
         // Near stations = safer
         const hasStation = system.planets?.some(p => p.hasStation);
