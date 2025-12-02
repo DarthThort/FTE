@@ -1,310 +1,201 @@
 /**
- * EncounterManager - Manages random enemy encounters during travel
- * 
- * Triggers encounters based on:
- * - System danger level
- * - Distance from safe zones
- * - Travel progress
- * - Random chance
+ * EncounterManager - Manages random encounters during travel
+ * Now uses threat-based encounter system with dialogue options
  */
 
 class EncounterManager {
     constructor(gameState) {
         this.state = gameState;
         this.currentEncounter = null;
-        this.encounterCooldown = 0; // Prevent back-to-back encounters
+        this.encounterCooldown = 0; // Travels remaining before next encounter
     }
 
     /**
      * Check if an encounter should occur during travel
-     * @param {number} customChance - Optional custom encounter chance (0.0-1.0)
-     * @returns {EnemyShip|null} Enemy ship if encounter triggered
      */
-    checkForEncounter(customChance = null) {
-        // Cooldown between encounters (minimum 30 seconds)
+    checkForEncounter() {
+        // Cooldown between encounters
         if (this.encounterCooldown > 0) {
-            this.encounterCooldown -= 1.0;
+            this.encounterCooldown -= 1;
             return null;
         }
 
         const system = this.state.currentSystem;
         if (!system) return null;
 
-        // Use custom chance if provided, otherwise calculate based on system danger
-        let encounterChance;
-        if (customChance !== null) {
-            encounterChance = customChance;
-        } else {
-            const baseChance = 0.30;
-            const dangerMultiplier = this.getSystemDangerLevel(system);
-            encounterChance = baseChance * dangerMultiplier * 0.016;
+        // Calculate encounter chance based on threat level
+        const threatLevel = system.threatLevel ?? 0;
+        let encounterChance = 0.05; // Base 5%
+
+        // Threat modifier: 0-5 adds 0-10%
+        encounterChance += (threatLevel * 0.02);
+
+        // Near stations = safer
+        const hasStation = system.planets?.some(p => p.hasStation);
+        if (hasStation) {
+            encounterChance *= 0.5; // Halve chance near stations
         }
 
+        console.log(`[Encounter] Threat: ${threatLevel}, Chance: ${(encounterChance * 100).toFixed(1)}%`);
+
         if (Math.random() < encounterChance) {
-            this.encounterCooldown = Math.floor(Math.random() * 3) + 3; // 3-5 travels cooldown
-            return this.spawnEnemy(system);
+            // Set cooldown to 3-5 travels
+            this.encounterCooldown = Math.floor(Math.random() * 3) + 3;
+
+            // Generate encounter
+            return this.generateEncounter(system);
         }
 
         return null;
     }
 
     /**
-     * Get system danger level (0.5 - 2.0)
+     * Generate encounter based on system threat level
      */
-    getSystemDangerLevel(system) {
-        // Safer systems
-        if (system.name === 'Sol' || system.hasStation) {
-            return 0.5; // Half as dangerous
-        }
+    generateEncounter(system) {
+        const threatLevel = system.threatLevel ?? 0;
 
-        // Distance from Sol increases danger
-        const distanceFromSol = system.distance || 0;
+        // Select encounter type based on threat
+        const encounterType = selectRandomEncounter(threatLevel);
 
-        if (distanceFromSol < 5) {
-            return 0.7; // Close to Sol = safer
-        } else if (distanceFromSol < 10) {
-            return 1.0; // Normal danger
-        } else if (distanceFromSol < 15) {
-            return 1.5; // Higher danger
+        console.log(`[Encounter] Generated: ${encounterType.id} (Threat ${threatLevel})`);
+
+        // Create encounter data
+        const encounter = {
+            ...encounterType,
+            systemName: system.name,
+            threatLevel: threatLevel
+        };
+
+        this.currentEncounter = encounter;
+        return encounter;
+    }
+
+    /**
+     * Trigger encounter (called by TravelManager)
+     */
+    triggerEncounter(encounter) {
+        console.log('[Encounter] Triggering encounter:', encounter.id);
+
+        // Instant combat for aggressive enemies
+        if (encounter.skipDialogue) {
+            this.startCombatFromDialogue(encounter);
         } else {
-            return 2.0; // Frontier = very dangerous
+            // Show dialogue UI
+            if (this.state.game && this.state.game.ui && this.state.game.ui.dialogueUI) {
+                this.state.game.ui.dialogueUI.show(encounter);
+            } else {
+                console.error('[Encounter] DialogueUI not available, starting combat directly');
+                this.startCombatFromDialogue(encounter);
+            }
         }
     }
 
     /**
-     * Spawn an enemy ship based on system
+     * Start combat from dialogue choice
      */
-    spawnEnemy(system) {
-        const dangerLevel = this.getSystemDangerLevel(system);
+    startCombatFromDialogue(encounter) {
+        console.log('[Encounter] Starting combat with', encounter.enemyType);
 
-        // Select enemy type based on danger
-        const type = this.selectEnemyType(dangerLevel);
-        const threatLevel = this.calculateThreatLevel(dangerLevel);
+        // Spawn enemy ship
+        const enemy = this.spawnEnemy(encounter);
 
-        const enemy = new EnemyShip(type, threatLevel);
+        // Initialize combat
+        if (this.state.combatManager) {
+            this.state.combatManager.active = false;
+        }
 
-        console.log(`Encounter: ${enemy.name} (${type}, threat ${threatLevel}) in ${system.name}`);
+        this.state.combatManager = new CombatManager(this.state, enemy);
+        this.state.combatManager.active = true;
+
+        console.log('[Combat] Combat started with', enemy.name);
+    }
+
+    /**
+     * Spawn enemy ship based on encounter type
+     */
+    spawnEnemy(encounter) {
+        const enemyType = encounter.enemyType || 'pirate_scout';
+        const threatLevel = encounter.threatLevel || 0;
+
+        // Create enemy based on type
+        let enemy;
+
+        switch (enemyType) {
+            case 'pirate_raider':
+                enemy = this.createPirateRaider(threatLevel);
+                break;
+            case 'pirate_scout':
+                enemy = this.createPirateScout(threatLevel);
+                break;
+            default:
+                enemy = this.createPirateScout(threatLevel);
+        }
 
         return enemy;
     }
 
     /**
-     * Select enemy type based on danger level
+     * Create pirate raider (aggressive)
      */
-    selectEnemyType(dangerLevel) {
-        const roll = Math.random();
-
-        if (dangerLevel < 1.0) {
-            // Safe systems: more merchants, fewer pirates
-            if (roll < 0.4) return 'merchant';
-            if (roll < 0.7) return 'patrol_ship';
-            if (roll < 0.9) return 'pirate_scout';
-            return 'pirate_raider';
-        } else if (dangerLevel < 1.5) {
-            // Normal systems: balanced
-            if (roll < 0.2) return 'merchant';
-            if (roll < 0.4) return 'patrol_ship';
-            if (roll < 0.7) return 'pirate_scout';
-            return 'pirate_raider';
-        } else {
-            // Dangerous systems: mostly pirates
-            if (roll < 0.1) return 'merchant';
-            if (roll < 0.2) return 'patrol_ship';
-            if (roll < 0.6) return 'pirate_scout';
-            return 'pirate_raider';
-        }
-    }
-
-    /**
-     * Calculate threat level (1-5) based on danger
-     */
-    calculateThreatLevel(dangerLevel) {
-        // Base threat level
-        let baseThreat = 1;
-
-        if (dangerLevel < 1.0) {
-            baseThreat = 1; // Low threat
-        } else if (dangerLevel < 1.5) {
-            baseThreat = 2; // Medium threat
-        } else {
-            baseThreat = 3; // High base threat
-        }
-
-        // Add some randomness (+/- 1 level)
-        const variation = Math.floor(Math.random() * 3) - 1; // -1, 0, or +1
-        const finalThreat = baseThreat + variation;
-
-        // Clamp to 1-5
-        return Math.max(1, Math.min(5, finalThreat));
-    }
-
-    /**
-     * Determine if pre-combat dialogue should occur
-     * High threat enemies attack immediately, others may talk
-     */
-    shouldShowDialogue(enemy) {
-        // Very high threat: immediate attack
-        if (enemy.threatLevel >= 4) {
-            return false;
-        }
-
-        // Merchants and low-threat enemies: usually dialogue
-        if (enemy.type === 'merchant' || enemy.threatLevel <= 2) {
-            return true;
-        }
-
-        // 50/50 for medium threat
-        return Math.random() < 0.5;
-    }
-
-    /**
-     * Get dialogue options for an encounter
-     */
-    getDialogueOptions(enemy) {
-        const options = [];
-
-        // Always available: Fight
-        options.push({
-            id: 'fight',
-            text: '⚔️ Attack',
-            action: 'combat'
+    createPirateRaider(threatLevel) {
+        return new EnemyShip({
+            name: 'Pirate Raider',
+            type: 'pirate_raider',
+            health: 60 + (threatLevel * 10),
+            maxHealth: 60 + (threatLevel * 10),
+            shields: {
+                maxLayers: Math.min(2 + Math.floor(threatLevel / 2), 3),
+                currentLayers: Math.min(2 + Math.floor(threatLevel / 2), 3),
+                layerHP: 5,
+                currentLayerHP: 5
+            },
+            weapons: this.generateWeapons(threatLevel, 2), // 2 weapons
+            aiAggressiveness: 0.8
         });
-
-        // Flee (requires engines)
-        const playerEngines = this.state.ship.systems.find(s => s.type === 'engines');
-        if (playerEngines && !playerEngines.offline) {
-            options.push({
-                id: 'flee',
-                text: '🚀 Attempt to Flee',
-                action: 'flee',
-                successChance: this.calculateFleeChance(enemy)
-            });
-        }
-
-        // Negotiate (merchants, low threat)
-        if (enemy.type === 'merchant' || enemy.threatLevel <= 2) {
-            const demandCredits = Math.floor(50 + enemy.threatLevel * 30);
-            options.push({
-                id: 'negotiate',
-                text: `💰 Pay ${demandCredits} credits`,
-                action: 'negotiate',
-                cost: demandCredits
-            });
-        }
-
-        // Surrender (if weak)
-        const playerHullPercent = this.state.ship.health / this.state.ship.maxHealth;
-        if (playerHullPercent < 0.4 || enemy.threatLevel >= 4) {
-            options.push({
-                id: 'surrender',
-                text: '🏳️ Surrender',
-                action: 'surrender'
-            });
-        }
-
-        return options;
     }
 
     /**
-     * Calculate chance to successfully flee
+     * Create pirate scout (lighter)
      */
-    calculateFleeChance(enemy) {
-        const playerEngines = this.state.ship.systems.find(s => s.type === 'engines');
-        const enemyEngines = enemy.systems.find(s => s.type === 'engines');
-
-        let baseChance = 0.5; // 50% base
-
-        // Player engine effectiveness
-        if (playerEngines) {
-            baseChance += (playerEngines.health / 100) * 0.2;
-        }
-
-        // Enemy engine status
-        if (enemyEngines && enemyEngines.health < 50) {
-            baseChance += 0.2; // Easier to flee from damaged enemies
-        }
-
-        // Enemy type modifiers
-        if (enemy.type === 'pirate_scout') {
-            baseChance -= 0.2; // Scouts are fast
-        } else if (enemy.type === 'merchant') {
-            baseChance += 0.2; // Merchants are slow
-        }
-
-        return Math.max(0.2, Math.min(0.9, baseChance)); // 20-90%
+    createPirateScout(threatLevel) {
+        return new EnemyShip({
+            name: 'Pirate Scout',
+            type: 'pirate_scout',
+            health: 40 + (threatLevel * 8),
+            maxHealth: 40 + (threatLevel * 8),
+            shields: {
+                maxLayers: Math.min(1 + Math.floor(threatLevel / 2), 2),
+                currentLayers: Math.min(1 + Math.floor(threatLevel / 2), 2),
+                layerHP: 5,
+                currentLayerHP: 5
+            },
+            weapons: this.generateWeapons(threatLevel, 1), // 1 weapon
+            aiAggressiveness: 0.6
+        });
     }
 
     /**
-     * Handle dialogue choice
+     * Generate weapons based on threat level
      */
-    handleDialogueChoice(choice, enemy) {
-        switch (choice.action) {
-            case 'combat':
-                return { outcome: 'combat', enemy: enemy };
+    generateWeapons(threatLevel, count) {
+        const weapons = [];
 
-            case 'flee':
-                const fleeSuccess = Math.random() < choice.successChance;
-                if (fleeSuccess) {
-                    return { outcome: 'fled', message: 'Successfully escaped!' };
-                } else {
-                    return { outcome: 'combat', enemy: enemy, message: 'Flee failed! Entering combat!' };
-                }
-
-            case 'negotiate':
-                if (this.state.credits >= choice.cost) {
-                    this.state.credits -= choice.cost;
-                    this.state.saveGame();
-                    return { outcome: 'negotiated', message: `Paid ${choice.cost} credits. Enemy stands down.` };
-                } else {
-                    return { outcome: 'combat', enemy: enemy, message: 'Insufficient credits! They attack!' };
-                }
-
-            case 'surrender':
-                const lostCredits = Math.floor(this.state.credits * 0.5);
-                const lostCargo = Math.floor(this.state.ship.cargo.items.length * 0.3);
-
-                this.state.credits -= lostCredits;
-                this.state.ship.cargo.items.splice(0, lostCargo);
-                this.state.saveGame();
-
-                return {
-                    outcome: 'surrendered',
-                    message: `Lost ${lostCredits} credits and ${lostCargo} cargo items.`
-                };
-
-            default:
-                return { outcome: 'combat', enemy: enemy };
+        for (let i = 0; i < count; i++) {
+            weapons.push({
+                id: `weapon_${i}`,
+                name: 'Laser Cannon',
+                type: 'laser',
+                damage: 8 + (threatLevel * 2),
+                damagePerShot: 8 + (threatLevel * 2),
+                shots: 1,
+                chargeTime: 8 - Math.min(threatLevel, 3), // Faster at higher threat
+                currentCharge: 0,
+                state: 'charging',
+                cooldown: 2
+            });
         }
-    }
 
-    /**
-     * Get encounter greeting message
-     */
-    getEncounterMessage(enemy) {
-        const messages = {
-            pirate_scout: [
-                "A pirate scout approaches! They're scanning your ship...",
-                "Pirate vessel detected! They're powering weapons!",
-                "A small raider appears on sensors. They're closing in!"
-            ],
-            pirate_raider: [
-                "Heavy pirate ship incoming! This looks dangerous!",
-                "A well-armed raider drops out of FTL! Prepare for combat!",
-                "Pirate vessel detected! They're hailing: 'Your cargo or your life!'"
-            ],
-            patrol_ship: [
-                "Patrol vessel approaching. They're running a security scan.",
-                "Law enforcement ship detected. Remain calm.",
-                "A patrol cruiser hails: 'Stand by for inspection.'"
-            ],
-            merchant: [
-                "Merchant ship detected. They seem nervous.",
-                "A trader vessel appears. They're attempting to flee!",
-                "Small merchant ship on sensors. They look vulnerable."
-            ]
-        };
-
-        const typeMessages = messages[enemy.type] || messages.pirate_scout;
-        return typeMessages[Math.floor(Math.random() * typeMessages.length)];
+        return weapons;
     }
 }

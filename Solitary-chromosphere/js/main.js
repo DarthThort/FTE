@@ -12,6 +12,10 @@ if (!canvas || !uiLayer) {
     window.game = game; // Expose for UI onclick handlers
     const ui = new UIManager(uiLayer, game);
 
+    // Initialize DialogueUI
+    if (!game.ui) game.ui = {};
+    game.ui.dialogueUI = new DialogueUI(game);
+
     // Reset Save Button removed (moved to Port UI)
 
     // Simulate loading
