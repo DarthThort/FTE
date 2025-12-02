@@ -109,6 +109,11 @@ class CrewManager {
     }
 
     updateCrewAI() {
+        // Don't move crew if combat is paused
+        if (this.state.combatManager && this.state.combatManager.paused) {
+            return;
+        }
+
         for (const crew of this.state.ship.crew) {
             // Check if crew is assigned to a system
             const assignedSystem = this.state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
