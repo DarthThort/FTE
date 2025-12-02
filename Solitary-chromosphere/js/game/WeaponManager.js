@@ -55,6 +55,15 @@ class WeaponManager {
 
                         // Apply damage if in combat
                         if (fired && this.state.combatManager && this.state.combatManager.active && this.state.combatManager.enemy) {
+                            // Add laser projectile effect
+                            if (this.state.game && this.state.game.combatEffects) {
+                                const shipX = this.state.game.canvas.width / 2;
+                                const shipY = this.state.game.canvas.height / 2;
+                                const enemyX = 405;
+                                const enemyY = 80;
+                                this.state.game.combatEffects.addProjectile(shipX, shipY, enemyX, enemyY, '#00ff55');
+                            }
+
                             this.state.combatManager.applyWeaponDamage(weapon, this.state.combatManager.enemy);
                             console.log(`[Auto-Fire] ${weapon.name} fired at ${this.state.combatManager.enemy.name}!`);
                         }
