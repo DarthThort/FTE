@@ -151,11 +151,13 @@ class DialogueUI {
         if (encounter.type === 'dialogue' || encounter.type === 'combat') {
             // Option to pay/negotiate
             if (encounter.canNegotiate && encounter.demandCredits) {
+                const canAfford = this.game.state.credits >= encounter.demandCredits;
                 options.push(this.createOptionButton(
                     '💰 Pay Credits',
-                    `Pay ${encounter.demandCredits} credits to avoid conflict`,
-                    () => this.handlePay(encounter),
-                    '#ffaa00'
+                    canAfford ? `Pay ${encounter.demandCredits} credits to avoid conflict` : `❌ Need ${encounter.demandCredits} credits (you have ${this.game.state.credits})`,
+                    canAfford ? () => this.handlePay(encounter) : null,
+                    canAfford ? '#ffaa00' : '#666666',
+                    !canAfford
                 ));
             }
 
@@ -252,7 +254,7 @@ class DialogueUI {
     /**
      * Create option button HTML
      */
-    createOptionButton(title, description, onClick, color) {
+    createOptionButton(title, description, onClick, color, disabled = false) {
         const buttonId = `dialogue-option-${Math.random().toString(36).substr(2, 9)}`;
 
         // Store callback
@@ -269,24 +271,25 @@ class DialogueUI {
                     background: linear-gradient(135deg, ${color}22, ${color}11);
                     border: 2px solid ${color};
                     border-radius: 8px;
-                    color: #ffffff;
+                    color: ${disabled ? '#888' : '#ffffff'};
                     font-size: 1.1rem;
                     font-weight: bold;
-                    cursor: pointer;
+                    cursor: ${disabled ? 'not-allowed' : 'pointer'};
+                    opacity: ${disabled ? '0.5' : '1'};
                     transition: all 0.2s;
                     text-align: left;
                     font-family: var(--font-tech);
                 "
-                onmouseover="
+                onmouseover="${disabled ? '' : `
                     this.style.background = 'linear-gradient(135deg, ${color}44, ${color}22)';
                     this.style.transform = 'translateX(5px)';
                     this.style.boxShadow = '0 0 20px ${color}';
-                "
-                onmouseout="
+                `}"
+                onmouseout="${disabled ? '' : `
                     this.style.background = 'linear-gradient(135deg, ${color}22, ${color}11)';
                     this.style.transform = 'translateX(0)';
                     this.style.boxShadow = 'none';
-                "
+                `}"
             >
                 <div style="font-size: 1.1rem; margin-bottom: 5px;">${title}</div>
                 <div style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">${description}</div>
