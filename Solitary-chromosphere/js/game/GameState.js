@@ -114,6 +114,9 @@ class GameState {
             { id: 'weapon_mod_laser', name: 'Pulse Laser', quantity: 1, value: 350, type: 'module', systemType: 'weapon' }
         ];
 
+        // Owned modules (purchased but not equipped)
+        this.ownedModules = [];
+
         this.port = {
             ships: [],
             crew: [],
