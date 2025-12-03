@@ -78,6 +78,26 @@ class GameState {
                     target: null
                 }
             ],
+
+            // Module hardpoints
+            hardpoints: {
+                weapon1: null,
+                weapon2: null,
+                shield: 'shield_basic',
+                engine: 'engine_basic',
+                jumpDrive: 'jumpdrive_basic',
+                reactor: 'reactor_basic',
+                bridge: 'bridge_basic'
+            },
+
+            maxWeaponHardpoints: 2,
+
+            // Stats computed from equipped modules (recalculated on module change)
+            totalPower: 8,
+            fleeChance: 0.3,
+            o2Regen: 1.0,
+            dialogueBonus: 0,
+
             rooms: [],  // Will be generated
             doors: [],  // Will be generated
             modules: [],
