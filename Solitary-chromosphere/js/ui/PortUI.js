@@ -34,6 +34,7 @@ class PortUI {
                 <button id="btn-tavern">TAVERN</button>
                 <button id="btn-crew">CREW ROSTER</button>
                 <button id="btn-contracts">CONTRACTS</button>
+                <button id="btn-modules" style="border-color: var(--primary); color: var(--primary);">⚙️ MODULES</button>
                 <button id="btn-market" style="border-color: var(--success); color: var(--success);">MARKET</button>
                 <button id="btn-undock" style="border-color: var(--warning); color: var(--warning);">UNDOCK</button>
             </div>
@@ -45,6 +46,11 @@ class PortUI {
         document.getElementById('btn-tavern').onclick = () => this.renderTavern();
         document.getElementById('btn-crew').onclick = () => this.renderCrewRoster();
         document.getElementById('btn-contracts').onclick = () => this.renderContracts();
+        document.getElementById('btn-modules').onclick = () => {
+            // Close port menu and open modules shop
+            document.getElementById('port-main-menu').remove();
+            this.game.ui.modulesUI.show();
+        };
         document.getElementById('btn-market').onclick = () => this.renderMarket();
         document.getElementById('btn-undock').onclick = () => {
             this.game.sceneManager.changeScene('SHIP');
