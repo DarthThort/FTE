@@ -198,7 +198,12 @@ class InventoryUI {
             `;
         }
 
-        const cargoItems = cargo.map((item, index) => `
+        const cargoItems = cargo.map((item, index) => {
+            // Get commodity info from Economy
+            const commodity = Economy.getCommodity(item.commodityId);
+            const itemName = commodity ? commodity.name : 'Unknown Item';
+
+            return `
             <div style="
                 display: flex;
                 justify-content: space-between;
@@ -209,7 +214,7 @@ class InventoryUI {
                 margin-bottom: 8px;
             ">
                 <div>
-                    <div style="color: #fff; font-weight: bold;">${item.name}</div>
+                    <div style="color: #fff; font-weight: bold;">${itemName}</div>
                     <div style="color: #aaa; font-size: 0.85rem;">Quantity: ${item.quantity || 1}</div>
                 </div>
                 <button onclick="game.ui.inventoryUI.discardCargo(${index})" style="
@@ -226,7 +231,8 @@ class InventoryUI {
                     🗑️ DISCARD
                 </button>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         return `
             <div style="margin-bottom: 25px;">
