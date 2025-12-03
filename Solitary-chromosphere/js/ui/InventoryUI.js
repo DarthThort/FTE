@@ -113,7 +113,7 @@ class InventoryUI {
         const fuel = state.fuel || 0;
         const maxFuel = state.ship?.maxFuel || 100;
 
-        // Scrap is stored in inventory array
+        // Scrap is stored in inventory array as {id: 'scrap', quantity: X}
         const scrapItem = state.inventory?.find(i => i.id === 'scrap');
         const scrap = scrapItem ? scrapItem.quantity : 0;
 
