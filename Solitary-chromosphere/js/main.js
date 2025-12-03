@@ -16,6 +16,7 @@ if (!canvas || !uiLayer) {
     if (!game.ui) game.ui = {};
     game.ui.dialogueUI = new DialogueUI(game);
     game.ui.inventoryUI = new InventoryUI(game);
+    game.ui.modulesUI = new ModulesUI(game, ui);
 
     // Reset Save Button removed (moved to Port UI)
 
