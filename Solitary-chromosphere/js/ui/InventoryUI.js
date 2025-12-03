@@ -112,8 +112,6 @@ class InventoryUI {
         const credits = state.credits || 0;
         const fuel = state.fuel || 0;
         const maxFuel = state.ship?.maxFuel || 100;
-
-        // Scrap is stored in inventory array as {id: 'scrap', quantity: X}
         const scrapItem = state.inventory?.find(i => i.id === 'scrap');
         const scrap = scrapItem ? scrapItem.quantity : 0;
 
@@ -175,7 +173,6 @@ class InventoryUI {
      */
     renderCargoSection() {
         const state = this.game.state;
-        // Cargo is stored in ship.cargo.items
         const cargo = state.ship?.cargo?.items || [];
         const maxCargo = state.ship?.cargo?.capacity || 10;
         const usedSlots = cargo.reduce((sum, item) => sum + (item.quantity || 1), 0);
