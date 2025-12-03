@@ -131,8 +131,17 @@ class MapUI {
                             if (result.success) {
                                 document.querySelector('.modal-overlay').remove();
                                 this.uiManager.animationUI.showTravelAnimation('WARP', () => {
-                                    this.uiManager.hud.showNotification(result.message, 'success');
-                                    this.renderSystemMap();
+                                    // Wait for travel to complete in the game loop
+                                    const checkTravelComplete = () => {
+                                        if (!state.travelManager.isTraveling) {
+                                            this.uiManager.hud.showNotification(`Arrived at ${state.currentSystem.name}`, 'success');
+                                            this.renderSystemMap();
+                                        } else {
+                                            // Check again next frame
+                                            setTimeout(checkTravelComplete, 50);
+                                        }
+                                    };
+                                    checkTravelComplete();
                                 });
                             } else {
                                 this.uiManager.hud.showNotification(result.message, 'error');
