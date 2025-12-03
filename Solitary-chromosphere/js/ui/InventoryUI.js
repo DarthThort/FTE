@@ -112,7 +112,10 @@ class InventoryUI {
         const credits = state.credits || 0;
         const fuel = state.fuel || 0;
         const maxFuel = state.ship?.maxFuel || 100;
-        const scrap = state.inventory?.scrap || 0;
+
+        // Scrap is stored in inventory array
+        const scrapItem = state.inventory?.find(i => i.id === 'scrap');
+        const scrap = scrapItem ? scrapItem.quantity : 0;
 
         const fuelPercent = (fuel / maxFuel) * 100;
         const fuelColor = fuelPercent > 50 ? '#00ff55' : fuelPercent > 25 ? '#ffaa00' : '#ff0055';
@@ -172,8 +175,9 @@ class InventoryUI {
      */
     renderCargoSection() {
         const state = this.game.state;
-        const cargo = state.cargo || [];
-        const maxCargo = state.ship?.cargoCapacity || 10;
+        // Cargo is stored in ship.cargo.items
+        const cargo = state.ship?.cargo?.items || [];
+        const maxCargo = state.ship?.cargo?.capacity || 10;
         const usedSlots = cargo.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
         if (cargo.length === 0) {
@@ -281,35 +285,18 @@ class InventoryUI {
             </div>
         `;
     }
-
-    /**
-     * Discard cargo item
-     */
-    discardCargo(index) {
-        const item = this.game.state.cargo[index];
-
-        if (confirm(`Discard ${item.name}? This cannot be undone.`)) {
-            this.game.state.cargo.splice(index, 1);
-            console.log(`[Inventory] Discarded ${item.name}`);
-
-            // Refresh display
-            this.show();
-        }
+    * Close inventory
+    */
+close() {
+    const overlay = document.getElementById('inventory-overlay');
+    if (overlay) {
+        overlay.remove();
     }
 
-    /**
-     * Close inventory
-     */
-    close() {
-        const overlay = document.getElementById('inventory-overlay');
-        if (overlay) {
-            overlay.remove();
-        }
-
-        // Remove ESC listener
-        if (this.escHandler) {
-            document.removeEventListener('keydown', this.escHandler);
-            this.escHandler = null;
-        }
+    // Remove ESC listener
+    if (this.escHandler) {
+        document.removeEventListener('keydown', this.escHandler);
+        this.escHandler = null;
     }
+}
 }
