@@ -106,8 +106,9 @@ class HUD {
                     ${crewPanelsHTML || '<p style="color: #888; font-size: 0.75rem;">No crew</p>'}
                 </div>
 
-                <div style="display: flex; gap: 10px;">
-                    <button id="btn-nav" style="flex: 1; padding: 8px; font-size: 0.8rem;">NAV</button>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button id="btn-nav" style="width: 100%; padding: 8px; font-size: 0.8rem;">🗺️ NAV</button>
+                    <button id="btn-inventory" style="width: 100%; padding: 8px; font-size: 0.8rem;">📦 INVENTORY</button>
                     <button id="btn-dock" style="flex: 1; padding: 8px; font-size: 0.8rem;" ${state.currentPlanet?.hasStation ? '' : 'disabled'}>DOCK</button>
                 </div>
             </div>
@@ -140,6 +141,15 @@ class HUD {
                     // Show system map first, then galaxy map
                     if (this.game.ui && this.game.ui.renderSystemMap) {
                         this.game.ui.renderSystemMap();
+                    }
+                };
+            }
+
+            const btnInventory = document.getElementById('btn-inventory');
+            if (btnInventory) {
+                btnInventory.onclick = () => {
+                    if (this.game.ui && this.game.ui.inventoryUI) {
+                        this.game.ui.inventoryUI.show();
                     }
                 };
             }
