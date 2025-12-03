@@ -282,18 +282,36 @@ class InventoryUI {
             </div>
         `;
     }
-    * Close inventory
-    */
-close() {
-    const overlay = document.getElementById('inventory-overlay');
-    if (overlay) {
-        overlay.remove();
+
+    /**
+     * Discard cargo item
+     */
+    discardCargo(index) {
+        const cargo = this.game.state.ship.cargo.items;
+        const item = cargo[index];
+
+        if (confirm(`Discard ${item.name}? This cannot be undone.`)) {
+            cargo.splice(index, 1);
+            console.log(`[Inventory] Discarded ${item.name}`);
+
+            // Refresh display
+            this.show();
+        }
     }
 
-    // Remove ESC listener
-    if (this.escHandler) {
-        document.removeEventListener('keydown', this.escHandler);
-        this.escHandler = null;
+    /**
+     * Close inventory
+     */
+    close() {
+        const overlay = document.getElementById('inventory-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+
+        // Remove ESC listener
+        if (this.escHandler) {
+            document.removeEventListener('keydown', this.escHandler);
+            this.escHandler = null;
+        }
     }
-}
 }
