@@ -6,6 +6,12 @@ class PortUI {
     }
 
     renderPortUI() {
+        // Check for passengers - show dropoff screen before port menu
+        if (this.game.state.passengers > 0) {
+            this.handleRefugeeDropoff();
+            return;
+        }
+
         // Generate procedural crew for this station (1-8 crew members)
         const crewCount = Math.floor(Math.random() * 8) + 1;
         const proceduralCrew = this.game.state.portGenerator.generateProceduralCrew(
@@ -42,6 +48,104 @@ class PortUI {
         document.getElementById('btn-market').onclick = () => this.renderMarket();
         document.getElementById('btn-undock').onclick = () => {
             this.game.sceneManager.changeScene('SHIP');
+        };
+    }
+
+    /**
+     * Handle refugee disembarkation when docking with passengers
+     */
+    handleRefugeeDropoff() {
+        const state = this.game.state;
+        const passengerCount = state.passengers;
+        const rewardPerPassenger = 30; // From EncounterTypes.REFUGEE_SHIP
+        const totalReward = passengerCount * rewardPerPassenger;
+
+        // Create disembarkation screen
+        this.uiManager.hud.clearUI();
+        const container = document.createElement('div');
+        container.id = 'refugee-dropoff';
+        container.className = 'screen active';
+        container.style.cssText = `
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        `;
+
+        container.innerHTML = `
+            <div style="
+                max-width: 500px;
+                background: linear-gradient(135deg, rgba(10,30,10,0.95), rgba(10,40,10,0.95));
+                border: 3px solid var(--success);
+                border-radius: 15px;
+                padding: 40px;
+                box-shadow: 0 0 60px rgba(0,255,85,0.5);
+                text-align: center;
+            ">
+                <div style="font-size: 4rem; margin-bottom: 20px;">👥</div>
+                
+                <h2 style="
+                    color: var(--success);
+                    margin-bottom: 20px;
+                    font-size: 1.8rem;
+                ">REFUGEES DISEMBARKING</h2>
+                
+                <p style="
+                    color: #fff;
+                    font-size: 1.2rem;
+                    margin-bottom: 30px;
+                    line-height: 1.6;
+                ">
+                    ${passengerCount} refugee${passengerCount > 1 ? 's' : ''} safely delivered to the station.
+                </p>
+                
+                <div style="
+                    background: rgba(0,255,85,0.15);
+                    border: 2px solid var(--success);
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin-bottom: 30px;
+                ">
+                    <p style="color: #aaa; margin-bottom: 10px;">Payment Received</p>
+                    <p style="
+                        color: var(--success);
+                        font-size: 2rem;
+                        font-weight: bold;
+                    ">+${totalReward} CREDITS</p>
+                </div>
+                
+                <button id="btn-continue" style="
+                    width: 100%;
+                    padding: 15px;
+                    font-size: 1.1rem;
+                    background: var(--success);
+                    border: 2px solid var(--success);
+                    color: #000;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                " onmouseover="this.style.transform='scale(1.05)'"
+                   onmouseout="this.style.transform='scale(1)'">
+                    CONTINUE TO STATION
+                </button>
+            </div>
+        `;
+
+        this.root.appendChild(container);
+
+        // Process payment
+        state.credits += totalReward;
+        state.passengers = 0;
+        state.saveGame();
+        state.notify();
+
+        console.log(`[PortUI] Disembarked ${passengerCount} refugees, received ${totalReward} credits`);
+
+        // Continue button
+        document.getElementById('btn-continue').onclick = () => {
+            container.remove();
+            this.renderPortUI(); // Now show main menu
         };
     }
 
