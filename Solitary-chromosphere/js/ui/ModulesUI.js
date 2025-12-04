@@ -110,8 +110,8 @@ class ModulesUI {
         document.getElementById('btn-close-shop').onclick = () => {
             modal.remove();
             // Reopen port menu
-            if (this.game.state.scene === 'PORT' && this.game.ui && this.game.ui.portUI) {
-                this.game.ui.portUI.renderPortUI();
+            if (this.game.state.scene === 'PORT' && this.uiManager && this.uiManager.portUI) {
+                this.uiManager.portUI.renderPortUI();
             }
         };
 
@@ -120,8 +120,8 @@ class ModulesUI {
             if (e.target === modal) {
                 modal.remove();
                 // Reopen port menu
-                if (this.game.state.scene === 'PORT' && this.game.ui && this.game.ui.portUI) {
-                    this.game.ui.portUI.renderPortUI();
+                if (this.game.state.scene === 'PORT' && this.uiManager && this.uiManager.portUI) {
+                    this.uiManager.portUI.renderPortUI();
                 }
             }
         };
