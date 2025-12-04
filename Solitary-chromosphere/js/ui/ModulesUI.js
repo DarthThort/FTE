@@ -109,12 +109,20 @@ class ModulesUI {
         // Close button
         document.getElementById('btn-close-shop').onclick = () => {
             modal.remove();
+            // Reopen port menu
+            if (this.game.state.scene === 'PORT' && this.game.ui && this.game.ui.portUI) {
+                this.game.ui.portUI.renderPortUI();
+            }
         };
 
         // Close on click outside
         modal.onclick = (e) => {
             if (e.target === modal) {
                 modal.remove();
+                // Reopen port menu
+                if (this.game.state.scene === 'PORT' && this.game.ui && this.game.ui.portUI) {
+                    this.game.ui.portUI.renderPortUI();
+                }
             }
         };
     }
