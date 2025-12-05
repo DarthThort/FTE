@@ -132,23 +132,8 @@ class LoadoutUI {
                                 </div>
                             ` : `
                                 <div style="color: #888; font-style: italic;">Empty</div>
+                                <div style="color: #555; font-size: 0.75rem; margin-top: 3px;">Walk to hardpoint and press E</div>
                             `}
-                        </div>
-                        <div>
-                            ${module && !['shield', 'engine', 'jumpDrive', 'reactor', 'bridge'].includes(slot.id) ? `
-                                <button 
-                                    onclick="game.ui.loadoutUI.unequip('${slot.id}')"
-                                    style="
-                                        padding: 6px 12px;
-                                        background: rgba(255,0,0,0.2);
-                                        border: 1px solid #ff4444;
-                                        color: #ff4444;
-                                        border-radius: 4px;
-                                        cursor: pointer;
-                                        font-size: 0.85rem;
-                                    "
-                                >UNEQUIP</button>
-                            ` : ''}
                         </div>
                     </div>
                 </div>
