@@ -109,6 +109,7 @@ class HUD {
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <button id="btn-nav" style="width: 100%; padding: 8px; font-size: 0.8rem;">🗺️ NAV</button>
                     <button id="btn-inventory" style="width: 100%; padding: 8px; font-size: 0.8rem;">📦 INVENTORY</button>
+                    <button id="btn-loadout" style="width: 100%; padding: 8px; font-size: 0.8rem; background: rgba(255,165,0,0.2); border-color: #ffaa00; color: #ffaa00;">⚙️ LOADOUT</button>
                     <button id="btn-dock" style="flex: 1; padding: 8px; font-size: 0.8rem;" ${state.currentPlanet?.hasStation ? '' : 'disabled'}>DOCK</button>
                 </div>
             </div>
@@ -150,6 +151,15 @@ class HUD {
                 btnInventory.onclick = () => {
                     if (this.game.ui && this.game.ui.inventoryUI) {
                         this.game.ui.inventoryUI.show();
+                    }
+                };
+            }
+
+            const btnLoadout = document.getElementById('btn-loadout');
+            if (btnLoadout) {
+                btnLoadout.onclick = () => {
+                    if (this.game.ui && this.game.ui.loadoutUI) {
+                        this.game.ui.loadoutUI.show();
                     }
                 };
             }
