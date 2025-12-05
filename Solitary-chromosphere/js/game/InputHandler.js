@@ -20,10 +20,9 @@ class InputHandler {
             this.mouseX = e.clientX - rect.left;
             this.mouseY = e.clientY - rect.top;
 
-            // Update coordinate display
-            const tileX = Math.floor(this.mouseX / 32);
-            const tileY = Math.floor(this.mouseY / 32);
-            this.updateCoordDisplay(this.mouseX, this.mouseY, tileX, tileY);
+            // Calculate ship grid coordinates (accounting for ship rendering offset)
+            // The ship is centered in the canvas, need to get offset from ShipRenderer
+            this.updateCoordDisplay(this.mouseX, this.mouseY);
         });
 
         canvas.addEventListener('click', (e) => {
