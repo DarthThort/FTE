@@ -19,6 +19,11 @@ class InputHandler {
             const rect = canvas.getBoundingClientRect();
             this.mouseX = e.clientX - rect.left;
             this.mouseY = e.clientY - rect.top;
+
+            // Update coordinate display
+            const tileX = Math.floor(this.mouseX / 32);
+            const tileY = Math.floor(this.mouseY / 32);
+            this.updateCoordDisplay(this.mouseX, this.mouseY, tileX, tileY);
         });
 
         canvas.addEventListener('click', (e) => {
@@ -41,5 +46,35 @@ class InputHandler {
         const clicked = this.mouseClicked;
         this.mouseClicked = false;
         return clicked;
+    }
+
+    updateCoordDisplay(mouseX, mouseY, tileX, tileY) {
+        // Create display element if it doesn't exist
+        if (!this.coordDisplay) {
+            this.coordDisplay = document.createElement('div');
+            this.coordDisplay.id = 'coord-display';
+            this.coordDisplay.style.cssText = `
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                background: rgba(0,0,0,0.85);
+                color: #00f0ff;
+                padding: 8px 12px;
+                border: 1px solid #00f0ff;
+                border-radius: 4px;
+                font-family: 'Courier New', monospace;
+                font-size: 0.85rem;
+                z-index: 9999;
+                pointer-events: none;
+                box-shadow: 0 0 10px rgba(0,240,255,0.3);
+            `;
+            document.body.appendChild(this.coordDisplay);
+        }
+
+        // Update display text
+        this.coordDisplay.innerHTML = `
+            <div style="margin-bottom: 3px;">Pixel: (${Math.floor(mouseX)}, ${Math.floor(mouseY)})</div>
+            <div style="color: #ffaa00;">Tile: (${tileX}, ${tileY})</div>
+        `;
     }
 }
