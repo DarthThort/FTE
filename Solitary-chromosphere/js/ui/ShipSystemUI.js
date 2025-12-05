@@ -164,9 +164,18 @@ class ShipSystemUI {
 
         this.uiManager.createModal('INSTALL MODULE', content);
 
-        // Add unequip button handler if there's a current module
-        if (currentModule) {
-            setTimeout(() => {
+        // Add event listeners after modal is created
+        setTimeout(() => {
+            // Add install button handlers
+            compatibleModules.forEach(module => {
+                const btn = document.getElementById(`btn-install-${module.id}`);
+                if (btn) {
+                    btn.onclick = () => this.installModuleToHardpoint(hardpointInfo.hardpoint, module.id);
+                }
+            });
+
+            // Add unequip button handler if there's a current module
+            if (currentModule) {
                 const unequipBtn = document.getElementById('btn-unequip');
                 if (unequipBtn) {
                     unequipBtn.onclick = () => {
@@ -177,8 +186,8 @@ class ShipSystemUI {
                         }
                     };
                 }
-            }, 100);
-        }
+            }
+        }, 100);
     }
 
     installModuleToHardpoint(hardpoint, moduleId) {
