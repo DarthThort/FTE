@@ -21,7 +21,6 @@ class InputHandler {
             this.mouseY = e.clientY - rect.top;
 
             // Calculate ship grid coordinates (accounting for ship rendering offset)
-            // The ship is centered in the canvas, need to get offset from ShipRenderer
             this.updateCoordDisplay(this.mouseX, this.mouseY);
         });
 
@@ -47,7 +46,7 @@ class InputHandler {
         return clicked;
     }
 
-    updateCoordDisplay(mouseX, mouseY, tileX, tileY) {
+    updateCoordDisplay(mouseX, mouseY) {
         // Create display element if it doesn't exist
         if (!this.coordDisplay) {
             this.coordDisplay = document.createElement('div');
@@ -70,10 +69,29 @@ class InputHandler {
             document.body.appendChild(this.coordDisplay);
         }
 
+        // Calculate ship layout grid coordinates
+        // Need to account for ship rendering offset (ship is centered in canvas)
+        const tileSize = 32;
+
+        // Get ship renderer offset (if available)
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (window.game && window.game.shipRenderer) {
+            offsetX = window.game.shipRenderer.offsetX || 0;
+            offsetY = window.game.shipRenderer.offsetY || 0;
+        }
+
+        // Calculate position relative to ship layout
+        const shipX = mouseX - offsetX;
+        const shipY = mouseY - offsetY;
+        const gridX = Math.floor(shipX / tileSize);
+        const gridY = Math.floor(shipY / tileSize);
+
         // Update display text
         this.coordDisplay.innerHTML = `
-            <div style="margin-bottom: 3px;">Pixel: (${Math.floor(mouseX)}, ${Math.floor(mouseY)})</div>
-            <div style="color: #ffaa00;">Tile: (${tileX}, ${tileY})</div>
+            <div style="margin-bottom: 3px;">Canvas: (${Math.floor(mouseX)}, ${Math.floor(mouseY)})</div>
+            <div style="color: #ffaa00; font-weight: bold;">Layout Grid: (${gridX}, ${gridY})</div>
         `;
     }
 }
