@@ -179,8 +179,15 @@ class GameState {
             try {
                 const data = JSON.parse(savedData);
                 this.credits = data.credits;
-                this.ship = { ...this.ship, ...data.ship };
                 this.ownedModules = data.ownedModules || [];
+
+                // Store fresh system positions before merging save data
+                const freshSystems = [...this.ship.systems];
+
+                this.ship = { ...this.ship, ...data.ship };
+
+                // Restore fresh system positions (don't use saved positions)
+                this.ship.systems = freshSystems;
 
                 // Migrate old saves: add cargo if missing
                 if (!this.ship.cargo) {
@@ -810,8 +817,8 @@ class GameState {
     /**
      * Load pre-travel save (retry combat)
      */    /**
- * Load pre-travel save (retry combat)
- */
+* Load pre-travel save (retry combat)
+*/
     loadPreTravelSave() {
         // Just reload - loadGame() will check for pre_travel_save and restore it
         location.reload();
