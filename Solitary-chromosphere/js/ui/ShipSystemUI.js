@@ -18,7 +18,8 @@ class ShipSystemUI {
         const content = `
             <div style="text-align: center;">
                 <h1 style="color: ${system.color}; margin-bottom: 10px;">${system.name.toUpperCase()}</h1>
-                <div style="font-family: var(--font-body); color: var(--text-dim); margin-bottom: 20px;">SYSTEM ID: ${system.id.toUpperCase()}</div>
+                <div style="font-family: var(--font-body); color: var(--text-dim); margin-bottom: 5px;">SYSTEM ID: ${system.id.toUpperCase()}</div>
+                <div style="font-family: var(--font-body); color: #ffaa00; font-weight: bold; margin-bottom: 20px;">COORDINATES: (${system.x}, ${system.y})</div>
                 
                 <div style="margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
