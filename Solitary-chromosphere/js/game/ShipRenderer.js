@@ -164,9 +164,15 @@ class ShipRenderer {
             ctx.strokeStyle = sys.color;
             ctx.lineWidth = 2;
             ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
+
+            // Draw coordinates for debugging
             ctx.fillStyle = '#fff';
-            ctx.font = 'bold 10px "Courier New", monospace';
+            ctx.font = 'bold 8px "Courier New", monospace';
             ctx.textAlign = 'center';
+            ctx.fillText(`${sys.x},${sys.y}`, posX + this.tileSize / 2, posY + 10);
+
+            // Draw system ID
+            ctx.font = 'bold 10px "Courier New", monospace';
             ctx.fillText(sys.id.substring(0, 3).toUpperCase(), posX + this.tileSize / 2, posY + this.tileSize / 2 + 4);
         }
     }
