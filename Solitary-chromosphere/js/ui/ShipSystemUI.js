@@ -104,13 +104,13 @@ class ShipSystemUI {
     renderInstallMenu(x, y) {
         // Map hardpoint coordinates to system types
         const hardpointMap = {
-            '18,10': { hardpoint: 'weapon1', category: MODULE_CATEGORIES.WEAPON },
-            '26,10': { hardpoint: 'weapon2', category: MODULE_CATEGORIES.WEAPON },
-            '23,9': { hardpoint: 'shield', category: MODULE_CATEGORIES.SHIELD },
-            '22,21': { hardpoint: 'engine', category: MODULE_CATEGORIES.ENGINE },
-            '21,13': { hardpoint: 'jumpDrive', category: MODULE_CATEGORIES.JUMP_DRIVE },
-            '23,13': { hardpoint: 'reactor', category: MODULE_CATEGORIES.REACTOR },
-            '22,6': { hardpoint: 'bridge', category: MODULE_CATEGORIES.BRIDGE }
+            '10,9': { hardpoint: 'weapon1', category: MODULE_CATEGORIES.WEAPON },
+            '16,9': { hardpoint: 'weapon2', category: MODULE_CATEGORIES.WEAPON },
+            '15,8': { hardpoint: 'shield', category: MODULE_CATEGORIES.SHIELD },
+            '13,18': { hardpoint: 'engine', category: MODULE_CATEGORIES.ENGINE },
+            '14,13': { hardpoint: 'jumpDrive', category: MODULE_CATEGORIES.JUMP_DRIVE },
+            '12,13': { hardpoint: 'reactor', category: MODULE_CATEGORIES.REACTOR },
+            '13,4': { hardpoint: 'bridge', category: MODULE_CATEGORIES.BRIDGE }
         };
 
         const hardpointKey = `${x},${y}`;
