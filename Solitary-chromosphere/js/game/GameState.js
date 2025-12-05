@@ -167,6 +167,15 @@ class GameState {
         this.portGenerator.generatePortContent();
         this.listeners = [];
         this.loadGame();
+
+        // Log all system coordinates for debugging
+        console.log('═══════════════════════════════════════');
+        console.log('SHIP SYSTEMS COORDINATES:');
+        console.log('═══════════════════════════════════════');
+        this.ship.systems.forEach(sys => {
+            console.log(`${sys.name.padEnd(25)} (${sys.x}, ${sys.y})`);
+        });
+        console.log('═══════════════════════════════════════');
     }
 
     generatePortContent() {
