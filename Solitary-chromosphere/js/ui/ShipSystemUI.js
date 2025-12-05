@@ -153,8 +153,7 @@ class ShipSystemUI {
                                 <div style="color: var(--primary); font-weight: bold;">${module.name}</div>
                                 <div style="color: #888; font-size: 0.8rem;">Tier ${module.tier}</div>
                             </div>
-                            <button id="btn-install-${module.id}" style="font-size: 0.8rem; padding: 6px 16px;" 
-                                onclick="game.shipSystemUI.installModuleToHardpoint('${hardpointInfo.hardpoint}', '${module.id}')">
+                            <button id="btn-install-${module.id}" style="font-size: 0.8rem; padding: 6px 16px;">
                                 INSTALL
                             </button>
                         </div>
