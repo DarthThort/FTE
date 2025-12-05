@@ -43,11 +43,11 @@ class GameState {
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             ],
             systems: [
-                { x: 13, y: 4, id: 'bridge', name: 'Bridge Console', type: 'bridge', color: '#00f0ff', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 },
-                { x: 13, y: 18, id: 'engines', name: 'Engine Control', type: 'engine', color: '#ff5500', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
-                { x: 10, y: 9, id: 'weapons1', name: 'Weapons Array 1', type: 'weapon', color: '#ff0055', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
-                { x: 16, y: 9, id: 'weapons2', name: 'Weapons Array 2', type: 'weapon', color: '#ff0055', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
-                { x: 15, y: 8, id: 'shields', name: 'Shield Generator', type: 'shield', color: '#00ff55', level: 2, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
+                { x: 13, y: 5, id: 'bridge', name: 'Bridge Console', type: 'bridge', color: '#00f0ff', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 },
+                { x: 13, y: 19, id: 'engines', name: 'Engine Control', type: 'engine', color: '#ff5500', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
+                { x: 10, y: 8, id: 'weapons1', name: 'Weapons Array 1', type: 'weapon', color: '#ff0055', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
+                { x: 16, y: 8, id: 'weapons2', name: 'Weapons Array 2', type: 'weapon', color: '#ff0055', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
+                { x: 16, y: 8, id: 'shields', name: 'Shield Generator', type: 'shield', color: '#00ff55', level: 2, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
                 { x: 14, y: 13, id: 'jump', name: 'Jump Drive', type: 'jumpdrive', color: '#ff00ff', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 },
                 { x: 12, y: 13, id: 'reactor', name: 'Reactor Core', type: 'reactor', color: '#ffaa00', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 }
             ],
