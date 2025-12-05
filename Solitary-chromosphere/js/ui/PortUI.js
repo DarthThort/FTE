@@ -47,8 +47,9 @@ class PortUI {
         document.getElementById('btn-crew').onclick = () => this.renderCrewRoster();
         document.getElementById('btn-contracts').onclick = () => this.renderContracts();
         document.getElementById('btn-modules').onclick = () => {
-            // Close port menu and open modules shop
-            document.getElementById('port-main-menu').remove();
+            // Hide port menu (don't remove it so we can show it again)
+            const menu = document.getElementById('port-main-menu');
+            if (menu) menu.style.display = 'none';
             this.game.ui.modulesUI.show();
         };
         document.getElementById('btn-market').onclick = () => this.renderMarket();
