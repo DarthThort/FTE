@@ -101,26 +101,89 @@ class ShipSystemUI {
     }
 
     renderInstallMenu(x, y) {
-        const modules = this.game.state.inventory.filter(i => i.type === 'module') || [];
+        // Map hardpoint coordinates to system types
+        // You'll need to adjust these coordinates based on your ship layout
+        const hardpointMap = {
+            '10,8': { hardpoint: 'weapon1', category: MODULE_CATEGORIES.WEAPON },
+            '16,8': { hardpoint: 'weapon2', category: MODULE_CATEGORIES.WEAPON },
+            // Add more hardpoint mappings as needed
+        };
+
+        const hardpointKey = `${x},${y}`;
+        const hardpointInfo = hardpointMap[hardpointKey];
+
+        if (!hardpointInfo) {
+            console.warn(`[ShipSystemUI] No hardpoint mapping for (${x},${y})`);
+            return;
+        }
+
+        // Get owned modules that match this hardpoint's category
+        const compatibleModules = this.game.state.ownedModules
+            .map(id => getModule(id))
+            .filter(m => m && m.category === hardpointInfo.category);
+
+        // Check if something is already installed here
+        const currentModuleId = this.game.state.ship.hardpoints[hardpointInfo.hardpoint];
+        const currentModule = currentModuleId ? getModule(currentModuleId) : null;
 
         const content = `
             <div style="text-align: center;">
-                <p style="color: var(--text-dim); margin-bottom: 20px;">Select a module from cargo to install at Hardpoint (${x},${y})</p>
+                <p style="color: var(--text-dim); margin-bottom: 20px;">
+                    ${currentModule ? `Currently installed: <span style="color: var(--primary);">${currentModule.name}</span>` : 'No module installed'}
+                </p>
                 
-                <div style="max-height: 300px; overflow-y: auto; margin-bottom: 30px; border: 1px solid #333; padding: 10px;">
-                    ${modules.length > 0 ? modules.map(item => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333;">
-                            <span>${item.name}</span>
-                            <button style="font-size: 0.8rem;" 
-                                onclick="game.state.installSystem(game.state.inventory.find(i => i.id === '${item.id}'), ${x}, ${y}); document.querySelector('.modal-overlay').remove();">
+                ${currentModule ? `
+                    <button id="btn-unequip" style="width: 100%; padding: 12px; margin-bottom: 20px; background: var(--danger); border-color: var(--danger);">
+                        UNEQUIP ${currentModule.name}
+                    </button>
+                ` : ''}
+                
+                <p style="color: var(--text-dim); margin-bottom: 10px; font-size: 0.9rem;">
+                    Available ${hardpointInfo.category} modules:
+                </p>
+                
+                <div style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #333; padding: 10px;">
+                    ${compatibleModules.length > 0 ? compatibleModules.map(module => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #333; background: rgba(0,240,255,0.05);">
+                            <div style="text-align: left;">
+                                <div style="color: var(--primary); font-weight: bold;">${module.name}</div>
+                                <div style="color: #888; font-size: 0.8rem;">Tier ${module.tier}</div>
+                            </div>
+                            <button id="btn-install-${module.id}" style="font-size: 0.8rem; padding: 6px 16px;" 
+                                onclick="game.shipSystemUI.installModuleToHardpoint('${hardpointInfo.hardpoint}', '${module.id}')">
                                 INSTALL
                             </button>
                         </div>
-                    `).join('') : '<p style="padding: 20px;">No compatible modules in cargo.</p>'}
+                    `).join('') : '<p style="padding: 20px; color: #888;">No compatible modules available.</p>'}
                 </div>
             </div>
         `;
+
         this.uiManager.createModal('INSTALL MODULE', content);
+
+        // Add unequip button handler if there's a current module
+        if (currentModule) {
+            setTimeout(() => {
+                const unequipBtn = document.getElementById('btn-unequip');
+                if (unequipBtn) {
+                    unequipBtn.onclick = () => {
+                        const result = this.game.state.unequipModule(hardpointInfo.hardpoint);
+                        this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
+                        if (result.success) {
+                            document.querySelector('.modal-overlay').remove();
+                        }
+                    };
+                }
+            }, 100);
+        }
+    }
+
+    installModuleToHardpoint(hardpoint, moduleId) {
+        const result = this.game.state.installModule(hardpoint, moduleId);
+        this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
+        if (result.success) {
+            document.querySelector('.modal-overlay').remove();
+        }
     }
 
     showCrewDetail(crewId) {
