@@ -288,10 +288,13 @@ class GameState {
     }
 
     saveGame() {
+        // Create ship data without systems (to avoid saving old positions)
+        const { systems, ...shipDataWithoutSystems } = this.ship;
+
         const data = {
             credits: this.credits,
             ship: {
-                ...this.ship,
+                ...shipDataWithoutSystems,
                 crew: this.ship.crew.map(c => ({
                     ...c,
                     targetX: null,
