@@ -187,6 +187,18 @@ class GameState {
         if (savedData) {
             try {
                 const data = JSON.parse(savedData);
+
+                // MIGRATION: Detect and remove old system coordinates
+                if (data.ship && data.ship.systems) {
+                    const hasOldCoords = data.ship.systems.some(s =>
+                        s.x > 19 || s.y > 19 // Old coords were 22,21 etc (out of main ship area)
+                    );
+                    if (hasOldCoords) {
+                        console.warn('⚠️ MIGRATING OLD SAVE - Removing outdated system positions');
+                        delete data.ship.systems;
+                    }
+                }
+
                 this.credits = data.credits;
                 this.ownedModules = data.ownedModules || [];
 
