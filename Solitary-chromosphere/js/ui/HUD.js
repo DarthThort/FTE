@@ -111,6 +111,7 @@ class HUD {
                     <button id="btn-inventory" style="width: 100%; padding: 8px; font-size: 0.8rem;">📦 INVENTORY</button>
                     <button id="btn-loadout" style="width: 100%; padding: 8px; font-size: 0.8rem; background: rgba(255,165,0,0.2); border-color: #ffaa00; color: #ffaa00;">⚙️ LOADOUT</button>
                     <button id="btn-dock" style="flex: 1; padding: 8px; font-size: 0.8rem;" ${state.currentPlanet?.hasStation ? '' : 'disabled'}>DOCK</button>
+                    <button id="btn-reset-save" style="width: 100%; padding: 8px; font-size: 0.7rem; background: rgba(255,0,0,0.2); border-color: #ff0000; color: #ff0000;">🔄 RESET SAVE</button>
                 </div>
             </div>
         `;
@@ -168,6 +169,16 @@ class HUD {
             if (btnDock) {
                 btnDock.onclick = () => {
                     this.game.sceneManager.changeScene('PORT');
+                };
+            }
+
+            const btnResetSave = document.getElementById('btn-reset-save');
+            if (btnResetSave) {
+                btnResetSave.onclick = () => {
+                    if (confirm('⚠️ WARNING: This will delete your save and restart the game!\n\nAre you sure?')) {
+                        localStorage.clear();
+                        location.reload();
+                    }
                 };
             }
         }, 100);
