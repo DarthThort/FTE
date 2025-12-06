@@ -82,11 +82,11 @@ class GameState {
                 }
             ],
 
-            // Module hardpoints
+            // Module hardpoints - Start with basic modules installed
             hardpoints: {
-                weapon1: null,
+                weapon1: null,           // Empty weapon slots
                 weapon2: null,
-                shield: 'shield_basic',
+                shield: 'shield_basic',  // Pre-installed basic modules
                 engine: 'engine_basic',
                 jumpDrive: 'jumpdrive_basic',
                 reactor: 'reactor_basic',
