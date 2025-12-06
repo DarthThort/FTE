@@ -201,26 +201,9 @@ class LoadoutUI {
                     <div style="color: #888; font-size: 0.8rem; margin-bottom: 8px;">
                         Tier ${module.tier} ${module.category}
                     </div>
-                    ${compatibleHardpoint ? `
-                        <button 
-                            onclick="game.ui.loadoutUI.install('${compatibleHardpoint}', '${moduleId}')"
-                            style="
-                                width: 100%;
-                                padding: 6px;
-                                background: var(--success);
-                                border: 1px solid var(--success);
-                                color: #000;
-                                border-radius: 4px;
-                                cursor: pointer;
-                                font-size: 0.85rem;
-                                font-weight: bold;
-                            "
-                        >INSTALL</button>
-                    ` : `
-                        <div style="color: #ff8800; font-size: 0.8rem; text-align: center;">
-                            All slots full
-                        </div>
-                    `}
+                    <div style="color: #555; font-size: 0.75rem; font-style: italic; text-align: center; margin-top: 8px;">
+                        Walk to compatible hardpoint to install
+                    </div>
                 </div>
             `;
         }).join('');
