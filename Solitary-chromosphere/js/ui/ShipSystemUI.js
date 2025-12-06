@@ -138,6 +138,16 @@ class ShipSystemUI {
 
         this.uiManager.createModal('SYSTEM CONSOLE', content);
 
+        // Close on click outside
+        const modalOverlay = document.querySelector('.modal-overlay');
+        if (modalOverlay) {
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) {
+                    modalOverlay.remove();
+                }
+            });
+        }
+
         // Event listeners
         setTimeout(() => {
             // Crew assignment
@@ -170,6 +180,38 @@ class ShipSystemUI {
             }
 
             // Module management
+            const btnUpgrade = document.getElementById('btn-upgrade');
+            if (btnUpgrade && hardpointKey && installedModule) {
+                btnUpgrade.onclick = () => {
+                    const scrapCost = installedModule.scrapCost || 0;
+                    const upgradeTo = installedModule.upgradeTo;
+
+                    if (!upgradeTo) {
+                        this.uiManager.hud.showNotification('This module is already at max tier', 'error');
+                        return;
+                    }
+
+                    const upgradeModule = getModule(upgradeTo);
+                    if (!upgradeModule) {
+                        this.uiManager.hud.showNotification('Upgrade not available', 'error');
+                        return;
+                    }
+
+                    if (this.game.state.scrap < scrapCost) {
+                        this.uiManager.hud.showNotification(`Need ${scrapCost} scrap (you have ${this.game.state.scrap})`, 'error');
+                        return;
+                    }
+
+                    if (confirm(`Upgrade ${installedModule.name} to ${upgradeModule.name} for ${scrapCost} scrap?`)) {
+                        const result = this.game.state.upgradeModule(hardpointKey);
+                        this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
+                        if (result.success) {
+                            this.renderSystemConsole(system);
+                        }
+                    }
+                };
+            }
+
             const btnUninstallModule = document.getElementById('btn-uninstall-module');
             if (btnUninstallModule && hardpointKey) {
                 btnUninstallModule.onclick = () => {
@@ -253,6 +295,16 @@ class ShipSystemUI {
         `;
 
         this.uiManager.createModal('INSTALL MODULE', content);
+
+        // Close on click outside
+        const modalOverlay1 = document.querySelector('.modal-overlay');
+        if (modalOverlay1) {
+            modalOverlay1.addEventListener('click', (e) => {
+                if (e.target === modalOverlay1) {
+                    modalOverlay1.remove();
+                }
+            });
+        }
 
         // Add event listeners after modal is created
         setTimeout(() => {
@@ -370,6 +422,16 @@ class ShipSystemUI {
         `;
 
         this.uiManager.createModal('CREW DETAILS', content);
+
+        // Close on click outside
+        const modalOverlay2 = document.querySelector('.modal-overlay');
+        if (modalOverlay2) {
+            modalOverlay2.addEventListener('click', (e) => {
+                if (e.target === modalOverlay2) {
+                    modalOverlay2.remove();
+                }
+            });
+        }
 
         // Add event listeners
         if (assignment) {
