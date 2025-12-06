@@ -154,25 +154,40 @@ class ShipRenderer {
         for (const sys of systems) {
             const posX = sys.x * this.tileSize;
             const posY = sys.y * this.tileSize;
+
+            // Check if system has a module installed
+            const systemToHardpoint = {
+                'bridge': 'bridge',
+                'shield': 'shield',
+                'engine': 'engine',
+                'jumpdrive': 'jumpDrive',
+                'reactor': 'reactor',
+                'weapon': sys.id === 'weapons1' ? 'weapon1' : 'weapon2'
+            };
+            const hardpointKey = systemToHardpoint[sys.type];
+            const hasModule = hardpointKey && this.game.state.ship.hardpoints[hardpointKey];
+
+            // Darker appearance if no module installed
+            const alpha = hasModule ? 0.2 : 0.05;
+            const shadowBlur = hasModule ? 15 : 5;
+
             ctx.shadowColor = sys.color;
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = shadowBlur;
             ctx.fillStyle = sys.color;
-            ctx.globalAlpha = 0.2;
+            ctx.globalAlpha = alpha;
             ctx.fillRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
             ctx.globalAlpha = 1.0;
             ctx.shadowBlur = 0;
-            ctx.strokeStyle = sys.color;
+            ctx.strokeStyle = hasModule ? sys.color : '#444';
             ctx.lineWidth = 2;
             ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
 
-            // Draw coordinates for debugging
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 8px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(`${sys.x},${sys.y}`, posX + this.tileSize / 2, posY + 10);
+
 
             // Draw system ID
+            ctx.fillStyle = hasModule ? '#fff' : '#666';
             ctx.font = 'bold 10px "Courier New", monospace';
+            ctx.textAlign = 'center';
             ctx.fillText(sys.id.substring(0, 3).toUpperCase(), posX + this.tileSize / 2, posY + this.tileSize / 2 + 4);
         }
     }
