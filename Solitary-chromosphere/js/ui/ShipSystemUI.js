@@ -190,39 +190,37 @@ class ShipSystemUI {
             }
         }, 100);
     }
-}
-    }
 
-renderInstallMenu(x, y) {
-    // Map hardpoint coordinates to system types
-    const hardpointMap = {
-        '9,8': { hardpoint: 'weapon1', category: MODULE_CATEGORIES.WEAPON },
-        '17,8': { hardpoint: 'weapon2', category: MODULE_CATEGORIES.WEAPON },
-        '14,6': { hardpoint: 'shield', category: MODULE_CATEGORIES.SHIELD },
-        '13,19': { hardpoint: 'engine', category: MODULE_CATEGORIES.ENGINE },
-        '14,11': { hardpoint: 'jumpDrive', category: MODULE_CATEGORIES.JUMP_DRIVE },
-        '12,11': { hardpoint: 'reactor', category: MODULE_CATEGORIES.REACTOR },
-        '13,4': { hardpoint: 'bridge', category: MODULE_CATEGORIES.BRIDGE }
-    };
+    renderInstallMenu(x, y) {
+        // Map hardpoint coordinates to system types
+        const hardpointMap = {
+            '9,8': { hardpoint: 'weapon1', category: MODULE_CATEGORIES.WEAPON },
+            '17,8': { hardpoint: 'weapon2', category: MODULE_CATEGORIES.WEAPON },
+            '14,6': { hardpoint: 'shield', category: MODULE_CATEGORIES.SHIELD },
+            '13,19': { hardpoint: 'engine', category: MODULE_CATEGORIES.ENGINE },
+            '14,11': { hardpoint: 'jumpDrive', category: MODULE_CATEGORIES.JUMP_DRIVE },
+            '12,11': { hardpoint: 'reactor', category: MODULE_CATEGORIES.REACTOR },
+            '13,4': { hardpoint: 'bridge', category: MODULE_CATEGORIES.BRIDGE }
+        };
 
-    const hardpointKey = `${x},${y}`;
-    const hardpointInfo = hardpointMap[hardpointKey];
+        const hardpointKey = `${x},${y}`;
+        const hardpointInfo = hardpointMap[hardpointKey];
 
-    if (!hardpointInfo) {
-        console.warn(`[ShipSystemUI] No hardpoint mapping for (${x},${y})`);
-        return;
-    }
+        if (!hardpointInfo) {
+            console.warn(`[ShipSystemUI] No hardpoint mapping for (${x},${y})`);
+            return;
+        }
 
-    // Get owned modules that match this hardpoint's category
-    const compatibleModules = this.game.state.ownedModules
-        .map(id => getModule(id))
-        .filter(m => m && m.category === hardpointInfo.category);
+        // Get owned modules that match this hardpoint's category
+        const compatibleModules = this.game.state.ownedModules
+            .map(id => getModule(id))
+            .filter(m => m && m.category === hardpointInfo.category);
 
-    // Check if something is already installed here
-    const currentModuleId = this.game.state.ship.hardpoints[hardpointInfo.hardpoint];
-    const currentModule = currentModuleId ? getModule(currentModuleId) : null;
+        // Check if something is already installed here
+        const currentModuleId = this.game.state.ship.hardpoints[hardpointInfo.hardpoint];
+        const currentModule = currentModuleId ? getModule(currentModuleId) : null;
 
-    const content = `
+        const content = `
             <div style="text-align: center;">
                 <p style="color: var(--text-dim); margin-bottom: 20px;">
                     ${currentModule ? `Currently installed: <span style="color: var(--primary);">${currentModule.name}</span>` : 'No module installed'}
@@ -254,51 +252,51 @@ renderInstallMenu(x, y) {
             </div>
         `;
 
-    this.uiManager.createModal('INSTALL MODULE', content);
+        this.uiManager.createModal('INSTALL MODULE', content);
 
-    // Add event listeners after modal is created
-    setTimeout(() => {
-        // Add install button handlers
-        compatibleModules.forEach(module => {
-            const btn = document.getElementById(`btn-install-${module.id}`);
-            if (btn) {
-                btn.onclick = () => this.installModuleToHardpoint(hardpointInfo.hardpoint, module.id);
+        // Add event listeners after modal is created
+        setTimeout(() => {
+            // Add install button handlers
+            compatibleModules.forEach(module => {
+                const btn = document.getElementById(`btn-install-${module.id}`);
+                if (btn) {
+                    btn.onclick = () => this.installModuleToHardpoint(hardpointInfo.hardpoint, module.id);
+                }
+            });
+
+            // Add unequip button handler if there's a current module
+            if (currentModule) {
+                const unequipBtn = document.getElementById('btn-unequip');
+                if (unequipBtn) {
+                    unequipBtn.onclick = () => {
+                        const result = this.game.state.unequipModule(hardpointInfo.hardpoint);
+                        this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
+                        if (result.success) {
+                            document.querySelector('.modal-overlay').remove();
+                        }
+                    };
+                }
             }
-        });
-
-        // Add unequip button handler if there's a current module
-        if (currentModule) {
-            const unequipBtn = document.getElementById('btn-unequip');
-            if (unequipBtn) {
-                unequipBtn.onclick = () => {
-                    const result = this.game.state.unequipModule(hardpointInfo.hardpoint);
-                    this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
-                    if (result.success) {
-                        document.querySelector('.modal-overlay').remove();
-                    }
-                };
-            }
-        }
-    }, 100);
-}
-
-installModuleToHardpoint(hardpoint, moduleId) {
-    const result = this.game.state.installModule(hardpoint, moduleId);
-    this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
-    if (result.success) {
-        document.querySelector('.modal-overlay').remove();
+        }, 100);
     }
-}
 
-showCrewDetail(crewId) {
-    const crew = this.game.state.ship.crew.find(c => c.id === crewId);
-    if (!crew) return;
+    installModuleToHardpoint(hardpoint, moduleId) {
+        const result = this.game.state.installModule(hardpoint, moduleId);
+        this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
+        if (result.success) {
+            document.querySelector('.modal-overlay').remove();
+        }
+    }
 
-    const assignment = this.game.state.ship.systems.find(s => s.assignedCrew?.id === crewId);
-    const primarySkill = this.game.state.getRolePrimarySkill(crew.role);
-    const availableSystems = this.game.state.ship.systems.filter(s => !s.assignedCrew || s.assignedCrew.id === crewId);
+    showCrewDetail(crewId) {
+        const crew = this.game.state.ship.crew.find(c => c.id === crewId);
+        if (!crew) return;
 
-    const content = `
+        const assignment = this.game.state.ship.systems.find(s => s.assignedCrew?.id === crewId);
+        const primarySkill = this.game.state.getRolePrimarySkill(crew.role);
+        const availableSystems = this.game.state.ship.systems.filter(s => !s.assignedCrew || s.assignedCrew.id === crewId);
+
+        const content = `
             <div style="max-width: 500px; margin: 0 auto;">
                 <div style="text-align: center; margin-bottom: 20px;">
                     <h2 style="color: var(--secondary); margin-bottom: 5px;">${crew.name}</h2>
@@ -333,10 +331,10 @@ showCrewDetail(crewId) {
                 <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
                     <h3 style="color: var(--primary); font-size: 0.9rem; margin-bottom: 10px;">SKILLS</h3>
                     ${Object.keys(crew.skills).map(skillName => {
-        const skill = crew.skills[skillName];
-        const isPrimary = skillName === primarySkill;
-        const xpPercent = (skill.xp / skill.xpToNext) * 100;
-        return `
+            const skill = crew.skills[skillName];
+            const isPrimary = skillName === primarySkill;
+            const xpPercent = (skill.xp / skill.xpToNext) * 100;
+            return `
                             <div style="margin-bottom: 10px;">
                                 <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
                                     <span style="font-size: 0.85rem; ${isPrimary ? 'color: var(--secondary); font-weight: bold;' : ''}">${skillName.charAt(0).toUpperCase() + skillName.slice(1)} ${isPrimary ? '⭐' : ''}</span>
@@ -348,17 +346,17 @@ showCrewDetail(crewId) {
                                 <div style="font-size: 0.7rem; color: #666; margin-top: 2px;">${skill.xp}/${skill.xpToNext} XP</div>
                             </div>
                         `;
-    }).join('')}
+        }).join('')}
                 </div>
 
                 <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
                     <h3 style="color: var(--success); font-size: 0.9rem; margin-bottom: 10px;">ASSIGNMENT</h3>
                     ${assignment ?
-            `<div>
+                `<div>
                             <p style="color: var(--primary); font-weight: bold; margin-bottom: 10px;">Currently working at: ${assignment.name}</p>
                             <button id="btn-unassign-crew" style="width: 100%; padding: 8px; background: var(--danger); border-color: var(--danger);">UNASSIGN FROM STATION</button>
                         </div>` :
-            `<div>
+                `<div>
                             <p style="color: var(--text-dim); font-size: 0.85rem; margin-bottom: 10px;">Currently idle. Assign to a system:</p>
                             <select id="system-selector" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; margin-bottom: 10px;">
                                 <option value="">-- Select System --</option>
@@ -366,42 +364,42 @@ showCrewDetail(crewId) {
                             </select>
                             <button id="btn-assign-crew" style="width: 100%; padding: 8px;">ASSIGN TO SYSTEM</button>
                         </div>`
-        }
+            }
                 </div>
             </div>
         `;
 
-    this.uiManager.createModal('CREW DETAILS', content);
+        this.uiManager.createModal('CREW DETAILS', content);
 
-    // Add event listeners
-    if (assignment) {
-        const unassignBtn = document.getElementById('btn-unassign-crew');
-        if (unassignBtn) {
-            unassignBtn.onclick = () => {
-                const result = this.game.state.unassignCrewFromSystem(assignment.id);
-                this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
-                if (result.success) {
-                    this.showCrewDetail(crewId); // Refresh
-                }
-            };
-        }
-    } else {
-        const assignBtn = document.getElementById('btn-assign-crew');
-        if (assignBtn) {
-            assignBtn.onclick = () => {
-                const selector = document.getElementById('system-selector');
-                const systemId = selector.value;
-                if (!systemId) {
-                    this.uiManager.hud.showNotification('Please select a system.', 'error');
-                    return;
-                }
-                const result = this.game.state.assignCrewToSystem(crewId, systemId);
-                this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
-                if (result.success) {
-                    this.showCrewDetail(crewId); // Refresh
-                }
-            };
+        // Add event listeners
+        if (assignment) {
+            const unassignBtn = document.getElementById('btn-unassign-crew');
+            if (unassignBtn) {
+                unassignBtn.onclick = () => {
+                    const result = this.game.state.unassignCrewFromSystem(assignment.id);
+                    this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        this.showCrewDetail(crewId); // Refresh
+                    }
+                };
+            }
+        } else {
+            const assignBtn = document.getElementById('btn-assign-crew');
+            if (assignBtn) {
+                assignBtn.onclick = () => {
+                    const selector = document.getElementById('system-selector');
+                    const systemId = selector.value;
+                    if (!systemId) {
+                        this.uiManager.hud.showNotification('Please select a system.', 'error');
+                        return;
+                    }
+                    const result = this.game.state.assignCrewToSystem(crewId, systemId);
+                    this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        this.showCrewDetail(crewId); // Refresh
+                    }
+                };
+            }
         }
     }
-}
 }
