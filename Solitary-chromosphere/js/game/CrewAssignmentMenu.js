@@ -109,6 +109,9 @@ class CrewAssignmentMenu {
         const menuWidth = 400;
         const menuHeight = 300;
 
+        console.log('[CrewMenu] Canvas size:', ctx.canvas.width, 'x', ctx.canvas.height);
+        console.log('[CrewMenu] Menu position:', menuX, menuY, 'size:', menuWidth, menuHeight);
+
         // Reset clickable bounds
         this.menuBounds = [];
 
