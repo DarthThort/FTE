@@ -81,6 +81,14 @@ class CrewRepairUI {
         this.container.appendChild(header);
         this.container.appendChild(this.contentArea);
         document.body.appendChild(this.container);
+
+        // Make draggable (header is drag handle)
+        if (window.draggableUI) {
+            // Wait a frame to ensure DOM is ready
+            setTimeout(() => {
+                window.draggableUI.makeDraggable(this.container, 'crew-repair-panel', '.ui-panel > div:first-child');
+            }, 0);
+        }
     }
 
     show() {
