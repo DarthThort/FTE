@@ -15,6 +15,18 @@ class GameEngine {
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
+
+        // Mouse click handler for HazardUI crew assignment menu
+        this.canvas.addEventListener('click', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Let HazardUI handle clicks if crew menu is open
+            if (this.state.hazardUI && this.state.hazardUI.showingCrewMenu) {
+                this.state.hazardUI.handleClick(mouseX, mouseY);
+            }
+        });
     }
 
     resize() {
