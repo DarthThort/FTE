@@ -32,6 +32,11 @@ class CrewAssignmentMenu {
 
         console.log('[CrewMenu] Click at', mouseX, mouseY, 'Bounds:', this.menuBounds.length);
 
+        // Debug: log all bounds
+        this.menuBounds.forEach((bound, i) => {
+            console.log(`  Bound ${i}: x=${bound.x}, y=${bound.y}, w=${bound.width}, h=${bound.height}, type=${bound.type}`);
+        });
+
         // Check if click is on any menu bounds
         for (const bound of this.menuBounds) {
             if (mouseX >= bound.x && mouseX <= bound.x + bound.width &&
