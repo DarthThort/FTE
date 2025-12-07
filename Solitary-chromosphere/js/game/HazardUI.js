@@ -9,7 +9,7 @@ class HazardUI {
         this.nearestBreach = null;
         this.showingCrewMenu = false;
         this.selectedBreach = null;  // Selected breach for crew assignment
-		this.menuBounds = [];  // Clickable areas for mouse detection
+        this.menuBounds = [];  // Clickable areas for mouse detection
         this.playerRepairing = false;
         this.currentRepairBreach = null;
         this.repairProgress = 0;
@@ -156,8 +156,8 @@ class HazardUI {
             this.renderRepairProgress(ctx, shipRenderer, player);
         }
 
-        // Render crew assignment menu
-        if (this.showingCrewMenu && this.nearestBreach) {
+        // Render crew assignment menu (accessible from anywhere)
+        if (this.showingCrewMenu) {
             this.renderCrewMenu(ctx);
         }
 
@@ -243,163 +243,163 @@ class HazardUI {
     /**
  * Render crew assignment menu (two stages: select breach, then select crew)
  */
-renderCrewMenu(ctx) {
-    const menuX = ctx.canvas.width / 2 - 200;
-    const menuY = ctx.canvas.height / 2 - 150;
-    const menuWidth = 400;
-    const menuHeight = 300;
-    // Reset clickable bounds
-    this.menuBounds = [];
-    ctx.save();
-    // Background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.92)';
-    ctx.fillRect(menuX, menuY, menuWidth, menuHeight);
-    // Border
-    ctx.strokeStyle = '#00f0ff';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(menuX, menuY, menuWidth, menuHeight);
-    if (!this.selectedBreach) {
-        // STAGE 1: Select Breach
-        ctx.fillStyle = '#00f0ff';
-        ctx.font = 'bold 18px "Rajdhani", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Select Breach to Repair', menuX + menuWidth / 2, menuY + 30);
-        // List breaches
-        const breaches = this.state.hazardManager.breaches || [];
-        
-        if (breaches.length === 0) {
-            ctx.fillStyle = '#888';
-            ctx.font = '14px "Rajdhani", sans-serif';
-            ctx.fillText('No breaches detected', menuX + menuWidth / 2, menuY + 100);
+    renderCrewMenu(ctx) {
+        const menuX = ctx.canvas.width / 2 - 200;
+        const menuY = ctx.canvas.height / 2 - 150;
+        const menuWidth = 400;
+        const menuHeight = 300;
+        // Reset clickable bounds
+        this.menuBounds = [];
+        ctx.save();
+        // Background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.92)';
+        ctx.fillRect(menuX, menuY, menuWidth, menuHeight);
+        // Border
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(menuX, menuY, menuWidth, menuHeight);
+        if (!this.selectedBreach) {
+            // STAGE 1: Select Breach
+            ctx.fillStyle = '#00f0ff';
+            ctx.font = 'bold 18px "Rajdhani", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Select Breach to Repair', menuX + menuWidth / 2, menuY + 30);
+            // List breaches
+            const breaches = this.state.hazardManager.breaches || [];
+
+            if (breaches.length === 0) {
+                ctx.fillStyle = '#888';
+                ctx.font = '14px "Rajdhani", sans-serif';
+                ctx.fillText('No breaches detected', menuX + menuWidth / 2, menuY + 100);
+            } else {
+                ctx.font = '14px "Rajdhani", sans-serif';
+                ctx.textAlign = 'left';
+
+                let yOffset = 60;
+                for (let i = 0; i < breaches.length; i++) {
+                    const breach = breaches[i];
+                    const buttonX = menuX + 20;
+                    const buttonY = menuY + yOffset;
+                    const buttonWidth = menuWidth - 40;
+                    const buttonHeight = 30;
+
+                    // Button background
+                    ctx.fillStyle = 'rgba(0, 240, 255, 0.1)';
+                    ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                    // Button border
+                    ctx.strokeStyle = '#00f0ff';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
+
+                    // Button text
+                    ctx.fillStyle = '#fff';
+                    ctx.fillText(`Breach at (${breach.x}, ${breach.y}) - Severity ${breach.severity}`, buttonX + 10, buttonY + 20);
+
+                    // Store clickable bounds
+                    this.menuBounds.push({
+                        x: buttonX,
+                        y: buttonY,
+                        width: buttonWidth,
+                        height: buttonHeight,
+                        type: 'breach',
+                        index: i
+                    });
+
+                    yOffset += 40;
+                }
+            }
+
+            // Close button
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+            ctx.fillRect(menuX + menuWidth - 80, menuY + menuHeight - 40, 70, 30);
+            ctx.strokeStyle = '#ff0000';
+            ctx.strokeRect(menuX + menuWidth - 80, menuY + menuHeight - 40, 70, 30);
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.fillText('Close', menuX + menuWidth - 45, menuY + menuHeight - 20);
+
+            this.menuBounds.push({
+                x: menuX + menuWidth - 80,
+                y: menuY + menuHeight - 40,
+                width: 70,
+                height: 30,
+                type: 'close'
+            });
+
         } else {
+            // STAGE 2: Select Crew
+            const breach = this.state.hazardManager.breaches[this.selectedBreach];
+
+            ctx.fillStyle = '#00f0ff';
+            ctx.font = 'bold 18px "Rajdhani", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Assign Crew to Breach at (${breach.x}, ${breach.y})`, menuX + menuWidth / 2, menuY + 30);
+            // List crew
+            const crew = this.state.ship.crew || [];
             ctx.font = '14px "Rajdhani", sans-serif';
             ctx.textAlign = 'left';
-            
             let yOffset = 60;
-            for (let i = 0; i < breaches.length; i++) {
-                const breach = breaches[i];
+            for (let i = 0; i < crew.length; i++) {
+                const member = crew[i];
+                const skill = member.engineeringSkill || 0;
+
                 const buttonX = menuX + 20;
                 const buttonY = menuY + yOffset;
                 const buttonWidth = menuWidth - 40;
                 const buttonHeight = 30;
-                
+
                 // Button background
                 ctx.fillStyle = 'rgba(0, 240, 255, 0.1)';
                 ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
-                
+
                 // Button border
                 ctx.strokeStyle = '#00f0ff';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
-                
-                // Button text
+
+                // Button text - name and role
                 ctx.fillStyle = '#fff';
-                ctx.fillText(`Breach at (${breach.x}, ${breach.y}) - Severity ${breach.severity}`, buttonX + 10, buttonY + 20);
-                
+                ctx.fillText(`${member.name} - ${member.role}`, buttonX + 10, buttonY + 20);
+
+                // Engineering skill
+                ctx.fillStyle = skill > 0 ? '#00ff00' : '#888';
+                ctx.textAlign = 'right';
+                ctx.fillText(`Engineering: ${skill}`, buttonX + buttonWidth - 10, buttonY + 20);
+                ctx.textAlign = 'left';
+
                 // Store clickable bounds
                 this.menuBounds.push({
                     x: buttonX,
                     y: buttonY,
                     width: buttonWidth,
                     height: buttonHeight,
-                    type: 'breach',
-                    index: i
+                    type: 'crew',
+                    crewMember: member
                 });
-                
+
                 yOffset += 40;
             }
-        }
-        
-        // Close button
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-        ctx.fillRect(menuX + menuWidth - 80, menuY + menuHeight - 40, 70, 30);
-        ctx.strokeStyle = '#ff0000';
-        ctx.strokeRect(menuX + menuWidth - 80, menuY + menuHeight - 40, 70, 30);
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.fillText('Close', menuX + menuWidth - 45, menuY + menuHeight - 20);
-        
-        this.menuBounds.push({
-            x: menuX + menuWidth - 80,
-            y: menuY + menuHeight - 40,
-            width: 70,
-            height: 30,
-            type: 'close'
-        });
-        
-    } else {
-        // STAGE 2: Select Crew
-        const breach = this.state.hazardManager.breaches[this.selectedBreach];
-        
-        ctx.fillStyle = '#00f0ff';
-        ctx.font = 'bold 18px "Rajdhani", sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Assign Crew to Breach at (${breach.x}, ${breach.y})`, menuX + menuWidth / 2, menuY + 30);
-        // List crew
-        const crew = this.state.ship.crew || [];
-        ctx.font = '14px "Rajdhani", sans-serif';
-        ctx.textAlign = 'left';
-        let yOffset = 60;
-        for (let i = 0; i < crew.length; i++) {
-            const member = crew[i];
-            const skill = member.engineeringSkill || 0;
-            
-            const buttonX = menuX + 20;
-            const buttonY = menuY + yOffset;
-            const buttonWidth = menuWidth - 40;
-            const buttonHeight = 30;
-            
-            // Button background
-            ctx.fillStyle = 'rgba(0, 240, 255, 0.1)';
-            ctx.fillRect(buttonX, buttonY, buttonWidth, buttonHeight);
-            
-            // Button border
-            ctx.strokeStyle = '#00f0ff';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(buttonX, buttonY, buttonWidth, buttonHeight);
-            
-            // Button text - name and role
+
+            // Back button
+            ctx.fillStyle = 'rgba(128, 128, 128, 0.2)';
+            ctx.fillRect(menuX + 10, menuY + menuHeight - 40, 70, 30);
+            ctx.strokeStyle = '#888';
+            ctx.strokeRect(menuX + 10, menuY + menuHeight - 40, 70, 30);
             ctx.fillStyle = '#fff';
-            ctx.fillText(`${member.name} - ${member.role}`, buttonX + 10, buttonY + 20);
-            
-            // Engineering skill
-            ctx.fillStyle = skill > 0 ? '#00ff00' : '#888';
-            ctx.textAlign = 'right';
-            ctx.fillText(`Engineering: ${skill}`, buttonX + buttonWidth - 10, buttonY + 20);
-            ctx.textAlign = 'left';
-            
-            // Store clickable bounds
+            ctx.textAlign = 'center';
+            ctx.fillText('Back', menuX + 45, menuY + menuHeight - 20);
+
             this.menuBounds.push({
-                x: buttonX,
-                y: buttonY,
-                width: buttonWidth,
-                height: buttonHeight,
-                type: 'crew',
-                crewMember: member
+                x: menuX + 10,
+                y: menuY + menuHeight - 40,
+                width: 70,
+                height: 30,
+                type: 'back'
             });
-            
-            yOffset += 40;
         }
-        
-        // Back button
-        ctx.fillStyle = 'rgba(128, 128, 128, 0.2)';
-        ctx.fillRect(menuX + 10, menuY + menuHeight - 40, 70, 30);
-        ctx.strokeStyle = '#888';
-        ctx.strokeRect(menuX + 10, menuY + menuHeight - 40, 70, 30);
-        ctx.fillStyle = '#fff';
-        ctx.textAlign = 'center';
-        ctx.fillText('Back', menuX + 45, menuY + menuHeight - 20);
-        
-        this.menuBounds.push({
-            x: menuX + 10,
-            y: menuY + menuHeight - 40,
-            width: 70,
-            height: 30,
-            type: 'back'
-        });
+        ctx.restore();
     }
-    ctx.restore();
-}
 
     /**
      * Render oxygen level in HUD
@@ -466,46 +466,46 @@ renderCrewMenu(ctx) {
     isPlayerRepairing() {
         return this.playerRepairing;
     }
-/**
- * Handle mouse click on crew menu
- * Returns true if click was handled
- */
-handleClick(mouseX, mouseY) {
-    if (!this.showingCrewMenu) return false;
-    
-    // Check if click is on any menu bounds
-    for (const bound of this.menuBounds) {
-        if (mouseX >= bound.x && mouseX <= bound.x + bound.width &&
-            mouseY >= bound.y && mouseY <= bound.y + bound.height) {
-            
-            if (bound.type === 'breach') {
-                // Select this breach for crew assignment
-                this.selectedBreach = bound.index;
-                return true;
-            }
-            
-            if (bound.type === 'crew') {
-                // Assign this crew member to selected breach
-                this.assignCrewToBreach(bound.crewMember, this.selectedBreach);
-                return true;
-            }
-            
-            if (bound.type === 'back') {
-                // Go back to breach selection
-                this.selectedBreach = null;
-                return true;
-            }
-            
-            if (bound.type === 'close') {
-                // Close menu
-                this.showingCrewMenu = false;
-                this.selectedBreach = null;
-                return true;
+    /**
+     * Handle mouse click on crew menu
+     * Returns true if click was handled
+     */
+    handleClick(mouseX, mouseY) {
+        if (!this.showingCrewMenu) return false;
+
+        // Check if click is on any menu bounds
+        for (const bound of this.menuBounds) {
+            if (mouseX >= bound.x && mouseX <= bound.x + bound.width &&
+                mouseY >= bound.y && mouseY <= bound.y + bound.height) {
+
+                if (bound.type === 'breach') {
+                    // Select this breach for crew assignment
+                    this.selectedBreach = bound.index;
+                    return true;
+                }
+
+                if (bound.type === 'crew') {
+                    // Assign this crew member to selected breach
+                    this.assignCrewToBreach(bound.crewMember, this.selectedBreach);
+                    return true;
+                }
+
+                if (bound.type === 'back') {
+                    // Go back to breach selection
+                    this.selectedBreach = null;
+                    return true;
+                }
+
+                if (bound.type === 'close') {
+                    // Close menu
+                    this.showingCrewMenu = false;
+                    this.selectedBreach = null;
+                    return true;
+                }
             }
         }
+
+        return false;
     }
-    
-    return false;
-}	
-	
+
 }
