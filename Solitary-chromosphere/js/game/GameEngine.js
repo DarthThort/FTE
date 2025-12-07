@@ -107,6 +107,7 @@ class GameEngine {
         if (this.input.isDown('KeyR')) {
             if (!this.crewAssignKeyPressed && this.state.hazardUI) {
                 this.crewAssignKeyPressed = true;
+                console.log('[GameEngine] R key pressed - toggling crew menu');
                 this.state.hazardUI.toggleCrewMenu();
             }
         } else {
