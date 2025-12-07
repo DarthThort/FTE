@@ -8,6 +8,8 @@ class HazardUI {
         this.state = gameState;
         this.nearestBreach = null;
         this.showingCrewMenu = false;
+        this.selectedBreach = null;  // Selected breach for crew assignment
+        this.menuBounds = [];  // Clickable areas for mouse detection
         this.playerRepairing = false;
         this.currentRepairBreach = null;
         this.repairProgress = 0;
@@ -108,33 +110,35 @@ class HazardUI {
     }
 
     /**
-     * Toggle crew assignment menu
+     * Toggle crew assignment menu (accessible anywhere)
      */
     toggleCrewMenu() {
-        if (!this.nearestBreach) return;
+        // Toggle menu - no proximity check needed
         this.showingCrewMenu = !this.showingCrewMenu;
+
+        // Reset selection when opening
+        if (this.showingCrewMenu) {
+            this.selectedBreach = null;
+        }
     }
 
     /**
      * Assign crew to breach
      */
-    assignCrewToBreach(crewMember) {
-        if (!this.nearestBreach) return false;
-
-        const breach = this.state.hazardManager.breaches[this.nearestBreach.index];
+    assignCrewToBreach(crewMember, breachIndex) {
+        const breach = this.state.hazardManager.breaches[breachIndex];
         if (!breach) return false;
 
         // Set crew target
-        crewMember.targetBreach = this.nearestBreach.index;
+        crewMember.targetBreach = breachIndex;
         crewMember.targetX = breach.x * 32 + 16;
         crewMember.targetY = breach.y * 32 + 16;
-        crewMember.isRepairing = false; // Will start when they arrive
-
-        // Mark breach as having assigned crew
-        this.state.hazardManager.repairBreach(this.nearestBreach.index, crewMember);
+        crewMember.state = 'moving';  // Start moving to breach
+        crewMember.path = [];  // Reset path
 
         this.showingCrewMenu = false;
-        console.log(`[HazardUI] Assigned ${crewMember.name} to breach repair`);
+        this.selectedBreach = null;
+        console.log(`[HazardUI] Assigned ${crewMember.name} to breach at (${breach.x}, ${breach.y})`);
         return true;
     }
 
