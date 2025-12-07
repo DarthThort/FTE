@@ -510,8 +510,7 @@ class CombatManager {
         console.log('[Combat] Player attempting to escape...');
         this.lastEscapeAttempt = now;
 
-        // Get bridge and engine modules
-        const bridgeModule = getModule(this.state.ship.hardpoints.bridge);
+        // Get engine module (bridgeModule already declared above for cooldown)
         const engineModule = getModule(this.state.ship.hardpoints.engine);
 
         // Get bridge and engine systems for power allocation
