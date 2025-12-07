@@ -7,6 +7,7 @@ class Player {
         this.speed = 150; // Pixels per second
         this.size = 16;
         this.color = '#00f0ff';
+        this.engineeringSkill = 0; // For breach repairs (upgradeable)
     }
 
     update(dt) {

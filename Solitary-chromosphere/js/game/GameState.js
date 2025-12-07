@@ -164,6 +164,9 @@ class GameState {
         // Initialize hazard manager for breaches, fires, and oxygen (Phase 1)
         this.hazardManager = new HazardManager(this);
 
+        // Initialize hazard UI for repair prompts and progress (Phase 1)
+        this.hazardUI = new HazardUI(this);
+
         // Star Systems (Sol + 10 nearest real systems)
         this.galaxy = null;
         this.currentSystem = null;

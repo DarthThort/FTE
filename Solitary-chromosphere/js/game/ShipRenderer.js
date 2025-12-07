@@ -121,6 +121,12 @@ class ShipRenderer {
             this.hazardRenderer.render(ctx, this.tileSize, this.offsetX, this.offsetY);
         }
 
+        // Render hazard UI (repair prompts, progress bars, oxygen HUD)
+        if (this.game.state.hazardUI) {
+            const player = this.game.sceneManager.player;
+            this.game.state.hazardUI.render(ctx, this, player);
+        }
+
         this.drawFog(ctx, layout);
         ctx.restore();
 

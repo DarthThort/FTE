@@ -78,6 +78,30 @@ class GameEngine {
         } else {
             this.oxygenTogglePressed = false;
         }
+		// Check for repair key (E key)
+        if (this.input.isDown('KeyE')) {
+            if (!this.repairKeyPressed && this.state.hazardUI) {
+                this.repairKeyPressed = true;
+                this.state.hazardUI.startPlayerRepair();
+            }
+        } else {
+            this.repairKeyPressed = false;
+        }
+        
+        // Check for crew assignment key (R key)  
+        if (this.input.isDown('KeyR')) {
+            if (!this.crewAssignKeyPressed && this.state.hazardUI) {
+                this.crewAssignKeyPressed = true;
+                this.state.hazardUI.toggleCrewMenu();
+            }
+        } else {
+            this.crewAssignKeyPressed = false;
+        }
+        // Update screen effects
+
+
+
+
 
         // Update screen effects
         this.screenEffects.update(dt);

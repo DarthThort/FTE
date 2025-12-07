@@ -25,18 +25,11 @@ class SceneManager {
             this.player.update(dt);
             this.game.state.updateCrewAI();
 
-            // Update life support systems (O2, fire, etc.)
-            if (this.game.state.lifeSupportManager) {
-                this.game.state.lifeSupportManager.tick();
+            // Update hazard UI (proximity check, repair progress)
+            if (this.game.state.hazardUI) {
+                this.game.state.hazardUI.update(dt, this.player);
             }
 
-            // Update weapon charging/cooldown
-            if (this.game.state.weaponManager) {
-                this.game.state.weaponManager.update(dt);
-            }
-            if (this.game.state.shieldManager) {
-                this.game.state.shieldManager.update(dt);
-            }
 
             this.shipRenderer.computeVisibility(this.player);
             this.handleCrewInteraction();
