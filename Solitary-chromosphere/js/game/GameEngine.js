@@ -62,9 +62,12 @@ class GameEngine {
             if (this.escapeButton) this.escapeButton.update();
         }
 
-        // Update hazards (breaches, oxygen depletion)
+        // Update hazards (breaches, oxygen depletion) - but not when combat is paused
         if (this.state.hazardManager) {
-            this.state.hazardManager.update(dt);
+            const combatPaused = this.state.combatManager && this.state.combatManager.active && this.state.combatManager.paused;
+            if (!combatPaused) {
+                this.state.hazardManager.update(dt);
+            }
         }
 
         // Check for oxygen overlay toggle (O key)
@@ -78,7 +81,7 @@ class GameEngine {
         } else {
             this.oxygenTogglePressed = false;
         }
-		// Check for repair key (E key)
+        // Check for repair key (E key)
         if (this.input.isDown('KeyE')) {
             if (!this.repairKeyPressed && this.state.hazardUI) {
                 this.repairKeyPressed = true;
@@ -87,7 +90,7 @@ class GameEngine {
         } else {
             this.repairKeyPressed = false;
         }
-        
+
         // Check for crew assignment key (R key)  
         if (this.input.isDown('KeyR')) {
             if (!this.crewAssignKeyPressed && this.state.hazardUI) {

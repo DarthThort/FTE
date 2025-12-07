@@ -509,7 +509,7 @@ class ShipRenderer {
 
         // DEBUG: Log effect values when they're active
         if (waveProgress > 0 || flashTime > 0) {
-            console.log('[ShipRenderer] Impact effects:', { waveProgress, flashTime, opacity });
+            // Impact effects rendering
         }
 
         if (waveProgress > 0 && waveProgress < 1.0) {

@@ -312,8 +312,8 @@ class CombatManager {
                         this.state.game.damageNumbers.add(shipX, shipY, Math.round(totalHullDamage), '#ff0055');
                     }
 
-                    // 30% chance to create hull breach on damage
-                    if (this.state.hazardManager && Math.random() < 0.3) {
+                    // 10% chance to create hull breach on damage (reduced from 30%)
+                    if (this.state.hazardManager && Math.random() < 0.10) {
                         // Random location on ship (avoid edges)
                         const layout = this.state.ship.layout;
                         const walkableTiles = [];
@@ -327,7 +327,6 @@ class CombatManager {
                         if (walkableTiles.length > 0) {
                             const tile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
                             this.state.hazardManager.createBreach(tile.x, tile.y, 1);
-                            console.log(`[Combat] Hull breach created at (${tile.x}, ${tile.y})`);
                         }
                     }
 
