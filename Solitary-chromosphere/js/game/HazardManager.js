@@ -10,7 +10,7 @@ class HazardManager {
         this.fires = [];
         this.roomOxygen = {};
         this.rooms = [];
-        this.oxygenOverlayEnabled = false;
+        this.oxygenOverlayEnabled = true; // Enabled by default
 
         // Initialize room detection
         this.detectRooms();

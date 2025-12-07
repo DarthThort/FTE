@@ -312,6 +312,25 @@ class CombatManager {
                         this.state.game.damageNumbers.add(shipX, shipY, Math.round(totalHullDamage), '#ff0055');
                     }
 
+                    // 30% chance to create hull breach on damage
+                    if (this.state.hazardManager && Math.random() < 0.3) {
+                        // Random location on ship (avoid edges)
+                        const layout = this.state.ship.layout;
+                        const walkableTiles = [];
+                        for (let y = 1; y < layout.length - 1; y++) {
+                            for (let x = 1; x < layout[y].length - 1; x++) {
+                                if (layout[y][x] === 2 || layout[y][x] === 3 || layout[y][x] === 7) {
+                                    walkableTiles.push({ x, y });
+                                }
+                            }
+                        }
+                        if (walkableTiles.length > 0) {
+                            const tile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
+                            this.state.hazardManager.createBreach(tile.x, tile.y, 1);
+                            console.log(`[Combat] Hull breach created at (${tile.x}, ${tile.y})`);
+                        }
+                    }
+
                     // Apply burn effect if weapon has it
                     if (burnDamage > 0 && burnDuration > 0) {
                         // TODO: Implement burn effect tracking

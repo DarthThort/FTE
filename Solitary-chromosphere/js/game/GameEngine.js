@@ -62,6 +62,23 @@ class GameEngine {
             if (this.escapeButton) this.escapeButton.update();
         }
 
+        // Update hazards (breaches, oxygen depletion)
+        if (this.state.hazardManager) {
+            this.state.hazardManager.update(dt);
+        }
+
+        // Check for oxygen overlay toggle (O key)
+        if (this.input.isDown('KeyO')) {
+            if (!this.oxygenTogglePressed) {
+                this.oxygenTogglePressed = true;
+                if (this.state.hazardManager) {
+                    this.state.hazardManager.toggleOxygenOverlay();
+                }
+            }
+        } else {
+            this.oxygenTogglePressed = false;
+        }
+
         // Update screen effects
         this.screenEffects.update(dt);
 
