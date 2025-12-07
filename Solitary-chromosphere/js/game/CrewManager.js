@@ -33,7 +33,8 @@ class CrewManager {
             speed: 1.5,
             state: 'idle',
             wanderTimer: 0,
-            doorWaitTimer: 0
+            doorWaitTimer: 0,
+            engineeringSkill: crew.role === 'Engineer' ? 3 : 0  // Engineers are better at repairs
         });
         this.state.port.crew = this.state.port.crew.filter(c => c.id !== crewId);
         this.state.saveGame();
@@ -221,6 +222,78 @@ class CrewManager {
                         crew.x += moveX;
                         crew.y += moveY;
                     }
+                }
+            }
+
+            // NEW: Check if crew reached their breach target and start repairing
+            if (crew.targetBreach !== undefined && crew.state === 'moving') {
+                const breach = this.state.hazardManager.breaches[crew.targetBreach];
+                if (breach) {
+                    const dx = crew.x - (breach.x * 32 + 16);
+                    const dy = crew.y - (breach.y * 32 + 16);
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    // If within 1.5 tiles (48px), start repairing
+                    if (dist < 48) {
+                        crew.state = 'repairing';
+                        crew.repairProgress = 0;
+                        crew.targetX = breach.x * 32 + 16;
+                        crew.targetY = breach.y * 32 + 16;
+                    }
+                } else {
+                    // Breach was already repaired by someone else, return to idle
+                    crew.state = 'idle';
+                    crew.targetBreach = undefined;
+                    crew.repairProgress = 0;
+                    crew.targetX = null;
+                    crew.targetY = null;
+                }
+            }
+
+            // NEW: Handle repairing state
+            if (crew.state === 'repairing' && crew.targetBreach !== undefined) {
+                const breach = this.state.hazardManager.breaches[crew.targetBreach];
+
+                if (!breach) {
+                    // Breach completed, return to idle
+                    crew.state = 'idle';
+                    crew.targetBreach = undefined;
+                    crew.repairProgress = 0;
+                    crew.targetX = null;
+                    crew.targetY = null;
+                    continue;
+                }
+
+                // Check if still in range
+                const dx = crew.x - (breach.x * 32 + 16);
+                const dy = crew.y - (breach.y * 32 + 16);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > 48) {
+                    // Moved away, go back to moving
+                    crew.state = 'moving';
+                    crew.targetX = breach.x * 32 + 16;
+                    crew.targetY = breach.y * 32 + 16;
+                    crew.path = [];
+                    crew.repairProgress = 0;
+                    continue;
+                }
+
+                // Progress repair (60 FPS assumed)
+                const engineeringSkill = crew.engineeringSkill || 0;
+                const repairTime = Math.max(2, 10 - engineeringSkill); // Same as player
+                const progressPerFrame = (1 / 60) / repairTime;
+
+                crew.repairProgress = (crew.repairProgress || 0) + progressPerFrame;
+
+                // Complete repair
+                if (crew.repairProgress >= 1.0) {
+                    this.state.hazardManager.completeBreach(crew.targetBreach);
+                    crew.state = 'idle';
+                    crew.targetBreach = undefined;
+                    crew.repairProgress = 0;
+                    crew.targetX = null;
+                    crew.targetY = null;
                 }
             }
         }

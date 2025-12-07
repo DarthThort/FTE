@@ -180,6 +180,19 @@ class HazardManager {
     }
 
     /**
+     * Complete a breach repair (called by crew or player)
+     */
+    completeBreach(breachIndex) {
+        const breach = this.breaches[breachIndex];
+        if (!breach) return;
+
+        console.log(`[HazardManager] Breach at (${breach.x}, ${breach.y}) repaired`);
+
+        // Remove breach
+        this.breaches.splice(breachIndex, 1);
+    }
+
+    /**
      * Update hazards (called each frame)
      */
     update(deltaTime) {
