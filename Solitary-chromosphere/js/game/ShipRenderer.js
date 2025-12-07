@@ -503,9 +503,12 @@ class ShipRenderer {
         const shipCenterY = this.offsetY + (25 * this.tileSize) / 2;
         const baseRadius = 360;
 
-        // Draw impact wave FIRST (even if shields are down) - use separate rendering
-        const waveProgress = this.game.state.shieldManager.impactWaveProgress;
-        const flashTime = this.game.state.shieldManager.impactFlashTime;
+        
+        // Only show impact effects during active combat
+const inActiveCombat = this.game.state.combatManager && this.game.state.combatManager.active;
+// Draw impact wave FIRST (even if shields are down) - use separate rendering  
+const waveProgress = inActiveCombat ? this.game.state.shieldManager.impactWaveProgress : 0;
+const flashTime = inActiveCombat ? this.game.state.shieldManager.impactFlashTime : 0;
 
         // DEBUG: Log effect values when they're active
         if (waveProgress > 0 || flashTime > 0) {
