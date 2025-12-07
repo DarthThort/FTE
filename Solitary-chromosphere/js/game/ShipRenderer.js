@@ -186,6 +186,27 @@ class ShipRenderer {
                     ctx.fillStyle = '#34d399';
                     ctx.fillRect(posX + 2, posY + this.tileSize / 2 - 2, 2, 4);
                     ctx.fillRect(posX + this.tileSize - 4, posY + this.tileSize / 2 - 2, 2, 4);
+                } else if (tile === 7) {
+                    // Infirmary - reddish floor with medical cross
+                    ctx.fillStyle = '#2d1a1a'; // Dark red floor
+                    ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
+
+                    // Medical cross
+                    ctx.fillStyle = '#ff5555';
+                    const centerX = posX + this.tileSize / 2;
+                    const centerY = posY + this.tileSize / 2;
+                    const crossSize = this.tileSize * 0.4;
+                    const crossWidth = crossSize * 0.3;
+
+                    // Vertical bar  
+                    ctx.fillRect(centerX - crossWidth / 2, centerY - crossSize / 2, crossWidth, crossSize);
+                    // Horizontal bar
+                    ctx.fillRect(centerX - crossSize / 2, centerY - crossWidth / 2, crossSize, crossWidth);
+
+                    // Border
+                    ctx.strokeStyle = 'rgba(255, 85, 85, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(posX, posY, this.tileSize, this.tileSize);
                 }
             }
         }
