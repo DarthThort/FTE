@@ -112,6 +112,7 @@ class GameEngine {
         } else {
             this.crewAssignKeyPressed = false;
         }
+
         // Update screen effects
 
 
