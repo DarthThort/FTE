@@ -71,6 +71,28 @@ class CombatUI {
                     text-transform: uppercase;
                     letter-spacing: 1px;
                 ">⚔️ COMBAT ACTIVE</div>
+                
+                <!-- Escape Button -->
+                <button id="combat-escape-btn" onclick="
+                    if (window.game && window.game.state.combatManager) {
+                        window.game.state.combatManager.attemptPlayerEscape();
+                    }
+                " style="
+                    padding: 8px 16px;
+                    background: rgba(255,170,0,0.2);
+                    border: 2px solid var(--warning);
+                    color: var(--warning);
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-family: var(--font-tech);
+                    font-weight: bold;
+                    font-size: 0.9rem;
+                    text-transform: uppercase;
+                    transition: all 0.2s;
+                " onmouseover="this.style.background='rgba(255,170,0,0.4)'" 
+                   onmouseout="this.style.background='rgba(255,170,0,0.2)'">
+                    🏃 ESCAPE
+                </button>
             </div>
         `;
 

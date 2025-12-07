@@ -480,6 +480,94 @@ class CombatManager {
     }
 
     /**
+     * Attempt player escape from combat
+     * Success chance based on bridge and engine modules + power allocation
+     */
+    attemptPlayerEscape() {
+        console.log('[Combat] Player attempting to escape...');
+
+        // Get bridge and engine modules
+        const bridgeModule = getModule(this.state.ship.hardpoints.bridge);
+        const engineModule = getModule(this.state.ship.hardpoints.engine);
+
+        // Get bridge and engine systems for power allocation
+        const bridgeSystem = this.state.ship.systems.find(s => s.type === 'bridge');
+        const engineSystem = this.state.ship.systems.find(s => s.type === 'engine');
+
+        // Base escape chance
+        let escapeChance = 0.3; // 30% base
+
+        // Bridge module bonus (up to +20%)
+        if (bridgeModule) {
+            const bridgeTier = bridgeModule.tier || 1;
+            escapeChance += (bridgeTier - 1) * 0.05; // +5% per tier above 1
+        }
+
+        // Engine module bonus (up to +30%)
+        if (engineModule) {
+            const engineTier = engineModule.tier || 1;
+            escapeChance += (engineTier - 1) * 0.075; // +7.5% per tier above 1
+        }
+
+        // Power allocation bonus (up to +20%)
+        if (bridgeSystem && bridgeSystem.currentPower > 0) {
+            escapeChance += bridgeSystem.currentPower * 0.05; // +5% per power bar
+        }
+        if (engineSystem && engineSystem.currentPower > 0) {
+            escapeChance += engineSystem.currentPower * 0.05; // +5% per power bar
+        }
+
+        // Cap at 90%
+        escapeChance = Math.min(0.9, escapeChance);
+
+        console.log(`[Combat] Escape chance: ${(escapeChance * 100).toFixed(1)}%`);
+        console.log(`[Combat] - Bridge: Tier ${bridgeModule?.tier || 0}, Power ${bridgeSystem?.currentPower || 0}`);
+        console.log(`[Combat] - Engine: Tier ${engineModule?.tier || 0}, Power ${engineSystem?.currentPower || 0}`);
+
+        // Roll for escape
+        const roll = Math.random();
+        const success = roll < escapeChance;
+
+        if (success) {
+            console.log(`[Combat] ESCAPE SUCCESSFUL! (rolled ${(roll * 100).toFixed(1)}% vs ${(escapeChance * 100).toFixed(1)}%)`);
+
+            // Show success message
+            if (this.state.game && this.state.game.hud) {
+                this.state.game.hud.showNotification('Escape successful!', 'success');
+            }
+
+            // Show escape message with damage numbers
+            if (this.state.game && this.state.game.damageNumbers) {
+                const shipX = this.state.game.canvas.width / 2;
+                const shipY = this.state.game.canvas.height / 2;
+                this.state.game.damageNumbers.add(shipX, shipY - 50, 'ESCAPED!', '#00ff55');
+            }
+
+            // Successful escape - end combat
+            this.victor = 'player_escaped';
+            this.rewards = { credits: 0, scrap: 0, systems: [] }; // No rewards for escaping
+            this.endCombat();
+        } else {
+            console.log(`[Combat] ESCAPE FAILED! (rolled ${(roll * 100).toFixed(1)}% vs ${(escapeChance * 100).toFixed(1)}%)`);
+
+            // Show failure message
+            if (this.state.game && this.state.game.hud) {
+                this.state.game.hud.showNotification(`Escape failed! (${(escapeChance * 100).toFixed(0)}% chance)`, 'error');
+            }
+
+            // Show failed message with damage numbers
+            if (this.state.game && this.state.game.damageNumbers) {
+                const shipX = this.state.game.canvas.width / 2;
+                const shipY = this.state.game.canvas.height / 2;
+                this.state.game.damageNumbers.add(shipX, shipY - 50, 'FAILED!', '#ff0055');
+            }
+
+            // Failed escape - combat continues
+            console.log('[Combat] Escape failed, combat continues');
+        }
+    }
+
+    /**
      * Attempt enemy flee
      */
     attemptEnemyFlee() {
