@@ -86,6 +86,30 @@ class CombatEscapeButton {
         // Update button state if combat ends
         if (!this.game.state.combatManager || !this.game.state.combatManager.active) {
             this.hide();
+            return;
+        }
+
+        // Update cooldown display
+        if (this.button && this.game.state.combatManager) {
+            const cm = this.game.state.combatManager;
+            const now = Date.now() / 1000;
+            const bridgeModule = getModule(this.game.state.ship.hardpoints.bridge);
+            const bridgeTier = bridgeModule?.tier || 1;
+            const cooldown = Math.max(5, cm.escapeCooldownBase - (bridgeTier - 1));
+            const timeSinceLastAttempt = now - cm.lastEscapeAttempt;
+
+            if (timeSinceLastAttempt < cooldown) {
+                const remaining = Math.ceil(cooldown - timeSinceLastAttempt);
+                this.button.textContent = `🏃 ESCAPE (${remaining}s)`;
+                this.button.disabled = true;
+                this.button.style.opacity = '0.5';
+                this.button.style.cursor = 'not-allowed';
+            } else {
+                this.button.textContent = '🏃 ESCAPE';
+                this.button.disabled = false;
+                this.button.style.opacity = '1';
+                this.button.style.cursor = 'pointer';
+            }
         }
     }
 }

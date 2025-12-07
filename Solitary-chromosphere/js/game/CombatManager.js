@@ -26,6 +26,10 @@ class CombatManager {
         // Combat results
         this.victor = null;
         this.rewards = null;
+
+        // Escape cooldown
+        this.lastEscapeAttempt = 0;
+        this.escapeCooldownBase = 10.0; // 10 seconds base
     }
 
     /**
@@ -484,7 +488,27 @@ class CombatManager {
      * Success chance based on bridge and engine modules + power allocation
      */
     attemptPlayerEscape() {
+        // Check cooldown
+        const now = Date.now() / 1000; // Convert to seconds
+        const bridgeModule = getModule(this.state.ship.hardpoints.bridge);
+        const bridgeTier = bridgeModule?.tier || 1;
+
+        // Cooldown: 10s base - (bridge tier - 1)
+        // Tier 1: 10s, Tier 2: 9s, Tier 3: 8s, Tier 4: 7s
+        const cooldown = Math.max(5, this.escapeCooldownBase - (bridgeTier - 1));
+        const timeSinceLastAttempt = now - this.lastEscapeAttempt;
+
+        if (timeSinceLastAttempt < cooldown) {
+            const remaining = Math.ceil(cooldown - timeSinceLastAttempt);
+            if (this.state.game && this.state.game.hud) {
+                this.state.game.hud.showNotification(`Escape on cooldown! (${remaining}s remaining)`, 'error');
+            }
+            console.log(`[Combat] Escape on cooldown, ${remaining}s remaining`);
+            return;
+        }
+
         console.log('[Combat] Player attempting to escape...');
+        this.lastEscapeAttempt = now;
 
         // Get bridge and engine modules
         const bridgeModule = getModule(this.state.ship.hardpoints.bridge);

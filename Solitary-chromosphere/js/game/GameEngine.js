@@ -56,6 +56,10 @@ class GameEngine {
         // Update combat if active
         if (this.state.combatManager && this.state.combatManager.active) {
             this.state.combatManager.tick(dt);
+
+            // Update combat buttons
+            if (this.pauseButton) this.pauseButton.update();
+            if (this.escapeButton) this.escapeButton.update();
         }
 
         // Update screen effects
@@ -153,7 +157,7 @@ class GameEngine {
             const existingResult = document.getElementById('combat-result');
             if (!existingResult) {
                 const status = this.state.combatManager.getStatus();
-                if (status.victor === 'player') {
+                if (status.victor === 'player' || status.victor === 'player_escaped') {
                     combatUIContainer.innerHTML = this.combatUI.showVictoryScreen(status.rewards);
                 } else {
                     combatUIContainer.innerHTML = this.combatUI.showDefeatScreen();
