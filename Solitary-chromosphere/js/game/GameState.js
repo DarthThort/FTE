@@ -1,6 +1,8 @@
 class GameState {
     constructor() {
-        this.credits = 1000;
+        this.credits = 10000; // Testing: Start with more credits
+        this.scrap = 0; // Phase 11: Scrap resource for upgrades
+        this.fuel = 100; // Starting fuel
 
         this.ship = {
             name: "Rusty Tub",
@@ -84,8 +86,8 @@ class GameState {
 
             // Module hardpoints - Start with basic modules installed
             hardpoints: {
-                weapon1: null,           // Empty weapon slots
-                weapon2: null,
+                weapon1: 'laser_mk1',    // Start with basic laser
+                weapon2: null,           // Empty second slot
                 shield: 'shield_basic',  // Pre-installed basic modules
                 engine: 'engine_basic',
                 jumpDrive: 'jumpdrive_basic',
@@ -168,6 +170,9 @@ class GameState {
         this.listeners = [];
         this.loadGame();
 
+        // Initialize weapons from equipped modules (Phase 8)
+        this.recalculateShipStats();
+
         // Log all system coordinates for debugging
         console.log('═══════════════════════════════════════');
         console.log('SHIP SYSTEMS COORDINATES:');
@@ -200,6 +205,8 @@ class GameState {
                 }
 
                 this.credits = data.credits;
+                this.scrap = data.scrap || 0;
+                this.fuel = data.fuel || 0;
                 this.ownedModules = data.ownedModules || [];
 
                 // Store fresh system positions before merging save data
@@ -314,6 +321,8 @@ class GameState {
 
         const data = {
             credits: this.credits,
+            scrap: this.scrap,
+            fuel: this.fuel,
             ship: {
                 ...shipDataWithoutSystems,
                 crew: this.ship.crew.map(c => ({
@@ -960,6 +969,28 @@ class GameState {
         if (reactor) {
             this.ship.totalPower = reactor.stats.maxPower;
             this.ship.reactor.maxPower = reactor.stats.maxPower;
+
+            // BETTER REACTOR = Higher max power per system
+            // Tier 1: 2 max, Tier 2: 3 max, Tier 3: 4 max, Tier 4: 5 max
+            const systemMaxPower = Math.min(reactor.tier + 1, 5);
+
+            // Update maxPower for all systems
+            this.ship.systems.forEach(sys => {
+                sys.maxPower = systemMaxPower;
+                // Cap current power if it exceeds new max
+                if (sys.currentPower > systemMaxPower) {
+                    sys.currentPower = systemMaxPower;
+                }
+            });
+        } else {
+            // No reactor installed = no power
+            this.ship.totalPower = 0;
+            this.ship.reactor.maxPower = 0;
+            // Reset all system power to 0
+            this.ship.systems.forEach(sys => {
+                sys.currentPower = 0;
+                sys.maxPower = 0;
+            });
         }
 
         // Update jump range
@@ -989,21 +1020,125 @@ class GameState {
             }
         }
 
+        // PHASE 8: Regenerate weapons from equipped modules
+        this.ship.weapons = this.getEquippedWeapons();
+        console.log(`[Modules] Generated ${this.ship.weapons.length} weapons from hardpoints`);
+
+        // Refresh weapon UI if available
+        if (window.game && window.game.ui && window.game.ui.weaponUI) {
+            window.game.ui.weaponUI.refreshWeaponsPanel();
+        }
+
+        // Refresh power UI if reactor changed
+        if (window.game && window.game.ui && window.game.ui.powerUI) {
+            window.game.ui.powerUI.refreshPowerPanel();
+        }
+
         console.log('[Modules] Ship stats recalculated');
         this.notify();
     }
 
     /**
-     * Get equipped weapons as module objects
+     * PHASE 11: Upgrade an installed module to next tier using scrap
+     */
+    upgradeModule(hardpoint) {
+        const moduleId = this.ship.hardpoints[hardpoint];
+
+        if (!moduleId) {
+            return { success: false, message: 'No module installed in this hardpoint' };
+        }
+
+        const currentModule = getModule(moduleId);
+        if (!currentModule) {
+            return { success: false, message: 'Module not found' };
+        }
+
+        // Check if module has upgrade path
+        if (!currentModule.upgradeTo) {
+            return { success: false, message: `${currentModule.name} is already max tier` };
+        }
+
+        const nextModule = getModule(currentModule.upgradeTo);
+        if (!nextModule) {
+            return { success: false, message: 'Upgrade module not found' };
+        }
+
+        // Check scrap cost
+        const scrapCost = currentModule.scrapCost;
+        if (this.scrap < scrapCost) {
+            return { success: false, message: `Need ${scrapCost} scrap (have ${this.scrap})` };
+        }
+
+        // Deduct scrap
+        this.scrap -= scrapCost;
+
+        // Swap module
+        this.ship.hardpoints[hardpoint] = nextModule.id;
+
+        // Recalculate stats
+        this.recalculateShipStats();
+
+        this.saveGame();
+        this.notify();
+
+        console.log(`[Upgrade] ${currentModule.name} → ${nextModule.name} (cost ${scrapCost} scrap)`);
+        return {
+            success: true,
+            message: `Upgraded to ${nextModule.name}!`,
+            from: currentModule.name,
+            to: nextModule.name
+        };
+    }
+
+    /**
+     * Get equipped weapons as module objects with combat-ready stats
      */
     getEquippedWeapons() {
         const weapons = [];
 
+        // Weapon 1
         if (this.ship.hardpoints.weapon1) {
-            weapons.push(getModule(this.ship.hardpoints.weapon1));
+            const module = getModule(this.ship.hardpoints.weapon1);
+            if (module) {
+                weapons.push({
+                    id: 'weapon_1',
+                    moduleId: module.id,
+                    name: module.name,
+                    type: module.stats.type || 'laser',
+                    chargeTime: module.stats.chargeTime || 8,
+                    cooldownTime: module.stats.cooldown || 2,
+                    shots: module.stats.shots || 1,
+                    damagePerShot: module.stats.hullDamage || 10,  // For UI display
+                    powerRequired: module.stats.energyCost || 1,
+                    currentCharge: 0,
+                    state: 'idle',
+                    target: null,
+                    // Reference to module for combat manager
+                    module: module
+                });
+            }
         }
+
+        // Weapon 2
         if (this.ship.hardpoints.weapon2) {
-            weapons.push(getModule(this.ship.hardpoints.weapon2));
+            const module = getModule(this.ship.hardpoints.weapon2);
+            if (module) {
+                weapons.push({
+                    id: 'weapon_2',
+                    moduleId: module.id,
+                    name: module.name,
+                    type: module.stats.type || 'laser',
+                    chargeTime: module.stats.chargeTime || 8,
+                    cooldownTime: module.stats.cooldown || 2,
+                    shots: module.stats.shots || 1,
+                    damagePerShot: module.stats.hullDamage || 10,
+                    powerRequired: module.stats.energyCost || 1,
+                    currentCharge: 0,
+                    state: 'idle',
+                    target: null,
+                    module: module
+                });
+            }
         }
 
         return weapons;

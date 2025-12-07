@@ -21,7 +21,8 @@ class InputHandler {
             this.mouseY = e.clientY - rect.top;
 
             // Calculate ship grid coordinates (accounting for ship rendering offset)
-            this.updateCoordDisplay(this.mouseX, this.mouseY);
+            // DISABLED: Coordinate display clutters UI
+            // this.updateCoordDisplay(this.mouseX, this.mouseY);
         });
 
         canvas.addEventListener('click', (e) => {

@@ -5,6 +5,15 @@ setInterval(() => {
     if (panel && window.game && window.game.state && window.game.state.weaponManager) {
         const weapons = window.game.state.weaponManager.getAllWeaponsStatus();
 
+        // Make draggable if not already
+        if (window.draggableUI && !panel._draggableInitialized) {
+            const handle = panel.querySelector('.drag-handle');
+            if (handle) {
+                window.draggableUI.makeDraggable(panel, 'weapons-panel', '.drag-handle');
+                panel._draggableInitialized = true;
+            }
+        }
+
         weapons.forEach(weapon => {
             // Only update if weapon is charging or in cooldown
             if (weapon.state === 'charging' || weapon.state === 'cooldown') {

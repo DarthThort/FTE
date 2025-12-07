@@ -34,6 +34,11 @@ class PowerManager {
             this.updateShieldLayers();
         }
 
+        // Update weapon UI when power changes on weapons system
+        if (system.type === 'weapon' && window.game && window.game.ui && window.game.ui.weaponUI) {
+            window.game.ui.weaponUI.refreshWeaponsPanel();
+        }
+
         return true;
     }
 

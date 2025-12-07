@@ -10,7 +10,7 @@ class PowerUI {
         const powerDist = state.powerManager.getPowerDistribution();
 
         const content = `
-            <div id="power-panel" style="
+            <div id="power-panel" class="draggable-panel" style="
                 position: absolute;
                 top: 20px;
                 right: 20px;
@@ -22,7 +22,15 @@ class PowerUI {
                 font-family: var(--font-tech);
                 z-index: 100;
             ">
-                <h3 style="margin: 0 0 15px 0; color: var(--primary); text-transform: uppercase; border-bottom: 1px solid var(--primary); padding-bottom: 8px;">
+                <h3 class="drag-handle" style="
+                    margin: 0 0 15px 0; 
+                    color: var(--primary); 
+                    text-transform: uppercase; 
+                    border-bottom: 1px solid var(--primary); 
+                    padding-bottom: 8px;
+                    cursor: move;
+                    user-select: none;
+                ">
                     ⚡ REACTOR POWER
                 </h3>
                 
@@ -282,7 +290,7 @@ class PowerUI {
     // Render door controls panel - SIMPLIFIED VERSION
     renderDoorPanel() {
         const content = `
-            <div id="door-panel" style="
+            <div id="door-panel" class="draggable-panel" style="
                 position: absolute;
                 bottom: 20px;
                 right: 20px;
@@ -294,7 +302,16 @@ class PowerUI {
                 font-family: var(--font-tech);
                 z-index: 100;
             ">
-                <h3 style="margin: 0 0 15px 0; color: var(--secondary); text-transform: uppercase; border-bottom: 1px solid var(--secondary); padding-bottom: 8px; font-size: 0.9rem;">
+                <h3 class="drag-handle" style="
+                    margin: 0 0 15px 0; 
+                    color: var(--secondary); 
+                    text-transform: uppercase; 
+                    border-bottom: 1px solid var(--secondary); 
+                    padding-bottom: 8px; 
+                    font-size: 0.9rem;
+                    cursor: move;
+                    user-select: none;
+                ">
                     🚪 DOOR CONTROLS
                 </h3>
                 
@@ -385,8 +402,14 @@ class PowerUI {
             const newContent = this.renderPowerPanel();
             const temp = document.createElement('div');
             temp.innerHTML = newContent;
-            panel.replaceWith(temp.firstElementChild);
+            const newPanel = temp.firstElementChild;
+            panel.replaceWith(newPanel);
             this.attachPowerEventListeners();
+
+            // Make draggable
+            if (window.draggableUI) {
+                window.draggableUI.makeDraggable(newPanel, 'power-panel', '.drag-handle');
+            }
         }
     }
 }

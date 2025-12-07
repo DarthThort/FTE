@@ -3,18 +3,24 @@ setInterval(() => {
     if (panel && window.game && window.game.state && window.game.state.shieldManager) {
         const status = window.game.state.shieldManager.getShieldStatus();
 
-        if (status.isRecharging) {
-            // Update progress bar
-            const rechargeBar = panel.querySelector('.shield-recharge-bar');
-            if (rechargeBar) {
-                const percent = status.rechargeProgress * 100;
-                rechargeBar.style.width = `${percent}%`;
+        // Make draggable if not already
+        if (window.draggableUI && !panel._draggableInitialized) {
+            const handle = panel.querySelector('.drag-handle');
+            if (handle) {
+                window.draggableUI.makeDraggable(panel, 'shield-panel', '.drag-handle');
+                panel._draggableInitialized = true;
             }
+        }
 
-            // Update percentage text
-            const percentText = panel.querySelector('.shield-recharge-percent');
-            if (percentText) {
-                percentText.textContent = `${Math.round(status.rechargeProgress * 100)}%`;
+        // Update recharge bar if recharging
+        if (status.isRecharging) {
+            const rechargeBar = panel.querySelector('.shield-recharge-bar');
+            const rechargePercent = panel.querySelector('.shield-recharge-percent');
+
+            if (rechargeBar && rechargePercent) {
+                const percent = Math.round(status.rechargeProgress * 100);
+                rechargeBar.style.width = `${percent}%`;
+                rechargePercent.textContent = `${percent}%`;
             }
         }
     }

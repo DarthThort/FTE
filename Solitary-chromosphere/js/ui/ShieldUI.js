@@ -10,8 +10,8 @@ class ShieldUI {
         const status = this.game.state.shieldManager.getShieldStatus();
 
         return `
-            <div id="shield-panel" style="position:absolute;bottom:380px;left:20px;width:280px;background:rgba(0,0,0,0.85);border:2px solid #00ff55;border-radius:6px;padding:12px;font-family:var(--font-tech);box-shadow:0 0 15px rgba(0,255,85,0.3);">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(0,255,85,0.3);">
+            <div id="shield-panel" class="draggable-panel" style="position:absolute;bottom:380px;left:20px;width:280px;background:rgba(0,0,0,0.85);border:2px solid #00ff55;border-radius:6px;padding:12px;font-family:var(--font-tech);box-shadow:0 0 15px rgba(0,255,85,0.3);">
+                <div class="drag-handle" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(0,255,85,0.3);cursor:move;user-select:none;">
                     <span style="font-size:0.9rem;font-weight:600;color:#00ff55;">🛡️ SHIELDS</span>
                     <span style="font-size:0.85rem;color:${status.currentLayers === status.maxLayers ? '#00ff55' : '#ffaa00'};font-weight:500;">${status.currentLayers}/${status.maxLayers} LAYERS</span>
                 </div>
@@ -53,6 +53,11 @@ class ShieldUI {
 
             if (newPanel) {
                 panel.replaceWith(newPanel);
+
+                // Make draggable
+                if (window.draggableUI) {
+                    window.draggableUI.makeDraggable(newPanel, 'shield-panel', '.drag-handle');
+                }
             }
         }
     }

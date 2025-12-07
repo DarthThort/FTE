@@ -112,8 +112,7 @@ class InventoryUI {
         const credits = state.credits || 0;
         const fuel = state.fuel || 0;
         const maxFuel = state.ship?.maxFuel || 100;
-        const scrapItem = state.inventory?.find(i => i.id === 'scrap');
-        const scrap = scrapItem ? scrapItem.quantity : 0;
+        const scrap = state.scrap || 0;
 
         const fuelPercent = (fuel / maxFuel) * 100;
         const fuelColor = fuelPercent > 50 ? '#00ff55' : fuelPercent > 25 ? '#ffaa00' : '#ff0055';

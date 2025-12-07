@@ -73,8 +73,8 @@ class GameEngine {
     }
 
     render() {
-        this.ctx.fillStyle = '#05050a';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Clear canvas completely (transparent)
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Apply screen shake offset
         const shake = this.screenEffects.getOffset();

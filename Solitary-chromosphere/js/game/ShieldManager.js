@@ -17,10 +17,19 @@
             return;
         }
 
-        // Calculate max layers: system level + crew bonus (max 4)
-        const baseLayers = shieldSystem.level || 1;  // 1-3 layers from system level
-        const crewBonus = shieldSystem.assignedCrew ? 1 : 0;
-        shields.maxLayers = Math.min(baseLayers + crewBonus, 4);
+        // Get shield module stats
+        const shieldModule = getModule(this.state.ship.hardpoints.shield);
+        if (!shieldModule) {
+            // No shield module equipped, shields disabled
+            shields.maxLayers = 0;
+            shields.currentLayers = 0;
+            return;
+        }
+
+        // Use module stats
+        shields.maxLayers = shieldModule.stats.layers;
+        const moduleRechargeRate = shieldModule.stats.rechargeRate; // seconds per layer
+        const moduleRechargeDelay = shieldModule.stats.rechargeDelay; // delay before recharging starts
 
         // Cap current layers to max
         if (shields.currentLayers > shields.maxLayers) {
@@ -45,7 +54,7 @@
                 }
 
                 // Then add new layer when timer full and current layer is full
-                if (shields.currentLayerHP >= shields.layerHP && shields.rechargeTimer >= shields.rechargeRate) {
+                if (shields.currentLayerHP >= shields.layerHP && shields.rechargeTimer >= moduleRechargeRate) {
                     if (shields.currentLayers < shields.maxLayers) {
                         shields.currentLayers++;
                         shields.currentLayerHP = shields.layerHP;
@@ -150,18 +159,21 @@
     getShieldStatus() {
         const shields = this.state.ship.shields;
         const shieldSystem = this.state.ship.systems.find(s => s.type === 'shield');
+        const shieldModule = getModule(this.state.ship.hardpoints.shield);
 
         return {
             currentLayers: shields.currentLayers,
             maxLayers: shields.maxLayers,
             layerHP: shields.layerHP,
             currentLayerHP: shields.currentLayerHP,
-            rechargeProgress: shields.rechargeTimer / shields.rechargeRate,
-            rechargeRate: shields.rechargeRate,
+            rechargeProgress: shieldModule ? shields.rechargeTimer / shieldModule.stats.rechargeRate : 0,
+            rechargeRate: shieldModule ? shieldModule.stats.rechargeRate : shields.rechargeRate,
+            rechargeDelay: shieldModule ? shieldModule.stats.rechargeDelay : 0,
             systemPower: shieldSystem ? shieldSystem.currentPower : 0,
             systemMaxPower: shieldSystem ? shieldSystem.maxPower : 0,
             isRecharging: shields.currentLayers < shields.maxLayers && shieldSystem?.currentPower > 0,
-            fullChargeTime: this.fullChargeTime
+            fullChargeTime: this.fullChargeTime,
+            hasModule: !!shieldModule
         };
     }
 

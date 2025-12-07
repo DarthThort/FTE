@@ -156,11 +156,47 @@
         weapon.state = 'cooldown';
         weapon.currentCharge = weapon.cooldownTime;
 
+        // Trigger visual fire effect
+        this.triggerWeaponFireEffect(weaponId);
+
         // In Phase 6, this will actually apply damage
         // For now, just log the fire event
         console.log(`${weapon.name} fired at ${target || 'Hull'}!`);
 
         return true;
+    }
+
+    /**
+     * Trigger visual weapon fire effect
+     */
+    triggerWeaponFireEffect(weaponId) {
+        // Get weapon hardpoint
+        const weaponIndex = weaponId === 'weapon_1' ? 0 : 1;
+        const hardpointKey = weaponIndex === 0 ? 'weapon1' : 'weapon2';
+        const moduleId = this.state.ship.hardpoints?.[hardpointKey];
+
+        if (!moduleId) return;
+
+        // Get weapon position (matching renderWeaponTurrets positions)
+        const weaponPositions = [
+            { x: 9, y: 6, hardpoint: 'weapon1' },
+            { x: 17, y: 6, hardpoint: 'weapon2' }
+        ];
+
+        const weaponPos = weaponPositions[weaponIndex];
+        if (!weaponPos) return;
+
+        // Get ship renderer from scene manager
+        const shipRenderer = this.state.game.sceneManager?.shipRenderer;
+        if (!shipRenderer || !shipRenderer.weaponFireEffects) return;
+
+        // Calculate screen position
+        const tileSize = shipRenderer.tileSize;
+        const centerX = weaponPos.x * tileSize + tileSize / 2;
+        const centerY = weaponPos.y * tileSize + tileSize / 2;
+
+        // Trigger the effect
+        shipRenderer.weaponFireEffects.triggerEffect(moduleId, centerX, centerY);
     }
 
     // Get weapon status for UI

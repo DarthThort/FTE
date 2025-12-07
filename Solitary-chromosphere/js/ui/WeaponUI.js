@@ -10,7 +10,7 @@ class WeaponUI {
         if (!weapons || weapons.length === 0) return '';
 
         const content = `
-            <div id="weapons-panel" style="
+            <div id="weapons-panel" class="draggable-panel" style="
                 position: absolute;
                 bottom: 20px;
                 left: 20px;
@@ -22,7 +22,16 @@ class WeaponUI {
                 font-family: var(--font-tech);
                 z-index: 100;
             ">
-                <h3 style="margin: 0 0 15px 0; color: var(--warning); text-transform: uppercase; border-bottom: 1px solid var(--warning); padding-bottom: 8px; font-size: 0.9rem;">
+                <h3 class="drag-handle" style="
+                    margin: 0 0 15px 0; 
+                    color: var(--warning); 
+                    text-transform: uppercase; 
+                    border-bottom: 1px solid var(--warning); 
+                    padding-bottom: 8px; 
+                    font-size: 0.9rem;
+                    cursor: move;
+                    user-select: none;
+                ">
                     ⚡ WEAPONS
                 </h3>
                 
@@ -322,8 +331,18 @@ class WeaponUI {
     // Refresh panel
     refreshWeaponsPanel() {
         const panel = document.getElementById('weapons-panel');
+        const newContent = this.renderWeaponsPanel();
+
+        if (!newContent) {
+            // No weapons, remove panel if it exists
+            if (panel) {
+                panel.remove();
+            }
+            return;
+        }
+
         if (panel) {
-            const newContent = this.renderWeaponsPanel();
+            // Panel exists, replace it
             const temp = document.createElement('div');
             temp.innerHTML = newContent;
             const newPanel = temp.firstElementChild;
@@ -333,6 +352,30 @@ class WeaponUI {
 
             // IMPORTANT: Re-attach event listeners to the NEW panel
             this.attachWeaponEventListeners();
+
+            // Make draggable
+            if (window.draggableUI) {
+                window.draggableUI.makeDraggable(newPanel, 'weapons-panel', '.drag-handle');
+            } else {
+                console.warn('[WeaponUI] draggableUI not available yet');
+            }
+        } else {
+            // Panel doesn't exist, create it
+            const uiLayer = document.getElementById('ui-layer');
+            if (uiLayer) {
+                const temp = document.createElement('div');
+                temp.innerHTML = newContent;
+                const newPanel = temp.firstElementChild;
+                uiLayer.appendChild(newPanel);
+                this.attachWeaponEventListeners();
+
+                // Make draggable
+                if (window.draggableUI) {
+                    window.draggableUI.makeDraggable(newPanel, 'weapons-panel', '.drag-handle');
+                } else {
+                    console.warn('[WeaponUI] draggableUI not available yet');
+                }
+            }
         }
     }
 }

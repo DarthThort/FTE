@@ -28,6 +28,9 @@ const MODULES = {
         stats: {
             shieldDamage: 8,
             hullDamage: 4,
+            chargeTime: 8,
+            cooldown: 2,
+            shots: 1,
             fireRate: 1.0,
             projectileSpeed: 500,
             projectileColor: '#ff4444',
@@ -46,6 +49,9 @@ const MODULES = {
         stats: {
             shieldDamage: 15,
             hullDamage: 2,
+            chargeTime: 10,
+            cooldown: 3,
+            shots: 1,
             fireRate: 0.8,
             projectileSpeed: 400,
             projectileColor: '#00ffff',
@@ -129,7 +135,8 @@ const MODULES = {
             powerCost: 2
         },
         price: 0, // Default equipment
-        scrapCost: 0,
+        scrapCost: 20,
+        upgradeTo: 'shield_advanced',
         description: 'Standard 2-layer shield protection with basic recharge'
     },
 
@@ -145,7 +152,8 @@ const MODULES = {
             powerCost: 3
         },
         price: 2000,
-        scrapCost: 0,
+        scrapCost: 40,
+        upgradeTo: 'shield_military',
         description: '3 shield layers with faster recharge rate'
     },
 
@@ -161,7 +169,8 @@ const MODULES = {
             powerCost: 4
         },
         price: 4000,
-        scrapCost: 0,
+        scrapCost: 60,
+        upgradeTo: 'shield_experimental',
         description: 'Military-grade 4-layer protection with rapid recharge'
     },
 
@@ -194,7 +203,8 @@ const MODULES = {
             powerCost: 1
         },
         price: 0, // Default equipment
-        scrapCost: 0,
+        scrapCost: 15,
+        upgradeTo: 'engine_improved',
         description: 'Basic propulsion system'
     },
 
@@ -209,7 +219,8 @@ const MODULES = {
             powerCost: 2
         },
         price: 1000,
-        scrapCost: 0,
+        scrapCost: 30,
+        upgradeTo: 'engine_advanced',
         description: 'Enhanced engines. +10% flee chance, +5% evasion'
     },
 
@@ -224,7 +235,8 @@ const MODULES = {
             powerCost: 2
         },
         price: 2500,
-        scrapCost: 0,
+        scrapCost: 50,
+        upgradeTo: 'engine_experimental',
         description: 'High-performance drives. +20% flee, +10% evasion'
     },
 
@@ -255,7 +267,8 @@ const MODULES = {
             fuelCost: 10
         },
         price: 0, // Default equipment
-        scrapCost: 0,
+        scrapCost: 15,
+        upgradeTo: 'jumpdrive_improved',
         description: 'Standard FTL drive with 6 LY range'
     },
 
@@ -269,7 +282,8 @@ const MODULES = {
             fuelCost: 12
         },
         price: 1500,
-        scrapCost: 0,
+        scrapCost: 30,
+        upgradeTo: 'jumpdrive_advanced',
         description: 'Improved FTL capabilities. 10 LY jump range'
     },
 
@@ -283,7 +297,8 @@ const MODULES = {
             fuelCost: 15
         },
         price: 3500,
-        scrapCost: 0,
+        scrapCost: 50,
+        upgradeTo: 'jumpdrive_military',
         description: 'Long-range warp drive. 15 LY jump range'
     },
 
@@ -312,7 +327,8 @@ const MODULES = {
             maxPower: 8
         },
         price: 0, // Default equipment
-        scrapCost: 0,
+        scrapCost: 25,
+        upgradeTo: 'reactor_improved',
         description: 'Standard power core. 8 power units'
     },
 
@@ -325,7 +341,8 @@ const MODULES = {
             maxPower: 12
         },
         price: 2000,
-        scrapCost: 0,
+        scrapCost: 45,
+        upgradeTo: 'reactor_advanced',
         description: 'Enhanced power generation. 12 power units'
     },
 
@@ -338,7 +355,8 @@ const MODULES = {
             maxPower: 16
         },
         price: 4500,
-        scrapCost: 0,
+        scrapCost: 65,
+        upgradeTo: 'reactor_experimental',
         description: 'High-output power core. 16 power units'
     },
 
@@ -368,7 +386,8 @@ const MODULES = {
             scanRange: 1.0
         },
         price: 0, // Default equipment
-        scrapCost: 0,
+        scrapCost: 20,
+        upgradeTo: 'bridge_improved',
         description: 'Basic command center with standard life support'
     },
 
@@ -383,7 +402,8 @@ const MODULES = {
             scanRange: 1.5
         },
         price: 1800,
-        scrapCost: 0,
+        scrapCost: 35,
+        upgradeTo: 'bridge_advanced',
         description: '+50% O2 regen, +5% dialogue success, better sensors'
     },
 
@@ -398,7 +418,8 @@ const MODULES = {
             scanRange: 2.0
         },
         price: 4000,
-        scrapCost: 0,
+        scrapCost: 55,
+        upgradeTo: 'bridge_command',
         description: '+100% O2 regen, +10% dialogue, advanced sensors'
     },
 
