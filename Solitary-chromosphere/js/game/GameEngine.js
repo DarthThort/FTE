@@ -121,6 +121,11 @@ class GameEngine {
             this.pauseButton = new CombatPauseButton(this);
         }
 
+        // Create CombatEscapeButton if not exists
+        if (!this.escapeButton) {
+            this.escapeButton = new CombatEscapeButton(this);
+        }
+
         // Initialize with current combat manager
         if (this.state.combatManager && this.state.combatManager.active) {
             this.combatUI.initialize(this.state.combatManager);
@@ -132,12 +137,16 @@ class GameEngine {
             combatUIContainer.innerHTML = this.combatUI.render() + this.enemyOverlay.render();
             this.combatUI.attachEventListeners();
 
-            // Show pause button
+            // Show pause and escape buttons
             this.pauseButton.show();
+            this.escapeButton.show();
         } else if (this.state.combatManager && this.state.combatManager.victor) {
-            // Hide pause button when combat ends
+            // Hide pause and escape buttons when combat ends
             if (this.pauseButton) {
                 this.pauseButton.hide();
+            }
+            if (this.escapeButton) {
+                this.escapeButton.hide();
             }
 
             // Show victory/defeat screen (only render once)
