@@ -21,11 +21,12 @@ class GameEngine {
             const rect = this.canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
+			console.log('[GameEngine] Mouse click at', mouseX, mouseY);
 
             // Let HazardUI handle clicks if crew menu is open
-            if (this.state.hazardUI && this.state.hazardUI.showingCrewMenu) {
-                this.state.hazardUI.handleClick(mouseX, mouseY);
-            }
+            if (this.state.hazardUI && this.state.hazardUI.crewMenu) {
+    this.state.hazardUI.crewMenu.handleClick(mouseX, mouseY);
+}
         });
     }
 
