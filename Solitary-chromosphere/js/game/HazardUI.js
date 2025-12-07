@@ -337,7 +337,7 @@ renderCrewMenu(ctx) {
         ctx.fillText(`Assign Crew to Breach at (${breach.x}, ${breach.y})`, menuX + menuWidth / 2, menuY + 30);
         // List crew
         const crew = this.state.ship.crew || [];
-        ctx.font = '14px "Rajdhani', sans-serif';
+        ctx.font = '14px "Rajdhani", sans-serif';
         ctx.textAlign = 'left';
         let yOffset = 60;
         for (let i = 0; i < crew.length; i++) {
