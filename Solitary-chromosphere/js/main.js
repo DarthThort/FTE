@@ -18,6 +18,7 @@ if (!canvas || !uiLayer) {
     game.ui.inventoryUI = new InventoryUI(game);
     game.ui.modulesUI = new ModulesUI(game, ui);
     game.ui.loadoutUI = new LoadoutUI(game, ui);
+    game.ui.crewRepairUI = new CrewRepairUI(game);
 
     // Reset Save Button removed (moved to Port UI)
 

@@ -21,12 +21,12 @@ class GameEngine {
             const rect = this.canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
-			console.log('[GameEngine] Mouse click at', mouseX, mouseY);
+            console.log('[GameEngine] Mouse click at', mouseX, mouseY);
 
             // Let HazardUI handle clicks if crew menu is open
             if (this.state.hazardUI && this.state.hazardUI.crewMenu) {
-    this.state.hazardUI.crewMenu.handleClick(mouseX, mouseY);
-}
+                this.state.hazardUI.crewMenu.handleClick(mouseX, mouseY);
+            }
         });
     }
 
@@ -106,10 +106,10 @@ class GameEngine {
 
         // Check for crew assignment key (R key)  
         if (this.input.isDown('KeyR')) {
-            if (!this.crewAssignKeyPressed && this.state.hazardUI) {
+            if (!this.crewAssignKeyPressed && this.ui && this.ui.crewRepairUI) {
                 this.crewAssignKeyPressed = true;
-                console.log('[GameEngine] R key pressed - toggling crew menu');
-                this.state.hazardUI.toggleCrewMenu();
+                console.log('[GameEngine] R key pressed - toggling crew repair UI');
+                this.ui.crewRepairUI.toggle();
             }
         } else {
             this.crewAssignKeyPressed = false;
