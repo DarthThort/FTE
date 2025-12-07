@@ -653,15 +653,16 @@ class CombatManager {
 
         console.log(`Combat ended! Victor: ${this.victor}`);
 
-        if (this.victor === 'player') {
+        if (this.victor === 'player' || this.victor === 'player_escaped') {
             console.log('Rewards:', this.rewards);
             this.applyRewards();
+            // Save game on victory or escape
+            this.state.saveGame();
         } else {
             console.log('Defeat!');
+            // DON'T save on defeat - this preserves pre_travel_save for retry
             // Game over or emergency FTL
         }
-
-        this.state.saveGame();
     }
 
     /**
