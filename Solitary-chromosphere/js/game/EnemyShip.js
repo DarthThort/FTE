@@ -169,25 +169,61 @@ class EnemyShip {
         return `${prefix} ${suffix}`;
     }
 
-    takeDamage(damage) {
+    /**
+     * Take damage with separate shield and hull damage
+     * @param {number} shieldDamage - Damage to shields
+     * @param {number} hullDamage - Damage to hull
+     * @param {number} penetration - Shield penetration (0-1)
+     * @returns {object} Damage breakdown for visual feedback
+     */
+    takeDamage(shieldDamage, hullDamage, penetration = 0) {
+        // Check for evasion
         if (Math.random() < this.evasion) {
-            return { evaded: true, absorbed: 0, hullDamage: 0 };
+            return {
+                evaded: true,
+                shieldDamage: 0,
+                hullDamage: 0,
+                shieldsRemaining: this.shields
+            };
         }
 
-        let remaining = damage;
-        let absorbed = 0;
+        let totalShieldDamage = 0;
+        let totalHullDamage = 0;
 
-        if (this.shields > 0) {
-            this.shields--;
-            absorbed = damage;
-            remaining = 0;
+        // Apply shield damage (reduced by penetration)
+        if (this.shields > 0 && shieldDamage > 0) {
+            const effectiveShieldDamage = shieldDamage * (1 - penetration);
+            const shieldAbsorbed = Math.min(this.shields, effectiveShieldDamage);
+            this.shields = Math.max(0, this.shields - shieldAbsorbed);
+            totalShieldDamage = shieldAbsorbed;
+
+            // Overflow damage goes to hull
+            const overflow = effectiveShieldDamage - shieldAbsorbed;
+            if (overflow > 0) {
+                totalHullDamage += overflow;
+            }
         }
 
-        if (remaining > 0) {
-            this.hull = Math.max(0, this.hull - remaining);
+        // Penetration damage bypasses shields
+        const penetrationDamage = hullDamage * penetration;
+        totalHullDamage += penetrationDamage;
+
+        // If shields are down, apply full hull damage
+        if (this.shields === 0) {
+            totalHullDamage += hullDamage;
         }
 
-        return { evaded: false, absorbed, hullDamage: remaining };
+        // Apply hull damage
+        if (totalHullDamage > 0) {
+            this.hull = Math.max(0, this.hull - totalHullDamage);
+        }
+
+        return {
+            evaded: false,
+            shieldDamage: totalShieldDamage,
+            hullDamage: totalHullDamage,
+            shieldsRemaining: this.shields
+        };
     }
 
     damageSystem(systemId, damage) {

@@ -91,14 +91,42 @@ class EnemyShipOverlay {
                     </div>
                 </div>
                 
-                <!-- Shield Layers -->
-                <div>
+                <!-- Shield Bar and Layers -->
+                <div style="margin-bottom: 10px;">
                     <div style="
+                        display: flex;
+                        justify-content: space-between;
                         font-size: 0.75rem;
                         margin-bottom: 4px;
                         color: #fff;
-                    ">🛡️ SHIELDS: ${this.enemy.shields}</div>
-                    <div style="display: flex; gap: 4px;">
+                    ">
+                        <span>🛡️ SHIELDS</span>
+                        <span>${this.enemy.shields}/${this.enemy.maxShields}</span>
+                    </div>
+                    
+                    <!-- Shield strength bar -->
+                    ${this.enemy.maxShields > 0 ? `
+                        <div style="
+                            width: 100%;
+                            height: 8px;
+                            background: rgba(255,255,255,0.1);
+                            border-radius: 4px;
+                            overflow: hidden;
+                            border: 1px solid rgba(0,240,255,0.3);
+                            margin-bottom: 6px;
+                        ">
+                            <div style="
+                                width: ${(this.enemy.shields / this.enemy.maxShields) * 100}%;
+                                height: 100%;
+                                background: linear-gradient(90deg, #00f0ff, #0088ff);
+                                transition: width 0.3s;
+                                box-shadow: 0 0 8px rgba(0,240,255,0.6);
+                            "></div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- Shield layer hexagons -->
+                    <div style="display: flex; gap: 4px; justify-content: center;">
                         ${this.renderShieldLayers(this.enemy.shields, this.enemy.maxShields)}
                     </div>
                 </div>
@@ -113,13 +141,14 @@ class EnemyShipOverlay {
         let html = '';
         for (let i = 0; i < max; i++) {
             const active = i < current;
-            // Use hex symbols: ⬡ (active) and ⬢ (inactive)
+            // Use hex symbols: ⬢ (active) and ⬡ (inactive)
             html += `
                 <span style="
-                    font-size: 1.2rem;
-                    color: ${active ? '#ff0055' : 'rgba(255,255,255,0.3)'};
-                    text-shadow: ${active ? '0 0 8px #ff0055' : 'none'};
-                    transition: all 0.2s;
+                    font-size: 1.4rem;
+                    color: ${active ? '#00f0ff' : 'rgba(255,255,255,0.2)'};
+                    text-shadow: ${active ? '0 0 10px #00f0ff, 0 0 20px #00f0ff' : 'none'};
+                    transition: all 0.3s;
+                    filter: ${active ? 'drop-shadow(0 0 4px #00f0ff)' : 'none'};
                 ">${active ? '⬢' : '⬡'}</span>
             `;
         }

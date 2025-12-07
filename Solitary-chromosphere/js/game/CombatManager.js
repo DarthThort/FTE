@@ -234,31 +234,69 @@ class CombatManager {
      * Apply weapon damage to target
      */
     applyWeaponDamage(weapon, target) {
+        // Get weapon module stats if available
+        let weaponModule = null;
+        if (weapon.moduleId) {
+            weaponModule = getModule(weapon.moduleId);
+        }
+
         for (let i = 0; i < weapon.shots; i++) {
-            const damage = weapon.damagePerShot || weapon.damage || 10;
+            // Use module stats if available, otherwise fallback to weapon.damage
+            const shieldDamage = weaponModule?.stats?.shieldDamage || weapon.damagePerShot || weapon.damage || 10;
+            const hullDamage = weaponModule?.stats?.hullDamage || weapon.damagePerShot || weapon.damage || 10;
+
+            // Special effects from module
+            const penetration = weaponModule?.stats?.penetration || 0;
+            const ionChance = weaponModule?.stats?.ionChance || 0;
+            const burnDamage = weaponModule?.stats?.burnDamage || 0;
+            const burnDuration = weaponModule?.stats?.burnDuration || 0;
 
             // Check if shields block (for player ship)
             if (target === this.state.ship && this.state.shieldManager) {
-                const overflowDamage = this.state.shieldManager.takeDamage(damage);
+                // PHASE 10: Check evasion BEFORE applying any damage
+                const engineModule = getModule(this.state.ship.hardpoints.engine);
+                const evasionBonus = engineModule?.stats?.evasionBonus || 0;
+
+                // Roll for evasion (only once per shot, not per weapon fire)
+                if (evasionBonus > 0 && i === 0 && Math.random() < evasionBonus) {
+                    console.log('[Combat] EVADED! Attack missed!');
+
+                    // Show evade message
+                    if (this.state.game && this.state.game.damageNumbers) {
+                        const shipX = this.state.game.canvas.width / 2;
+                        const shipY = this.state.game.canvas.height / 2;
+                        this.state.game.damageNumbers.add(shipX, shipY - 30, 'EVADED!', '#00ff00');
+                    }
+                    return; // Skip all damage from this weapon
+                }
+
+                // Calculate damage to shields (may be reduced by penetration)
+                const effectiveShieldDamage = shieldDamage * (1 - penetration);
+                const overflowDamage = this.state.shieldManager.takeDamage(effectiveShieldDamage);
 
                 // Show shield damage number (Blue/Cyan)
                 if (this.state.game && this.state.game.damageNumbers) {
                     const shipX = this.state.game.canvas.width / 2;
                     const shipY = this.state.game.canvas.height / 2;
-                    const absorbed = damage - overflowDamage;
+                    const absorbed = effectiveShieldDamage - overflowDamage;
                     if (absorbed > 0) {
-                        this.state.game.damageNumbers.add(shipX, shipY - 50, absorbed, '#00f0ff');
+                        this.state.game.damageNumbers.add(shipX, shipY - 50, Math.round(absorbed), '#00f0ff');
                     }
                 }
 
-                if (overflowDamage === 0) {
-                    // Shields absorbed all damage
-                    console.log(`[Combat] Shields absorbed all ${damage} damage`);
+                // If shields absorbed all damage
+                if (overflowDamage === 0 && penetration === 0) {
+                    console.log(`[Combat] Shields absorbed all ${effectiveShieldDamage.toFixed(1)} shield damage`);
                     continue;
-                } else {
-                    // Apply overflow damage to hull + screen shake
-                    console.log(`[Combat] Shields partially blocked. ${overflowDamage} damage to hull`);
-                    target.health = Math.max(0, target.health - overflowDamage);
+                }
+
+                // Calculate hull damage (overflow from shields + penetration bonus + base hull damage)
+                const totalHullDamage = overflowDamage + (hullDamage * penetration);
+
+                if (totalHullDamage > 0) {
+                    console.log(`[Combat] ${totalHullDamage.toFixed(1)} damage to hull (${overflowDamage.toFixed(1)} overflow + ${(hullDamage * penetration).toFixed(1)} penetration)`);
+                    target.health = Math.max(0, target.health - totalHullDamage);
+
                     // Notify state change to update HUD
                     if (this.state.notify) this.state.notify();
                     console.log(`[Combat] Player Hull: ${target.health}/${target.maxHealth}`);
@@ -267,28 +305,59 @@ class CombatManager {
                     if (this.state.game && this.state.game.damageNumbers) {
                         const shipX = this.state.game.canvas.width / 2;
                         const shipY = this.state.game.canvas.height / 2;
-                        this.state.game.damageNumbers.add(shipX, shipY, overflowDamage, '#ff0055');
+                        this.state.game.damageNumbers.add(shipX, shipY, Math.round(totalHullDamage), '#ff0055');
                     }
 
-                    // Trigger screen shake on hull damage
-                    // DISABLED: Screen shake was decentering ship
-                    // if (this.state.game && this.state.game.screenEffects) {
-                    //     this.state.game.screenEffects.shake(8, 0.3);
-                    // }
-                    continue;
+                    // Apply burn effect if weapon has it
+                    if (burnDamage > 0 && burnDuration > 0) {
+                        // TODO: Implement burn effect tracking
+                        console.log(`[Combat] Burn effect applied: ${burnDamage} damage over ${burnDuration}s`);
+                    }
                 }
+                continue;
             }
 
-            // Apply hull damage (enemy uses .hull, player uses .health)
+            // Apply damage to enemy (enemy has shields too)
             if (target === this.enemy) {
-                target.hull = Math.max(0, target.hull - damage);
-                console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.hull}/${target.maxHull}`);
+                // Call new takeDamage method with shield and hull damage
+                const result = this.enemy.takeDamage(shieldDamage, hullDamage, penetration);
 
-                // Show damage number on enemy (Red)
-                if (this.state.game && this.state.game.damageNumbers) {
-                    // Enemy overlay is at top-left (left: 20px, top: 80px)
-                    // We'll spawn numbers around there
-                    this.state.game.damageNumbers.add(405, 80, damage, '#ff0055');
+                if (result.evaded) {
+                    console.log('[Combat] Enemy EVADED!');
+                    if (this.state.game && this.state.game.damageNumbers) {
+                        this.state.game.damageNumbers.add(405, 80, 'EVADED!', '#00ff00');
+                    }
+                    continue;
+                }
+
+                // Show shield damage number (Cyan)
+                if (result.shieldDamage > 0 && this.state.game && this.state.game.damageNumbers) {
+                    this.state.game.damageNumbers.add(405, 60, Math.round(result.shieldDamage), '#00f0ff');
+                    console.log(`[Combat] Enemy shields: ${result.shieldDamage.toFixed(1)} absorbed, ${result.shieldsRemaining}/${this.enemy.maxShields} remaining`);
+                }
+
+                // Show hull damage number (Red)
+                if (result.hullDamage > 0) {
+                    console.log(`[Combat] ${result.hullDamage.toFixed(1)} damage to ${target.name}! Hull: ${target.hull}/${target.maxHull}`);
+
+                    if (this.state.game && this.state.game.damageNumbers) {
+                        this.state.game.damageNumbers.add(405, 80, Math.round(result.hullDamage), '#ff0055');
+                    }
+                }
+
+                // Ion effect - chance to disable enemy system
+                if (ionChance > 0 && Math.random() < ionChance) {
+                    console.log(`[Combat] ION HIT! Enemy system ionized!`);
+                    // TODO: Implement ion effect on enemy systems
+                    if (this.state.game && this.state.game.damageNumbers) {
+                        this.state.game.damageNumbers.add(405, 60, 'ION!', '#00ffff');
+                    }
+                }
+
+                // Burn effect
+                if (burnDamage > 0 && burnDuration > 0) {
+                    console.log(`[Combat] BURN! ${burnDamage} damage over ${burnDuration}s`);
+                    // TODO: Implement burn DOT tracking
                 }
 
                 // Add visual effects
@@ -296,8 +365,9 @@ class CombatManager {
                     // Hit marker at enemy position
                     this.state.game.combatEffects.addHitMarker(405, 80, '#fff');
 
-                    // Impact particles
-                    this.state.game.combatEffects.addImpactParticles(405, 80, 8, '#ff0055');
+                    // Impact particles (cyan for shield, red for hull)
+                    const particleColor = result.shieldDamage > 0 ? '#00f0ff' : '#ff0055';
+                    this.state.game.combatEffects.addImpactParticles(405, 80, 8, particleColor);
 
                     // Impact sound
                     this.state.game.combatEffects.playImpactSound();
@@ -312,24 +382,19 @@ class CombatManager {
                     }, 150);
                 }
             } else {
-                target.health = Math.max(0, target.health - damage);
-                console.log
+                // Fallback for player ship without shield manager
+                target.health = Math.max(0, target.health - hullDamage);
+
                 // Notify state change to update HUD
                 if (this.state.notify) this.state.notify();
-                console.log(`[Combat] ${damage} damage to ${target.name}! Hull: ${target.health}/${target.maxHealth}`);
+                console.log(`[Combat] ${hullDamage} damage to ${target.name}! Hull: ${target.health}/${target.maxHealth}`);
 
                 // Show hull damage number on player (Red)
                 if (this.state.game && this.state.game.damageNumbers) {
                     const shipX = this.state.game.canvas.width / 2;
                     const shipY = this.state.game.canvas.height / 2;
-                    this.state.game.damageNumbers.add(shipX, shipY, damage, '#ff0055');
+                    this.state.game.damageNumbers.add(shipX, shipY, Math.round(hullDamage), '#ff0055');
                 }
-
-                // Screen shake on player damage
-                // DISABLED: Screen shake was decentering ship
-                // if (this.state.game && this.state.game.screenEffects) {
-                //     this.state.game.screenEffects.shake(10, 0.4);
-                // }
             }
         }
     }

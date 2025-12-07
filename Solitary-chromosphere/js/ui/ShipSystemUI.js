@@ -218,6 +218,14 @@ class ShipSystemUI {
                     const result = this.game.state.unequipModule(hardpointKey);
                     this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
                     if (result.success) {
+                        // Refresh shield UI if shield module was uninstalled
+                        if (hardpointKey === 'shield' && this.uiManager.shieldUI) {
+                            this.uiManager.shieldUI.refreshShieldPanel();
+                        }
+                        // Refresh weapon UI if weapon module was uninstalled
+                        if ((hardpointKey === 'weapon1' || hardpointKey === 'weapon2') && this.uiManager.weaponUI) {
+                            this.uiManager.weaponUI.refreshWeaponsPanel();
+                        }
                         this.renderSystemConsole(system);
                     }
                 };
@@ -324,6 +332,14 @@ class ShipSystemUI {
                         const result = this.game.state.unequipModule(hardpointInfo.hardpoint);
                         this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
                         if (result.success) {
+                            // Refresh shield UI if shield module was uninstalled
+                            if (hardpointInfo.hardpoint === 'shield' && this.uiManager.shieldUI) {
+                                this.uiManager.shieldUI.refreshShieldPanel();
+                            }
+                            // Refresh weapon UI if weapon module was uninstalled
+                            if ((hardpointInfo.hardpoint === 'weapon1' || hardpointInfo.hardpoint === 'weapon2') && this.uiManager.weaponUI) {
+                                this.uiManager.weaponUI.refreshWeaponsPanel();
+                            }
                             document.querySelector('.modal-overlay').remove();
                         }
                     };
@@ -336,6 +352,14 @@ class ShipSystemUI {
         const result = this.game.state.installModule(hardpoint, moduleId);
         this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
         if (result.success) {
+            // Refresh shield UI if shield module was installed
+            if (hardpoint === 'shield' && this.uiManager.shieldUI) {
+                this.uiManager.shieldUI.refreshShieldPanel();
+            }
+            // Refresh weapon UI if weapon module was installed
+            if ((hardpoint === 'weapon1' || hardpoint === 'weapon2') && this.uiManager.weaponUI) {
+                this.uiManager.weaponUI.refreshWeaponsPanel();
+            }
             document.querySelector('.modal-overlay').remove();
         }
     }
