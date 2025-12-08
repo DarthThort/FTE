@@ -152,7 +152,7 @@ class GameState {
         this.cargoManager = new CargoManager(this);
         this.travelManager = new TravelManager(this);
         this.portGenerator = new PortGenerator(this);
-		this.saveManager = new SaveManager(this);
+        this.saveManager = new SaveManager(this);
         this.crewManager = new CrewManager(this);
 
         // Combat system managers
@@ -164,29 +164,13 @@ class GameState {
         this.ship.rooms = this.lifeSupportManager.detectRooms();
         this.ship.doors = this.generateDoors();
         console.log(`Detected ${this.ship.rooms.length} rooms in ship`);
-
-        // Initialize hazard manager for breaches, fires, and oxygen (Phase 1)
-        this.hazardManager = new HazardManager(this);
-
-        // Initialize hazard UI for repair prompts and progress (Phase 1)
-        this.hazardUI = new HazardUI(this);
-        console.log('═══════════════════════════════════════');
-        console.log('SHIP SYSTEMS COORDINATES:');
-        console.log('═══════════════════════════════════════');
-        this.ship.systems.forEach(sys => {
-            console.log(`${sys.name.padEnd(25)} (${sys.x}, ${sys.y})`);
-        });
-        console.log('═══════════════════════════════════════');
-    }
-
-    generatePortContent() {
         return this.portGenerator.generatePortContent();
     }
 
     loadGame() {
         // Delegate to SaveManager
         const loaded = this.saveManager.loadGame();
-        
+
         // Handle pre-travel save (retry mechanism)
         if (loaded) {
             const preTravelData = localStorage.getItem('pre_travel_save');
@@ -203,7 +187,7 @@ class GameState {
                 }
             }
         }
-        
+
         return loaded;
     }
 
