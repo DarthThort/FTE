@@ -1,0 +1,8 @@
+// Añade esta línea en SceneManager.js línea 23, justo después de:
+// this.lastDeltaTime = dt;
+
+// DEBUG: Log scene when crew is repairing
+const repairingCrew = this.game.state.ship.crew.filter(c => c.state === 'repairing');
+if (repairingCrew.length > 0) {
+    console.log(`[SceneManager] Scene='${this.currentScene}' - ${repairingCrew.length} crew repairing`);
+}
