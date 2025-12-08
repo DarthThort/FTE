@@ -265,6 +265,8 @@ class CrewManager {
                     continue;
                 }
 
+                console.log(`[CrewManager] 🔍 Checking repair handler - state='${crew.state}' targetBreach=${crew.targetBreach}`);
+
                 // Check if still in range
                 const dx = crew.x - (breach.x * 32 + 16);
                 const dy = crew.y - (breach.y * 32 + 16);
