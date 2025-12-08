@@ -164,7 +164,36 @@ class GameState {
         this.ship.rooms = this.lifeSupportManager.detectRooms();
         this.ship.doors = this.generateDoors();
         console.log(`Detected ${this.ship.rooms.length} rooms in ship`);
-        return this.portGenerator.generatePortContent();
+
+        // Initialize hazard manager for breaches, fires, and oxygen
+        this.hazardManager = new HazardManager(this);
+        this.hazardUI = new HazardUI(this);
+
+        // Star Systems
+        this.galaxy = null;
+        this.currentSystem = null;
+        this.currentPlanet = null;
+
+        // Initialize listeners BEFORE loadGame
+        this.listeners = [];
+
+        // Generate initial port content
+        this.portGenerator.generatePortContent();
+
+        // Load saved game
+        this.loadGame();
+
+        // Initialize weapons from equipped modules
+        this.recalculateShipStats();
+
+        // Log system coordinates for debugging
+        console.log('═══════════════════════════════════════');
+        console.log('SHIP SYSTEMS COORDINATES:');
+        console.log('═══════════════════════════════════════');
+        this.ship.systems.forEach(sys => {
+            console.log(`${sys.name.padEnd(25)} (${sys.x}, ${sys.y})`);
+        });
+        console.log('═══════════════════════════════════════');
     }
 
     loadGame() {
