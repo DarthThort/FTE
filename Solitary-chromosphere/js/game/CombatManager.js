@@ -169,8 +169,14 @@ class CombatManager {
                         this.state.game.combatEffects.playLaserSound();
                     }
 
-                    // Fire at player
-                    this.applyWeaponDamage(weapon, this.state.ship);
+                    // Fire at player using damage calculator
+                    const weaponModule = null; // Enemy weapons don't have modules yet
+                    this.damageCalculator.applyWeaponDamage(
+                        weapon,
+                        weaponModule,
+                        this.state.ship,
+                        this.enemy
+                    );
 
                     // Enemy weapons return to idle immediately (no cooldown)
                     weapon.state = 'idle';
