@@ -110,24 +110,12 @@ class CrewManager {
     }
 
     updateCrewAI() {
-        // DEBUG: Verify this method is called
-        const repairingCrew = this.state.ship.crew.filter(c => c.state === 'repairing');
-        if (repairingCrew.length > 0) {
-            console.log(`[CrewManager] ⚙️ updateCrewAI called - ${repairingCrew.length} crew in 'repairing' state`);
-        }
-
         // Don't move crew if combat is paused
         if (this.state.combatManager && this.state.combatManager.paused) {
-            console.log(`[CrewManager] ⏸️ Combat is PAUSED - skipping crew AI`);
             return;
         }
 
         for (const crew of this.state.ship.crew) {
-            // DEBUG: Log crew with repairing state
-            if (crew.state === 'repairing') {
-                console.log(`[CrewManager] 🔧 LOOP processing crew ${crew.name} - state='repairing' targetBreach=${crew.targetBreach}`);
-            }
-
             // Check if crew is assigned to a system
             const assignedSystem = this.state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
 
@@ -276,8 +264,6 @@ class CrewManager {
                     crew.targetY = null;
                     continue;
                 }
-
-                console.log(`[CrewManager] 🔍 Checking repair handler - state='${crew.state}' targetBreach=${crew.targetBreach}`);
 
                 // Check if still in range
                 const dx = crew.x - (breach.x * 32 + 16);
