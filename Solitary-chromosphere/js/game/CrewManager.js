@@ -144,6 +144,11 @@ class CrewManager {
             }
 
             if ((crew.state === 'moving' || crew.state === 'wandering') && crew.targetX !== null && crew.targetY !== null) {
+                // DEBUG: Log if crew has targetBreach
+                if (crew.targetBreach !== undefined) {
+                    console.log(`[CrewManager] ${crew.name} moving to breach - state='${crew.state}' targetBreach=${crew.targetBreach} path.length=${crew.path?.length || 0}`);
+                }
+
                 if (!crew.path || crew.path.length === 0) {
                     const startX = Math.floor(crew.x / 32);
                     const startY = Math.floor(crew.y / 32);
