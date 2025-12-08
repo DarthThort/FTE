@@ -34,7 +34,10 @@ class SceneManager {
             this.shipRenderer.computeVisibility(this.player);
             this.handleCrewInteraction();
         } else if (this.currentScene === 'COMBAT') {
-            // Combat scene update
+            // UPDATE CREW AI IN COMBAT TOO!
+				this.game.state.updateCrewAI();
+			
+			// Combat scene update
             if (this.game.state.combatManager) {
                 this.game.state.combatManager.tick(dt);
             }
