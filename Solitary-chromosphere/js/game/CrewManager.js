@@ -225,6 +225,11 @@ class CrewManager {
                 }
             }
 
+            // DEBUG: Log crew state if they have a targetBreach
+            if (crew.targetBreach !== undefined) {
+                console.log(`[CrewManager] ${crew.name} state='${crew.state}' targetBreach=${crew.targetBreach} pos=(${Math.floor(crew.x)}, ${Math.floor(crew.y)})`);
+            }
+
             // NEW: Check if crew reached their breach target and start repairing
             if (crew.targetBreach !== undefined && crew.state === 'moving') {
                 const breach = this.state.hazardManager.breaches[crew.targetBreach];
