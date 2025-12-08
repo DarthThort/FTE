@@ -20,129 +20,157 @@ class PortGenerator {
             modules: this.generateModules(),
             contracts: this.generateContracts(planet)
         };
-
-        availableCrew.push({
-            id: 'crew_' + Date.now() + '_' + i,
-            name: `${firstName} ${lastName}`,
-            role: role,
-            cost: 500 + Math.floor(Math.random() * 1000),
-            skills: this.generateCrewSkills(role)
-        });
     }
+
+    /**
+     * Generate available crew at port
+     */
+    generateCrew() {
+        const firstNames = ['Alex', 'Jordan', 'Sam', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Quinn', 'Avery', 'Drew'];
+        const lastNames = ['Chen', 'Patel', 'Kim', 'Rodriguez', 'O\'Brien', 'Yamamoto', 'Singh', 'Mueller', 'Santos', 'Kowalski'];
+        const availableCrew = [];
+
+        for (let i = 0; i < 5; i++) {
+            const roles = ['Pilot', 'Engineer', 'Weapon Specialist', 'Medic', 'General Staff'];
+            const role = roles[Math.floor(Math.random() * roles.length)];
+            const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+            const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+
+            availableCrew.push({
+                id: 'crew_' + Date.now() + '_' + i,
+                name: `${firstName} ${lastName}`,
+                role: role,
+                cost: 500 + Math.floor(Math.random() * 1000),
+                skills: this.generateCrewSkills(role)
+            });
+        }
 
         return availableCrew;
     }
 
-/**
- * Generate crew skills based on role
- */
-generateCrewSkills(role) {
-    const baseSkills = {
-        piloting: 1,
-        weapons: 1,
-        engineering: 1,
-        combat: 1,
-        medical: 1
-    };
+    /**
+     * Generate crew skills based on role
+     */
+    generateCrewSkills(role) {
+        const baseSkills = {
+            piloting: 1,
+            weapons: 1,
+            engineering: 1,
+            combat: 1,
+            medical: 1
+        };
 
-    switch (role) {
-        case 'Pilot':
-            baseSkills.piloting = 3 + Math.floor(Math.random() * 2);
-            baseSkills.combat = 2;
-            break;
-        case 'Engineer':
-            baseSkills.engineering = 3 + Math.floor(Math.random() * 2);
-            break;
-        case 'Weapon Specialist':
-            baseSkills.weapons = 3 + Math.floor(Math.random() * 2);
-            baseSkills.combat = 2;
-            break;
-        case 'Medic':
-            baseSkills.medical = 3 + Math.floor(Math.random() * 2);
-            break;
-        default:
-            // General staff - balanced
-            const skills = ['piloting', 'weapons', 'engineering', 'medical'];
-            const boostedSkill = skills[Math.floor(Math.random() * skills.length)];
-            baseSkills[boostedSkill] = 2;
-            break;
+        switch (role) {
+            case 'Pilot':
+                baseSkills.piloting = 3 + Math.floor(Math.random() * 2);
+                baseSkills.combat = 2;
+                break;
+            case 'Engineer':
+                baseSkills.engineering = 3 + Math.floor(Math.random() * 2);
+                break;
+            case 'Weapon Specialist':
+                baseSkills.weapons = 3 + Math.floor(Math.random() * 2);
+                baseSkills.combat = 2;
+                break;
+            case 'Medic':
+                baseSkills.medical = 3 + Math.floor(Math.random() * 2);
+                break;
+            default:
+                // General staff - balanced
+                const skills = ['piloting', 'weapons', 'engineering', 'medical'];
+                const boostedSkill = skills[Math.floor(Math.random() * skills.length)];
+                baseSkills[boostedSkill] = 2;
+                break;
+        }
+
+        return baseSkills;
     }
 
-    return baseSkills;
-}
-
-/**
- * Generate available modules for sale
- */
-generateModules() {
-    // For now, return empty - module system defined in modules.js
-    return [];
-}
-
-/**
- * Generate available contracts
- */
-generateContracts(planet) {
-    const contracts = [];
-    const count = 2 + Math.floor(Math.random() * 2); // 2-3 contracts
-
-    for (let i = 0; i < count; i++) {
-        contracts.push(this.generateContract(planet));
+    /**
+     * Generate available modules for sale
+     */
+    generateModules() {
+        // For now, return empty - module system defined in modules.js
+        return [];
     }
 
-    return contracts;
-}
+    /**
+     * Generate available contracts
+     */
+    generateContracts(planet) {
+        const contracts = [];
+        const count = 2 + Math.floor(Math.random() * 2); // 2-3 contracts
 
-/**
- * Generate a single contract
- */
-generateContract(planet) {
-    const types = ['delivery', 'passenger', 'escort', 'pirate_hunt'];
-    const type = types[Math.floor(Math.random() * types.length)];
+        for (let i = 0; i < count; i++) {
+            contracts.push(this.generateContract(planet));
+        }
 
-    const baseReward = 1000 + Math.floor(Math.random() * 2000);
-    const distance = 1 + Math.floor(Math.random() * 5); // 1-5 systems away
-
-    return {
-        id: 'contract_' + Date.now() + '_' + Math.random(),
-        type: type,
-        destination: `System-${Math.floor(Math.random() * 100)}`,
-        reward: baseReward + (distance * 500),
-        distance: distance,
-        difficulty: 1 + Math.floor(Math.random() * 3),
-        description: this.getContractDescription(type),
-        status: 'available'
-    };
-}
-
-/**
- * Get contract description
- */
-getContractDescription(type) {
-    switch (type) {
-        case 'delivery':
-            return 'Deliver cargo to destination';
-        case 'passenger':
-            return 'Transport passenger safely';
-        case 'escort':
-            return 'Escort convoy through dangerous space';
-        case 'pirate_hunt':
-            return 'Eliminate pirate threat';
-        default:
-            return 'Complete mission objectives';
+        return contracts;
     }
-}
 
-/**
- * Refresh port (generate new crew/contracts)
- */
-refreshPort() {
-    const newPort = this.generatePort(this.state.currentPlanet);
-    this.state.port.crew = newPort.crew;
-    this.state.port.contracts = newPort.contracts;
+    /**
+     * Generate a single contract
+     */
+    generateContract(planet) {
+        const types = ['delivery', 'passenger', 'escort', 'pirate_hunt'];
+        const type = types[Math.floor(Math.random() * types.length)];
 
-    console.log('[PortGenerator] Port refreshed');
-    this.state.saveGame();
-    this.state.notify();
-}
+        const baseReward = 1000 + Math.floor(Math.random() * 2000);
+        const distance = 1 + Math.floor(Math.random() * 5); // 1-5 systems away
+
+        return {
+            id: 'contract_' + Date.now() + '_' + Math.random(),
+            type: type,
+            destination: `System-${Math.floor(Math.random() * 100)}`,
+            reward: baseReward + (distance * 500),
+            distance: distance,
+            difficulty: 1 + Math.floor(Math.random() * 3),
+            description: this.getContractDescription(type),
+            status: 'available'
+        };
+    }
+
+    /**
+     * Get contract description
+     */
+    getContractDescription(type) {
+        switch (type) {
+            case 'delivery':
+                return 'Deliver cargo to destination';
+            case 'passenger':
+                return 'Transport passenger safely';
+            case 'escort':
+                return 'Escort convoy through dangerous space';
+            case 'pirate_hunt':
+                return 'Eliminate pirate threat';
+            default:
+                return 'Complete mission objectives';
+        }
+    }
+
+    /**
+     * Refresh port (generate new crew/contracts)
+     */
+    refreshPort() {
+        const newPort = this.generatePort(this.state.currentPlanet);
+        this.state.port.crew = newPort.crew;
+        this.state.port.contracts = newPort.contracts;
+
+        console.log('[PortGenerator] Port refreshed');
+        this.state.saveGame();
+        this.state.notify();
+    }
+
+    /**
+     * Generate port content during initialization
+     */
+    generatePortContent() {
+        // This is called from GameState constructor
+        // Generate initial port data
+        const port = this.generatePort(null);
+        this.state.port.crew = port.crew;
+        this.state.port.contracts = port.contracts;
+
+        console.log('[PortGenerator] Initial port generated');
+    }
 }
