@@ -16,7 +16,10 @@ class ShipRenderer {
 
         // Initialize hazard renderer (will get manager reference later)
         this.hazardRenderer = null;
-    }
+		// Rendering modules
+        this.tileRenderer = new TileRenderer(gameEngine);
+        this.crewUIRenderer = new CrewUIRenderer(gameEngine);
+    }	
 
     initFog(layout) {
         if (this.explored.length !== layout.length || (layout.length > 0 && this.explored[0].length !== layout[0].length)) {
@@ -101,11 +104,11 @@ class ShipRenderer {
         this.offsetY = (ctx.canvas.height - mapHeight) / 2;
         ctx.save();
         ctx.translate(this.offsetX, this.offsetY);
-        this.drawGrid(ctx, layout, ship.systems);
+        this.tileRenderer.render(ctx, layout, ship.systems);
         if (this.powerUI) {
             this.powerUI.renderRoomOverlays(ctx, layout, 0, 0, this.tileSize);
         }
-        this.drawCrew(ctx, ship);
+        this.crewUIRenderer.drawCrew(ctx, ship, this.visible);
         this.renderOxygenBars(ctx, ship);
         this.renderEngineThruster(ctx, ship);
         this.renderWeaponTurrets(ctx, ship);
@@ -127,7 +130,7 @@ class ShipRenderer {
             this.game.state.hazardUI.render(ctx, this, player);
         }
 
-        this.drawFog(ctx, layout);
+        this.crewUIRenderer.drawFog(ctx, layout, this.visible);
         ctx.restore();
 
         // Render station if near one
@@ -136,229 +139,6 @@ class ShipRenderer {
         this.renderShields(ctx);
     }
 
-    drawGrid(ctx, layout, systems) {
-        for (let y = 0; y < layout.length; y++) {
-            for (let x = 0; x < layout[y].length; x++) {
-                const tile = layout[y][x];
-                const posX = x * this.tileSize;
-                const posY = y * this.tileSize;
-
-                // Tile 0 = outer space, make it COMPLETELY transparent (no fill, no grid)
-                if (tile === 0) {
-                    continue; // Don't draw anything - let starfield show through
-                }
-                ctx.fillStyle = '#0b1120';
-                ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(posX, posY, this.tileSize, this.tileSize);
-                if (tile === 1) {
-                    ctx.fillStyle = '#1e293b';
-                    ctx.fillRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-                    ctx.shadowColor = '#00f0ff';
-                    ctx.shadowBlur = 10;
-                    ctx.strokeStyle = '#00f0ff';
-                    ctx.lineWidth = 1.5;
-                    ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
-                    ctx.shadowBlur = 0;
-                } else if (tile === 3) {
-                    ctx.strokeStyle = '#334155';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
-                    ctx.fillStyle = '#64748b';
-                    const s = 4;
-                    ctx.fillRect(posX + 4, posY + 4, s, s);
-                    ctx.fillRect(posX + this.tileSize - 4 - s, posY + 4, s, s);
-                    ctx.fillRect(posX + 4, posY + this.tileSize - 4 - s, s, s);
-                    ctx.fillRect(posX + this.tileSize - 4 - s, posY + this.tileSize - 4 - s, s, s);
-                } else if (tile === 4) {
-                    ctx.fillStyle = '#1e293b';
-                    ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.rect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-                    ctx.clip();
-                    ctx.fillStyle = '#d97706';
-                    ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-                    ctx.fillStyle = '#000';
-                    ctx.lineWidth = 4;
-                    for (let i = -this.tileSize; i < this.tileSize * 2; i += 8) {
-                        ctx.beginPath();
-                        ctx.moveTo(posX + i, posY);
-                        ctx.lineTo(posX + i + 8, posY + this.tileSize);
-                        ctx.lineTo(posX + i + 4, posY + this.tileSize);
-                        ctx.lineTo(posX + i - 4, posY);
-                        ctx.fill();
-                    }
-                    ctx.restore();
-                    ctx.strokeStyle = '#d97706';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-                } else if (tile === 5) {
-                    ctx.fillStyle = '#0f172a';
-                    ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-                    ctx.fillStyle = '#059669';
-                    ctx.fillRect(posX, posY, 6, this.tileSize);
-                    ctx.fillRect(posX + this.tileSize - 6, posY, 6, this.tileSize);
-                    ctx.fillStyle = '#34d399';
-                    ctx.fillRect(posX + 2, posY + this.tileSize / 2 - 2, 2, 4);
-                    ctx.fillRect(posX + this.tileSize - 4, posY + this.tileSize / 2 - 2, 2, 4);
-                } else if (tile === 7) {
-                    // Infirmary - reddish floor with medical cross
-                    ctx.fillStyle = '#2d1a1a'; // Dark red floor
-                    ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-
-                    // Medical cross
-                    ctx.fillStyle = '#ff5555';
-                    const centerX = posX + this.tileSize / 2;
-                    const centerY = posY + this.tileSize / 2;
-                    const crossSize = this.tileSize * 0.4;
-                    const crossWidth = crossSize * 0.3;
-
-                    // Vertical bar  
-                    ctx.fillRect(centerX - crossWidth / 2, centerY - crossSize / 2, crossWidth, crossSize);
-                    // Horizontal bar
-                    ctx.fillRect(centerX - crossSize / 2, centerY - crossWidth / 2, crossSize, crossWidth);
-
-                    // Border
-                    ctx.strokeStyle = 'rgba(255, 85, 85, 0.3)';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(posX, posY, this.tileSize, this.tileSize);
-                }
-            }
-        }
-        for (const sys of systems) {
-            const posX = sys.x * this.tileSize;
-            const posY = sys.y * this.tileSize;
-
-            // Check if system has a module installed
-            const systemToHardpoint = {
-                'bridge': 'bridge',
-                'shield': 'shield',
-                'engine': 'engine',
-                'jumpdrive': 'jumpDrive',
-                'reactor': 'reactor',
-                'weapon': sys.id === 'weapons1' ? 'weapon1' : 'weapon2'
-            };
-            const hardpointKey = systemToHardpoint[sys.type];
-            const hasModule = hardpointKey && this.game.state.ship.hardpoints[hardpointKey];
-
-            // Darker appearance if no module installed
-            const alpha = hasModule ? 0.2 : 0.05;
-            const shadowBlur = hasModule ? 15 : 5;
-
-            ctx.shadowColor = sys.color;
-            ctx.shadowBlur = shadowBlur;
-            ctx.fillStyle = sys.color;
-            ctx.globalAlpha = alpha;
-            ctx.fillRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-            ctx.globalAlpha = 1.0;
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = hasModule ? sys.color : '#444';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
-
-
-
-            // Draw system ID
-            ctx.fillStyle = hasModule ? '#fff' : '#666';
-            ctx.font = 'bold 10px "Courier New", monospace';
-            ctx.textAlign = 'center';
-            ctx.fillText(sys.id.substring(0, 3).toUpperCase(), posX + this.tileSize / 2, posY + this.tileSize / 2 + 4);
-        }
-    }
-
-    drawCrew(ctx, ship) {
-        if (!ship.crew || ship.crew.length === 0) return;
-        for (const crewMember of ship.crew) {
-            const posX = crewMember.x || 0;
-            const posY = crewMember.y || 0;
-            const radius = 8;
-            ctx.save();
-            ctx.shadowColor = this.getCrewColor(crewMember.role);
-            ctx.shadowBlur = 12;
-            ctx.fillStyle = this.getCrewColor(crewMember.role);
-            ctx.beginPath();
-            ctx.arc(posX, posY, radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.beginPath();
-            ctx.arc(posX, posY, radius - 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = this.getCrewColor(crewMember.role);
-            ctx.beginPath();
-            ctx.arc(posX, posY, radius - 5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
-            const gridX = Math.floor(posX / this.tileSize);
-            const gridY = Math.floor(posY / this.tileSize);
-            if (this.visible && this.visible[gridY] && this.visible[gridY][gridX]) {
-                ctx.fillStyle = '#fff';
-                ctx.font = '9px "Courier New", monospace';
-                ctx.textAlign = 'center';
-                ctx.fillText(crewMember.name.split(' ')[0], posX, posY - radius - 4);
-
-                // REPAIRING indicator + progress bar
-                if (crewMember.state === 'repairing' && crewMember.repairProgress !== undefined) {
-                    const progress = crewMember.repairProgress;
-
-                    // "REPAIRING" text
-                    ctx.fillStyle = '#00ff00';
-                    ctx.font = 'bold 10px "Rajdhani", sans-serif';
-                    ctx.fillText('REPAIRING', posX, posY - radius - 18);
-
-                    // Progress bar
-                    const barWidth = 40;
-                    const barHeight = 4;
-                    const barX = posX - barWidth / 2;
-                    const barY = posY - radius - 30;
-
-                    // Background
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-                    ctx.fillRect(barX, barY, barWidth, barHeight);
-
-                    // Progress fill
-                    ctx.fillStyle = '#00ff00';
-                    ctx.fillRect(barX, barY, barWidth * progress, barHeight);
-
-                    // Border
-                    ctx.strokeStyle = '#00f0ff';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(barX, barY, barWidth, barHeight);
-                }
-            }
-        }
-    }
-
-    getCrewColor(role) {
-        const colors = {
-            'Engineer': '#fbbf24',
-            'Pilot': '#60a5fa',
-            'Gunner': '#ef4444',
-            'Medic': '#34d399'
-        };
-        return colors[role] || '#9ca3af';
-    }
-
-    drawFog(ctx, layout) {
-        for (let y = 0; y < layout.length; y++) {
-            for (let x = 0; x < layout[0].length; x++) {
-                const posX = x * this.tileSize;
-                const posY = y * this.tileSize;
-
-                // Skip tile 0 (outer space) - let starfield show through
-                if (layout[y][x] === 0) {
-                    continue;
-                }
-
-                // Only draw shadow for non-visible tiles (all ship tiles are pre-explored)
-                if (!this.visible[y][x]) {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-                    ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-                }
-            }
-        }
-    }
 
     /**
      * Render oxygen level indicators for each room
