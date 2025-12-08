@@ -249,6 +249,13 @@ class CrewRepairUI {
         const breach = this.game.state.hazardManager.breaches[breachIndex];
         if (!breach) return;
 
+        // Make sure crew is not assigned to a system
+        const assignedSystem = this.game.state.ship.systems.find(s => s.assignedCrew?.id === crewMember.id);
+        if (assignedSystem) {
+            assignedSystem.assignedCrew = null;
+            console.log(`[CrewRepairUI] Unassigned ${crewMember.name} from ${assignedSystem.type} system`);
+        }
+
         // Set crew target
         crewMember.targetBreach = breachIndex;
         crewMember.targetX = breach.x * 32 + 16;
@@ -256,7 +263,7 @@ class CrewRepairUI {
         crewMember.state = 'moving';
         crewMember.path = [];
 
-        console.log(`[CrewRepairUI] Assigned ${crewMember.name} to breach at (${breach.x}, ${breach.y})`);
+        console.log(`[CrewRepairUI] Assigned ${crewMember.name} to breach at (${breach.x}, ${breach.y}) - state set to 'moving'`);
 
         this.hide();
     }
