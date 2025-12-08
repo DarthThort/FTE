@@ -225,36 +225,6 @@ class CrewManager {
                 }
             }
 
-            // NEW: Check if crew reached their breach target and start repairing
-            if (crew.targetBreach !== undefined && crew.state === 'moving') {
-                const breach = this.state.hazardManager.breaches[crew.targetBreach];
-                console.log(`[CrewManager] ${crew.name} has targetBreach ${crew.targetBreach}, breach exists: ${!!breach}`);
-
-                if (breach) {
-                    const dx = crew.x - (breach.x * 32 + 16);
-                    const dy = crew.y - (breach.y * 32 + 16);
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    console.log(`[CrewManager] ${crew.name} distance to breach: ${dist.toFixed(1)}px (threshold: 48px)`);
-
-                    // If within 1.5 tiles (48px), start repairing
-                    if (dist < 48) {
-                        console.log(`[CrewManager] ${crew.name} STARTING REPAIR state='repairing'`);
-                        crew.state = 'repairing';
-                        crew.repairProgress = 0;
-                        crew.targetX = breach.x * 32 + 16;
-                        crew.targetY = breach.y * 32 + 16;
-                    }
-                } else {
-                    // Breach was already repaired by someone else, return to idle
-                    crew.state = 'idle';
-                    crew.targetBreach = undefined;
-                    crew.repairProgress = 0;
-                    crew.targetX = null;
-                    crew.targetY = null;
-                }
-            }
-
             // NEW: Handle repairing state
             if (crew.state === 'repairing' && crew.targetBreach !== undefined) {
                 const breach = this.state.hazardManager.breaches[crew.targetBreach];
