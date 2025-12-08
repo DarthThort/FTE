@@ -256,14 +256,17 @@ class CrewRepairUI {
             console.log(`[CrewRepairUI] Unassigned ${crewMember.name} from ${assignedSystem.type} system`);
         }
 
-        // Set crew to move to breach location
+        // HACK: Teleport crew to breach and start repairing immediately (bypassing movement)
+        crewMember.x = breach.x * 32 + 16;
+        crewMember.y = breach.y * 32 + 16;
         crewMember.targetBreach = breachIndex;
         crewMember.targetX = breach.x * 32 + 16;
         crewMember.targetY = breach.y * 32 + 16;
-        crewMember.state = 'moving';  // Crew will walk to breach
+        crewMember.state = 'repairing';  // GO STRAIGHT TO REPAIRING
+        crewMember.repairProgress = 0;
         crewMember.path = [];
 
-        console.log(`[CrewRepairUI] Assigned ${crewMember.name} to breach at (${breach.x}, ${breach.y}) - crew will walk there`);
+        console.log(`[CrewRepairUI] 🔧 HACK: ${crewMember.name} TELEPORTED to breach and REPAIRING NOW`);
 
         this.hide();
     }
