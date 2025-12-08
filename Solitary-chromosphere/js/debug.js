@@ -134,6 +134,26 @@ window.debug = {
     },
 
     /**
+     * Create a fire at specified tile coordinates
+     * @param {number} x - Tile X coordinate
+     * @param {number} y - Tile Y coordinate
+     */
+    createFire(x, y) {
+        if (!window.game) {
+            console.error('[Debug] Game not loaded');
+            return;
+        }
+
+        if (!window.game.state.hazardManager) {
+            console.error('[Debug] HazardManager not initialized');
+            return;
+        }
+
+        window.game.state.hazardManager.createFire(x, y);
+        console.log(`[Debug] Fire created at (${x}, ${y})`);
+    },
+
+    /**
      * Show help
      */
     help() {
