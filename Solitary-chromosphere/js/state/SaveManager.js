@@ -7,7 +7,7 @@
 class SaveManager {
     constructor(gameState) {
         this.state = gameState;
-        this.SAVE_KEY = 'antigravity_save';
+        this.SAVE_KEY = 'spaceSimSave';  // Match GameState's current key
     }
 
     /**

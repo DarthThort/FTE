@@ -3,6 +3,9 @@ class GameState {
         this.credits = 10000; // Testing: Start with more credits
         this.scrap = 0; // Phase 11: Scrap resource for upgrades
         this.fuel = 100; // Starting fuel
+        // State modules
+        this.saveManager = null;  // Will be initialized after all properties
+        this.portGenerator = null;
 
         this.ship = {
             name: "Rusty Tub",
@@ -166,20 +169,6 @@ class GameState {
 
         // Initialize hazard UI for repair prompts and progress (Phase 1)
         this.hazardUI = new HazardUI(this);
-
-        // Star Systems (Sol + 10 nearest real systems)
-        this.galaxy = null;
-        this.currentSystem = null;
-        this.currentPlanet = null;
-
-        this.portGenerator.generatePortContent();
-        this.listeners = [];
-        this.loadGame();
-
-        // Initialize weapons from equipped modules (Phase 8)
-        this.recalculateShipStats();
-
-        // Log all system coordinates for debugging
         console.log('═══════════════════════════════════════');
         console.log('SHIP SYSTEMS COORDINATES:');
         console.log('═══════════════════════════════════════');
@@ -322,32 +311,7 @@ class GameState {
     }
 
     saveGame() {
-        // Create ship data without systems (to avoid saving old positions)
-        const { systems, ...shipDataWithoutSystems } = this.ship;
-
-        const data = {
-            credits: this.credits,
-            scrap: this.scrap,
-            fuel: this.fuel,
-            ship: {
-                ...shipDataWithoutSystems,
-                crew: this.ship.crew.map(c => ({
-                    ...c,
-                    targetX: null,
-                    targetY: null,
-                    path: [],
-                    state: 'idle'
-                }))
-            },
-            ownedModules: this.ownedModules,
-            portCrew: this.port.crew,
-            contracts: this.port.contracts,
-            galaxy: this.galaxy,
-            currentSystem: this.currentSystem,
-            currentPlanet: this.currentPlanet
-        };
-        localStorage.setItem('spaceSimSave', JSON.stringify(data));
-        console.log('Game Saved');
+        this.saveManager.saveGame();
     }
 
     initializeGalaxy() {
