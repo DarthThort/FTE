@@ -28,55 +28,68 @@ class SceneManager {
             // Update hazard UI (proximity check, repair progress)
             if (this.game.state.hazardUI) {
                 this.game.state.hazardUI.update(dt, this.player);
-                handleCrewInteraction() {
-                    const mouse = this.game.input.getMousePosition();
-                    const crewUnderMouse = this.getCrewAtPosition(mouse.x, mouse.y);
+            }
 
-                    if (crewUnderMouse) {
-                        this.hoveredCrew = crewUnderMouse;
-                        this.showCrewTooltip(crewUnderMouse, mouse.x, mouse.y);
 
-                        if (this.game.input.wasClicked()) {
-                            if (this.game.ui) {
-                                this.game.ui.showCrewDetail(crewUnderMouse.id);
-                            }
-                        }
-                    } else {
-                        this.hoveredCrew = null;
-                        this.hideCrewTooltip();
-                    }
+            this.shipRenderer.computeVisibility(this.player);
+            this.handleCrewInteraction();
+        } else if (this.currentScene === 'COMBAT') {
+            // Combat scene update
+            if (this.game.state.combatManager) {
+                this.game.state.combatManager.tick(dt);
+            }
+        }
+    }
+
+    handleCrewInteraction() {
+        const mouse = this.game.input.getMousePosition();
+        const crewUnderMouse = this.getCrewAtPosition(mouse.x, mouse.y);
+
+        if (crewUnderMouse) {
+            this.hoveredCrew = crewUnderMouse;
+            this.showCrewTooltip(crewUnderMouse, mouse.x, mouse.y);
+
+            if (this.game.input.wasClicked()) {
+                if (this.game.ui) {
+                    this.game.ui.showCrewDetail(crewUnderMouse.id);
                 }
+            }
+        } else {
+            this.hoveredCrew = null;
+            this.hideCrewTooltip();
+        }
+    }
 
-                getCrewAtPosition(mouseX, mouseY) {
-                    const offsetX = this.shipRenderer.offsetX || 0;
-                    const offsetY = this.shipRenderer.offsetY || 0;
+    getCrewAtPosition(mouseX, mouseY) {
+        const offsetX = this.shipRenderer.offsetX || 0;
+        const offsetY = this.shipRenderer.offsetY || 0;
 
-                    const canvasX = mouseX - offsetX;
-                    const canvasY = mouseY - offsetY;
+        const canvasX = mouseX - offsetX;
+        const canvasY = mouseY - offsetY;
 
-                    for (const crew of this.game.state.ship.crew) {
-                        const dx = canvasX - crew.x;
-                        const dy = canvasY - crew.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
+        for (const crew of this.game.state.ship.crew) {
+            const dx = canvasX - crew.x;
+            const dy = canvasY - crew.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
 
-                        if (distance <= 12) {
-                            return crew;
-                        }
-                    }
+            if (distance <= 12) {
+                return crew;
+            }
+        }
 
-                    return null;
-                }
+        return null;
+    }
 
-                showCrewTooltip(crew, mouseX, mouseY) {
-                    if (!this.tooltip) return;
+    showCrewTooltip(crew, mouseX, mouseY) {
+        if (!this.tooltip) return;
 
-                    const primarySkill = this.game.state.getRolePrimarySkill(crew.role);
-                    const skillLevel = crew.skills[primarySkill]?.level || 1;
+        const primarySkill = this.game.state.getRolePrimarySkill(crew.role);
+        const skillLevel = crew.skills[primarySkill]?.level || 1;
 
-                    const assignedSystem = this.game.state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
-                    const assignment = assignedSystem ? assignedSystem.name : 'Unassigned';
+        const assignedSystem = this.game.state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
+        const assignment = assignedSystem ? assignedSystem.name : 'Unassigned';
 
-                    this.tooltip.innerHTML = `
+        this.tooltip.innerHTML = `
             <div style="font-family: 'Rajdhani', sans-serif; color: var(--text);">
                 <div style="font-size: 0.9rem; font-weight: 600; color: var(--secondary); margin-bottom: 6px;">${crew.name}</div>
                 <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px;">${crew.species} · ${crew.role}</div>
@@ -103,30 +116,30 @@ class SceneManager {
             </div>
         `;
 
-                    this.tooltip.style.display = 'block';
-                    this.tooltip.style.left = (mouseX + 15) + 'px';
-                    this.tooltip.style.top = (mouseY + 15) + 'px';
-                }
+        this.tooltip.style.display = 'block';
+        this.tooltip.style.left = (mouseX + 15) + 'px';
+        this.tooltip.style.top = (mouseY + 15) + 'px';
+    }
 
-                hideCrewTooltip() {
-                    if (this.tooltip) {
-                        this.tooltip.style.display = 'none';
-                    }
-                }
+    hideCrewTooltip() {
+        if (this.tooltip) {
+            this.tooltip.style.display = 'none';
+        }
+    }
 
-                render(ctx) {
-                    const deltaTime = this.lastDeltaTime || 0.016;
+    render(ctx) {
+        const deltaTime = this.lastDeltaTime || 0.016;
 
-                    if (this.currentScene === 'SHIP') {
-                        this.shipRenderer.render(ctx, deltaTime);
-                        this.player.render(ctx);
-                    } else if (this.currentScene === 'PORT') {
-                        ctx.fillStyle = '#1a1a2e';
-                        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                    } else if (this.currentScene === 'COMBAT') {
-                        // Render ship (no player control during combat)
-                        this.shipRenderer.render(ctx, deltaTime);
-                        // Combat UI is rendered via UIManager
-                    }
-                }
-            }
+        if (this.currentScene === 'SHIP') {
+            this.shipRenderer.render(ctx, deltaTime);
+            this.player.render(ctx);
+        } else if (this.currentScene === 'PORT') {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        } else if (this.currentScene === 'COMBAT') {
+            // Render ship (no player control during combat)
+            this.shipRenderer.render(ctx, deltaTime);
+            // Combat UI is rendered via UIManager
+        }
+    }
+}
