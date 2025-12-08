@@ -297,6 +297,35 @@ class ShipRenderer {
                 ctx.font = '9px "Courier New", monospace';
                 ctx.textAlign = 'center';
                 ctx.fillText(crewMember.name.split(' ')[0], posX, posY - radius - 4);
+
+                // REPAIRING indicator + progress bar
+                if (crewMember.state === 'repairing' && crewMember.repairProgress !== undefined) {
+                    const progress = crewMember.repairProgress;
+
+                    // "REPAIRING" text
+                    ctx.fillStyle = '#00ff00';
+                    ctx.font = 'bold 10px "Rajdhani", sans-serif';
+                    ctx.fillText('REPAIRING', posX, posY - radius - 18);
+
+                    // Progress bar
+                    const barWidth = 40;
+                    const barHeight = 4;
+                    const barX = posX - barWidth / 2;
+                    const barY = posY - radius - 30;
+
+                    // Background
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                    ctx.fillRect(barX, barY, barWidth, barHeight);
+
+                    // Progress fill
+                    ctx.fillStyle = '#00ff00';
+                    ctx.fillRect(barX, barY, barWidth * progress, barHeight);
+
+                    // Border
+                    ctx.strokeStyle = '#00f0ff';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(barX, barY, barWidth, barHeight);
+                }
             }
         }
     }
@@ -503,12 +532,12 @@ class ShipRenderer {
         const shipCenterY = this.offsetY + (25 * this.tileSize) / 2;
         const baseRadius = 360;
 
-        
+
         // Only show impact effects during active combat
-const inActiveCombat = this.game.state.combatManager && this.game.state.combatManager.active;
-// Draw impact wave FIRST (even if shields are down) - use separate rendering  
-const waveProgress = inActiveCombat ? this.game.state.shieldManager.impactWaveProgress : 0;
-const flashTime = inActiveCombat ? this.game.state.shieldManager.impactFlashTime : 0;
+        const inActiveCombat = this.game.state.combatManager && this.game.state.combatManager.active;
+        // Draw impact wave FIRST (even if shields are down) - use separate rendering  
+        const waveProgress = inActiveCombat ? this.game.state.shieldManager.impactWaveProgress : 0;
+        const flashTime = inActiveCombat ? this.game.state.shieldManager.impactFlashTime : 0;
 
         // DEBUG: Log effect values when they're active
         if (waveProgress > 0 || flashTime > 0) {
