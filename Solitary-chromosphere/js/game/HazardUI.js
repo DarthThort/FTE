@@ -138,7 +138,11 @@ class HazardUI {
      * Render repair prompt near breach
      */
     renderRepairPrompt(ctx, breach, shipRenderer) {
-        const screenPos = shipRenderer.gridToScreen(breach.x, breach.y);
+        // Calculate screen position manually
+        const screenPos = {
+            x: breach.x * shipRenderer.tileSize + shipRenderer.tileSize / 2,
+            y: breach.y * shipRenderer.tileSize + shipRenderer.tileSize / 2
+        };
 
         ctx.save();
         ctx.font = 'bold 14px "Rajdhani", sans-serif';
@@ -164,7 +168,11 @@ class HazardUI {
      * Render player repair progress bar
      */
     renderPlayerRepairProgress(ctx, breach, progress, shipRenderer) {
-        const screenPos = shipRenderer.gridToScreen(breach.x, breach.y);
+        // Calculate screen position manually
+        const screenPos = {
+            x: breach.x * shipRenderer.tileSize + shipRenderer.tileSize / 2,
+            y: breach.y * shipRenderer.tileSize + shipRenderer.tileSize / 2
+        };
 
         ctx.save();
         const barWidth = 100;
