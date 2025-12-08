@@ -28,6 +28,8 @@ class PortGenerator {
     generateCrew() {
         const firstNames = ['Alex', 'Jordan', 'Sam', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Quinn', 'Avery', 'Drew'];
         const lastNames = ['Chen', 'Patel', 'Kim', 'Rodriguez', 'O\'Brien', 'Yamamoto', 'Singh', 'Mueller', 'Santos', 'Kowalski'];
+        const species = ['Human', 'Vulcan', 'Andorian', 'Tellarite'];
+        const genders = ['Male', 'Female', 'Non-binary'];
         const availableCrew = [];
 
         for (let i = 0; i < 5; i++) {
@@ -37,11 +39,21 @@ class PortGenerator {
             const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
 
             availableCrew.push({
-                id: 'crew_' + Date.now() + '_' + i,
+                id: Date.now() + i,  // Numeric ID
                 name: `${firstName} ${lastName}`,
                 role: role,
+                species: species[Math.floor(Math.random() * species.length)],
+                gender: genders[Math.floor(Math.random() * genders.length)],
+                age: 20 + Math.floor(Math.random() * 40),  // 20-60 years old
+                health: 100,
+                maxHealth: 100,
+                morale: 70 + Math.floor(Math.random() * 30),  // 70-100
                 cost: 500 + Math.floor(Math.random() * 1000),
-                skills: this.generateCrewSkills(role)
+                skills: this.generateCrewSkills(role),
+                x: 0,
+                y: 0,
+                state: 'idle',
+                assignedSystem: null
             });
         }
 
@@ -53,33 +65,33 @@ class PortGenerator {
      */
     generateCrewSkills(role) {
         const baseSkills = {
-            piloting: 1,
-            weapons: 1,
-            engineering: 1,
-            combat: 1,
-            medical: 1
+            piloting: { level: 1, xp: 0 },
+            weapons: { level: 1, xp: 0 },
+            engineering: { level: 1, xp: 0 },
+            combat: { level: 1, xp: 0 },
+            medical: { level: 1, xp: 0 }
         };
 
         switch (role) {
             case 'Pilot':
-                baseSkills.piloting = 3 + Math.floor(Math.random() * 2);
-                baseSkills.combat = 2;
+                baseSkills.piloting = { level: 3 + Math.floor(Math.random() * 2), xp: 0 };
+                baseSkills.combat = { level: 2, xp: 0 };
                 break;
             case 'Engineer':
-                baseSkills.engineering = 3 + Math.floor(Math.random() * 2);
+                baseSkills.engineering = { level: 3 + Math.floor(Math.random() * 2), xp: 0 };
                 break;
             case 'Weapon Specialist':
-                baseSkills.weapons = 3 + Math.floor(Math.random() * 2);
-                baseSkills.combat = 2;
+                baseSkills.weapons = { level: 3 + Math.floor(Math.random() * 2), xp: 0 };
+                baseSkills.combat = { level: 2, xp: 0 };
                 break;
             case 'Medic':
-                baseSkills.medical = 3 + Math.floor(Math.random() * 2);
+                baseSkills.medical = { level: 3 + Math.floor(Math.random() * 2), xp: 0 };
                 break;
             default:
                 // General staff - balanced
                 const skills = ['piloting', 'weapons', 'engineering', 'medical'];
                 const boostedSkill = skills[Math.floor(Math.random() * skills.length)];
-                baseSkills[boostedSkill] = 2;
+                baseSkills[boostedSkill] = { level: 2, xp: 0 };
                 break;
         }
 

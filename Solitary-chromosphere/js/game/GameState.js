@@ -200,6 +200,12 @@ class GameState {
         // Delegate to SaveManager
         const loaded = this.saveManager.loadGame();
 
+        // If no save exists, initialize galaxy
+        if (!loaded) {
+            console.log('[GameState] No save found - initializing new game');
+            this.galaxyManager.initializeGalaxy();
+        }
+
         // Handle pre-travel save (retry mechanism)
         if (loaded) {
             const preTravelData = localStorage.getItem('pre_travel_save');

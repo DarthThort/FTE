@@ -14,7 +14,7 @@ class PortUI {
 
         // Generate procedural crew for this station (1-8 crew members)
         const crewCount = Math.floor(Math.random() * 8) + 1;
-        const proceduralCrew = this.game.state.portGenerator.generateProceduralCrew(
+        const proceduralCrew = this.game.state.portGenerator.generateCrew(
             crewCount,
             this.game.state.currentSystem.id,
             this.game.state.currentPlanet.id
@@ -441,3 +441,4 @@ class PortUI {
         }, 100);
     }
 }
+
