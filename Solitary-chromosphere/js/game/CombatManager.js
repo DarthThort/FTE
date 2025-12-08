@@ -10,6 +10,11 @@ class CombatManager {
         this.state = gameState;
         this.enemy = enemyShip;
 
+        // Combat modules
+        this.damageCalculator = new DamageCalculator(gameState);
+        this.combatAI = new CombatAI(gameState, enemyShip);
+        this.combatRewards = new CombatRewards(gameState);
+
         // Combat state
         this.active = false;
         this.paused = false;
@@ -18,10 +23,6 @@ class CombatManager {
         // Targeting
         this.playerTarget = null; // Enemy system being targeted
         this.enemyTarget = null; // Player system being targeted
-
-        // AI
-        this.aiDecisionCooldown = 0;
-        this.aiDecisionInterval = 2.0; // AI makes decisions every 2 seconds
 
         // Combat results
         this.victor = null;
@@ -108,79 +109,26 @@ class CombatManager {
      * Enemy AI tick
      */
     tickEnemyAI(dt) {
-        this.aiDecisionCooldown -= dt;
+        this.combatAI.update(dt);
 
-        if (this.aiDecisionCooldown <= 0) {
-            this.aiDecisionCooldown = this.aiDecisionInterval;
-            this.makeAIDecision();
+        const decision = this.combatAI.makeDecision();
+
+        if (decision.flee) {
+            this.attemptEnemyFlee();
+        } else if (decision.surrender) {
+            this.enemySurrender();
+        } else if (decision.target) {
+            this.enemyTarget = decision.target;
         }
     }
 
     /**
      * AI decision making
      */
-    makeAIDecision() {
-        // Update AI state based on situation
-        this.enemy.updateAIState(this.state.ship);
-
-        // Check for flee/surrender
-        if (this.enemy.aiState === 'fleeing') {
-            this.attemptEnemyFlee();
-            return;
-        }
-
-        if (this.enemy.aiState === 'surrendering') {
-            this.enemySurrender();
-            return;
-        }
-
-        // Select target
-        this.selectEnemyTarget();
-
-        // Charge idle weapons
-        this.enemy.weapons.forEach(weapon => {
-            if (weapon.state === 'idle') {
-                this.enemy.chargeWeapon(weapon.id);
-            }
-        });
-    }
 
     /**
      * Enemy selects target
      */
-    selectEnemyTarget() {
-        const playerSystems = this.state.ship.systems.filter(s => !s.offline);
-
-        if (playerSystems.length === 0) {
-            this.enemyTarget = null;
-            return;
-        }
-
-        // AI targeting strategy based on state
-        if (this.enemy.aiState === 'aggressive') {
-            // Target weapons or shields
-            const priorityTargets = playerSystems.filter(s =>
-                s.type === 'weapon' || s.type === 'shield'
-            );
-
-            if (priorityTargets.length > 0) {
-                this.enemyTarget = priorityTargets[Math.floor(Math.random() * priorityTargets.length)];
-            } else {
-                this.enemyTarget = playerSystems[Math.floor(Math.random() * playerSystems.length)];
-            }
-        } else if (this.enemy.aiState === 'defensive') {
-            // Target engines to prevent chase
-            const engines = playerSystems.find(s => s.type === 'engine');
-            if (engines) {
-                this.enemyTarget = engines;
-            } else {
-                this.enemyTarget = playerSystems[Math.floor(Math.random() * playerSystems.length)];
-            }
-        } else {
-            // Random targeting
-            this.enemyTarget = playerSystems[Math.floor(Math.random() * playerSystems.length)];
-        }
-    }
 
     /**
      * Auto-fire ready weapons
@@ -235,194 +183,8 @@ class CombatManager {
     }
 
     /**
-     * Apply weapon damage to target
-     */
-    applyWeaponDamage(weapon, target) {
-        // Get weapon module stats if available
-        let weaponModule = null;
-        if (weapon.moduleId) {
-            weaponModule = getModule(weapon.moduleId);
-        }
-
-        for (let i = 0; i < weapon.shots; i++) {
-            // Use module stats if available, otherwise fallback to weapon.damage
-            const shieldDamage = weaponModule?.stats?.shieldDamage || weapon.damagePerShot || weapon.damage || 10;
-            const hullDamage = weaponModule?.stats?.hullDamage || weapon.damagePerShot || weapon.damage || 10;
-
-            // Special effects from module
-            const penetration = weaponModule?.stats?.penetration || 0;
-            const ionChance = weaponModule?.stats?.ionChance || 0;
-            const burnDamage = weaponModule?.stats?.burnDamage || 0;
-            const burnDuration = weaponModule?.stats?.burnDuration || 0;
-
-            // Check if shields block (for player ship)
-            if (target === this.state.ship && this.state.shieldManager) {
-                // PHASE 10: Check evasion BEFORE applying any damage
-                const engineModule = getModule(this.state.ship.hardpoints.engine);
-                const evasionBonus = engineModule?.stats?.evasionBonus || 0;
-
-                // Roll for evasion (only once per shot, not per weapon fire)
-                if (evasionBonus > 0 && i === 0 && Math.random() < evasionBonus) {
-                    console.log('[Combat] EVADED! Attack missed!');
-
-                    // Show evade message
-                    if (this.state.game && this.state.game.damageNumbers) {
-                        const shipX = this.state.game.canvas.width / 2;
-                        const shipY = this.state.game.canvas.height / 2;
-                        this.state.game.damageNumbers.add(shipX, shipY - 30, 'EVADED!', '#00ff00');
-                    }
-                    return; // Skip all damage from this weapon
-                }
-
-                // Calculate damage to shields (may be reduced by penetration)
-                const effectiveShieldDamage = shieldDamage * (1 - penetration);
-                const overflowDamage = this.state.shieldManager.takeDamage(effectiveShieldDamage);
-
-                // Show shield damage number (Blue/Cyan)
-                if (this.state.game && this.state.game.damageNumbers) {
-                    const shipX = this.state.game.canvas.width / 2;
-                    const shipY = this.state.game.canvas.height / 2;
-                    const absorbed = effectiveShieldDamage - overflowDamage;
-                    if (absorbed > 0) {
-                        this.state.game.damageNumbers.add(shipX, shipY - 50, Math.round(absorbed), '#00f0ff');
-                    }
-                }
-
-                // If shields absorbed all damage
-                if (overflowDamage === 0 && penetration === 0) {
-                    console.log(`[Combat] Shields absorbed all ${effectiveShieldDamage.toFixed(1)} shield damage`);
-                    continue;
-                }
-
-                // Calculate hull damage (overflow from shields + penetration bonus + base hull damage)
-                const totalHullDamage = overflowDamage + (hullDamage * penetration);
-
-                if (totalHullDamage > 0) {
-                    console.log(`[Combat] ${totalHullDamage.toFixed(1)} damage to hull (${overflowDamage.toFixed(1)} overflow + ${(hullDamage * penetration).toFixed(1)} penetration)`);
-                    target.health = Math.max(0, target.health - totalHullDamage);
-
-                    // Notify state change to update HUD
-                    if (this.state.notify) this.state.notify();
-                    console.log(`[Combat] Player Hull: ${target.health}/${target.maxHealth}`);
-
-                    // Show hull damage number (Red)
-                    if (this.state.game && this.state.game.damageNumbers) {
-                        const shipX = this.state.game.canvas.width / 2;
-                        const shipY = this.state.game.canvas.height / 2;
-                        this.state.game.damageNumbers.add(shipX, shipY, Math.round(totalHullDamage), '#ff0055');
-                    }
-
-                    // 10% chance to create hull breach on damage (reduced from 30%)
-                    if (this.state.hazardManager && Math.random() < 0.10) {
-                        // Random location on ship (avoid edges)
-                        const layout = this.state.ship.layout;
-                        const walkableTiles = [];
-                        for (let y = 1; y < layout.length - 1; y++) {
-                            for (let x = 1; x < layout[y].length - 1; x++) {
-                                if (layout[y][x] === 2 || layout[y][x] === 3 || layout[y][x] === 7) {
-                                    walkableTiles.push({ x, y });
-                                }
-                            }
-                        }
-                        if (walkableTiles.length > 0) {
-                            const tile = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
-                            this.state.hazardManager.createBreach(tile.x, tile.y, 1);
-                        }
-                    }
-
-                    // Apply burn effect if weapon has it
-                    if (burnDamage > 0 && burnDuration > 0) {
-                        // TODO: Implement burn effect tracking
-                        console.log(`[Combat] Burn effect applied: ${burnDamage} damage over ${burnDuration}s`);
-                    }
-                }
-                continue;
-            }
-
-            // Apply damage to enemy (enemy has shields too)
-            if (target === this.enemy) {
-                // Call new takeDamage method with shield and hull damage
-                const result = this.enemy.takeDamage(shieldDamage, hullDamage, penetration);
-
-                if (result.evaded) {
-                    console.log('[Combat] Enemy EVADED!');
-                    if (this.state.game && this.state.game.damageNumbers) {
-                        this.state.game.damageNumbers.add(405, 80, 'EVADED!', '#00ff00');
-                    }
-                    continue;
-                }
-
-                // Show shield damage number (Cyan)
-                if (result.shieldDamage > 0 && this.state.game && this.state.game.damageNumbers) {
-                    this.state.game.damageNumbers.add(405, 60, Math.round(result.shieldDamage), '#00f0ff');
-                    console.log(`[Combat] Enemy shields: ${result.shieldDamage.toFixed(1)} absorbed, ${result.shieldsRemaining}/${this.enemy.maxShields} remaining`);
-                }
-
-                // Show hull damage number (Red)
-                if (result.hullDamage > 0) {
-                    console.log(`[Combat] ${result.hullDamage.toFixed(1)} damage to ${target.name}! Hull: ${target.hull}/${target.maxHull}`);
-
-                    if (this.state.game && this.state.game.damageNumbers) {
-                        this.state.game.damageNumbers.add(405, 80, Math.round(result.hullDamage), '#ff0055');
-                    }
-                }
-
-                // Ion effect - chance to disable enemy system
-                if (ionChance > 0 && Math.random() < ionChance) {
-                    console.log(`[Combat] ION HIT! Enemy system ionized!`);
-                    // TODO: Implement ion effect on enemy systems
-                    if (this.state.game && this.state.game.damageNumbers) {
-                        this.state.game.damageNumbers.add(405, 60, 'ION!', '#00ffff');
-                    }
-                }
-
-                // Burn effect
-                if (burnDamage > 0 && burnDuration > 0) {
-                    console.log(`[Combat] BURN! ${burnDamage} damage over ${burnDuration}s`);
-                    // TODO: Implement burn DOT tracking
-                }
-
-                // Add visual effects
-                if (this.state.game && this.state.game.combatEffects) {
-                    // Hit marker at enemy position
-                    this.state.game.combatEffects.addHitMarker(405, 80, '#fff');
-
-                    // Impact particles (cyan for shield, red for hull)
-                    const particleColor = result.shieldDamage > 0 ? '#00f0ff' : '#ff0055';
-                    this.state.game.combatEffects.addImpactParticles(405, 80, 8, particleColor);
-
-                    // Impact sound
-                    this.state.game.combatEffects.playImpactSound();
-                }
-
-                // Flash enemy overlay on hit
-                const overlay = document.getElementById('enemy-ship-overlay');
-                if (overlay) {
-                    overlay.classList.add('enemy-hit');
-                    setTimeout(() => {
-                        overlay.classList.remove('enemy-hit');
-                    }, 150);
-                }
-            } else {
-                // Fallback for player ship without shield manager
-                target.health = Math.max(0, target.health - hullDamage);
-
-                // Notify state change to update HUD
-                if (this.state.notify) this.state.notify();
-                console.log(`[Combat] ${hullDamage} damage to ${target.name}! Hull: ${target.health}/${target.maxHealth}`);
-
-                // Show hull damage number on player (Red)
-                if (this.state.game && this.state.game.damageNumbers) {
-                    const shipX = this.state.game.canvas.width / 2;
-                    const shipY = this.state.game.canvas.height / 2;
-                    this.state.game.damageNumbers.add(shipX, shipY, Math.round(hullDamage), '#ff0055');
-                }
-            }
-        }
-    }
-
-    /**
      * Fire player weapon
+
      */
     firePlayerWeapon(weaponId) {
         const weaponFire = this.state.weaponManager.fire(weaponId);
@@ -612,16 +374,10 @@ class CombatManager {
      * Attempt enemy flee
      */
     attemptEnemyFlee() {
-        const fleeChance = 0.6; // 60% base chance
-
-        if (Math.random() < fleeChance) {
-            console.log(`${this.enemy.name} has fled!`);
+        if (this.combatAI.attemptFlee()) {
             this.victor = 'player';
-            this.rewards = this.calculateRewards(false); // Partial rewards for flee
+            this.rewards = this.calculateRewards(false);
             this.endCombat();
-        } else {
-            console.log(`${this.enemy.name} failed to flee!`);
-            this.enemy.aiState = 'defensive';
         }
     }
 
@@ -629,9 +385,9 @@ class CombatManager {
      * Enemy surrender
      */
     enemySurrender() {
-        console.log(`${this.enemy.name} surrenders!`);
+        this.combatAI.surrender();
         this.victor = 'player';
-        this.rewards = this.calculateRewards(true); // Full rewards + bonus
+        this.rewards = this.calculateRewards(true);
         this.endCombat();
     }
 
@@ -659,31 +415,7 @@ class CombatManager {
      * Calculate rewards
      */
     calculateRewards(fullRewards) {
-        const base = {
-            credits: this.enemy.creditReward,
-            scrap: this.enemy.scrapValue,
-            systems: []
-        };
-
-        if (!fullRewards) {
-            // Partial rewards for flee
-            base.credits = Math.floor(base.credits * 0.3);
-            base.scrap = Math.floor(base.scrap * 0.3);
-        } else {
-            // Chance for system salvage (10%)
-            if (Math.random() < 0.1) {
-                const salvageableSystem = this.enemy.systems.find(s => !s.offline);
-                if (salvageableSystem) {
-                    base.systems.push({
-                        type: salvageableSystem.type,
-                        name: `Salvaged ${salvageableSystem.name}`,
-                        level: salvageableSystem.level
-                    });
-                }
-            }
-        }
-
-        return base;
+        return this.combatRewards.calculateRewards(this.enemy, fullRewards);
     }
 
     /**
@@ -710,38 +442,7 @@ class CombatManager {
      * Apply rewards to player
      */
     applyRewards() {
-        if (!this.rewards) return;
-
-        // Credits
-        this.state.credits += this.rewards.credits;
-
-        // Scrap
-        const scrapItem = this.state.inventory.find(i => i.id === 'scrap');
-        if (scrapItem) {
-            scrapItem.quantity += this.rewards.scrap;
-        } else {
-            this.state.inventory.push({
-                id: 'scrap',
-                name: 'Scrap Metal',
-                quantity: this.rewards.scrap,
-                value: 25
-            });
-        }
-
-        // Systems
-        this.rewards.systems.forEach(system => {
-            this.state.inventory.push({
-                id: `system_${Date.now()}`,
-                ...system,
-                type: 'module',
-                systemType: system.type
-            });
-        });
-
-        // Update UI and save game
-        this.state.notify();
-        this.state.saveGame();
-        console.log('[Combat] Rewards applied and game saved');
+        this.combatRewards.applyRewards(this.rewards);
     }
 
     /**
