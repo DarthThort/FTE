@@ -110,8 +110,15 @@ class CrewManager {
     }
 
     updateCrewAI() {
+        // DEBUG: Verify this method is called
+        const repairingCrew = this.state.ship.crew.filter(c => c.state === 'repairing');
+        if (repairingCrew.length > 0) {
+            console.log(`[CrewManager] ⚙️ updateCrewAI called - ${repairingCrew.length} crew in 'repairing' state`);
+        }
+
         // Don't move crew if combat is paused
         if (this.state.combatManager && this.state.combatManager.paused) {
+            console.log(`[CrewManager] ⏸️ Combat is PAUSED - skipping crew AI`);
             return;
         }
 
