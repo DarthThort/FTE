@@ -116,6 +116,11 @@ class CrewManager {
         }
 
         for (const crew of this.state.ship.crew) {
+            // DEBUG: Log crew with repairing state
+            if (crew.state === 'repairing') {
+                console.log(`[CrewManager] 🔧 LOOP processing crew ${crew.name} - state='repairing' targetBreach=${crew.targetBreach}`);
+            }
+
             // Check if crew is assigned to a system
             const assignedSystem = this.state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
 
