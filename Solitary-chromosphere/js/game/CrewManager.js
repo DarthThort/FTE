@@ -285,6 +285,7 @@ class CrewManager {
                 const progressPerFrame = (1 / 60) / repairTime;
 
                 crew.repairProgress = (crew.repairProgress || 0) + progressPerFrame;
+                console.log(`[CrewManager] ${crew.name} repairing - progress: ${(crew.repairProgress * 100).toFixed(1)}%`);
 
                 // Complete repair
                 if (crew.repairProgress >= 1.0) {
