@@ -152,6 +152,7 @@ class GameState {
         this.cargoManager = new CargoManager(this);
         this.travelManager = new TravelManager(this);
         this.portGenerator = new PortGenerator(this);
+		this.saveManager = new SaveManager(this);
         this.crewManager = new CrewManager(this);
 
         // Combat system managers
@@ -183,131 +184,27 @@ class GameState {
     }
 
     loadGame() {
-        const savedData = localStorage.getItem('spaceSimSave');
-        if (savedData) {
-            try {
-                const data = JSON.parse(savedData);
-
-                // MIGRATION: Detect and remove old system coordinates
-                if (data.ship && data.ship.systems) {
-                    const hasOldCoords = data.ship.systems.some(s =>
-                        s.x > 19 || s.y > 19 // Old coords were 22,21 etc (out of main ship area)
-                    );
-                    if (hasOldCoords) {
-                        console.warn('⚠️ MIGRATING OLD SAVE - Removing outdated system positions');
-                        delete data.ship.systems;
-                    }
+        // Delegate to SaveManager
+        const loaded = this.saveManager.loadGame();
+        
+        // Handle pre-travel save (retry mechanism)
+        if (loaded) {
+            const preTravelData = localStorage.getItem('pre_travel_save');
+            if (preTravelData) {
+                try {
+                    const saveData = JSON.parse(preTravelData);
+                    console.log('[RETRY] Restoring hull from pre-travel save:', saveData.shipHealth);
+                    this.ship.health = saveData.shipHealth;
+                    localStorage.removeItem('pre_travel_save');
+                    console.log('[RETRY] Hull restored to:', this.ship.health);
+                } catch (e) {
+                    console.error('[RETRY] Failed to load pre-travel save:', e);
+                    localStorage.removeItem('pre_travel_save');
                 }
-
-                this.credits = data.credits;
-                this.scrap = data.scrap || 0;
-                this.fuel = data.fuel || 0;
-                this.ownedModules = data.ownedModules || [];
-
-                // Store fresh system positions before merging save data
-                const freshSystems = [...this.ship.systems];
-
-                this.ship = { ...this.ship, ...data.ship };
-
-                // Restore fresh system positions (don't use saved positions)
-                this.ship.systems = freshSystems;
-
-                // Migrate old saves: add cargo if missing
-                if (!this.ship.cargo) {
-                    this.ship.cargo = {
-                        capacity: 50,
-                        items: []
-                    };
-                    console.log('Migrated save: added cargo system');
-                }
-
-                this.port.crew = data.portCrew || this.port.crew;
-                this.port.contracts = data.contracts || this.port.contracts;
-
-                if (data.galaxy) {
-                    this.galaxy = data.galaxy;
-                    this.currentSystem = data.currentSystem || this.galaxy[0];
-
-                    // Find currentPlanet by ID in the system
-                    if (data.currentPlanet && data.currentPlanet.id) {
-                        this.currentPlanet = this.currentSystem.planets?.find(p => p.id === data.currentPlanet.id);
-                    }
-
-                    // Fallback to first planet if not found
-                    if (!this.currentPlanet && this.currentSystem.planets && this.currentSystem.planets.length > 0) {
-                        this.currentPlanet = this.currentSystem.planets[0];
-                        console.log('[GameState] currentPlanet not found in save, defaulting to first planet');
-                    }
-                } else {
-                    this.initializeGalaxy();
-                }
-
-                if (data.ship.crew) {
-                    this.ship.crew = data.ship.crew.map(c => {
-                        // Migrate crew positions from 20x18 to 25x25 grid
-                        let newX = c.x;
-                        let newY = c.y;
-
-                        // If crew is at old coordinates (< 400px), migrate them
-                        if (c.x < 400) {
-                            newX = c.x + 160;  // Add 5 tiles * 32px
-                            newY = c.y + 96;   // Add 3 tiles * 32px
-                            console.log(`Migrated ${c.name} from (${c.x}, ${c.y}) to (${newX}, ${newY})`);
-                        }
-
-                        return {
-                            ...c,
-                            x: newX,
-                            y: newY,
-                            targetX: null,
-                            targetY: null,
-                            path: [],
-                            state: 'idle',
-                            wanderTimer: 0,
-                            doorWaitTimer: 0
-                        };
-                    });
-                }
-
-                // Move crew to their assigned systems after load
-                this.ship.systems.forEach(system => {
-                    if (system.assignedCrew) {
-                        const crew = this.ship.crew.find(c => c.id === system.assignedCrew.id);
-                        if (crew) {
-                            crew.x = system.x * 32 + 16;
-                            crew.y = system.y * 32 + 16;
-                            crew.targetX = system.x * 32 + 16;
-                            crew.targetY = system.y * 32 + 16;
-                            crew.state = 'moving';
-                            crew.path = [];
-                        }
-                    }
-                });
-
-
-                console.log('Game Loaded');
-            } catch (e) {
-                console.error('Failed to load save:', e);
-                this.initializeGalaxy();
-            }
-        } else {
-            this.galaxyManager.initializeGalaxy();
-        }
-
-        // Load pre-travel save LAST to override hull health
-        const preTravelData = localStorage.getItem('pre_travel_save');
-        if (preTravelData) {
-            try {
-                const saveData = JSON.parse(preTravelData);
-                console.log('[RETRY] Restoring hull from pre-travel save:', saveData.shipHealth);
-                this.ship.health = saveData.shipHealth;
-                localStorage.removeItem('pre_travel_save');
-                console.log('[RETRY] Hull restored to:', this.ship.health);
-            } catch (e) {
-                console.error('[RETRY] Failed to load pre-travel save:', e);
-                localStorage.removeItem('pre_travel_save');
             }
         }
+        
+        return loaded;
     }
 
     saveGame() {
