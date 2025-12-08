@@ -1,6 +1,7 @@
 /**
- * HazardUI.js (Refactored)
- * Core coordinator for hazard UI - delegates to specialized components
+ * HazardUI.js (Simplified)
+ * Handles player repair mechanics and proximity detection
+ * Crew assignment now uses HTML-based CrewRepairUI
  */
 
 class HazardUI {
@@ -12,10 +13,6 @@ class HazardUI {
         this.playerRepairing = false;
         this.currentRepairBreach = null;
         this.repairProgress = 0;
-
-        // Delegate components
-        this.crewMenu = new CrewAssignmentMenu(gameState);
-        this.renderer = new HazardUIRenderer(gameState);
     }
 
     /**
@@ -113,29 +110,15 @@ class HazardUI {
     }
 
     /**
-     * Toggle crew assignment menu (delegates to CrewAssignmentMenu)
-     */
-    toggleCrewMenu() {
-        this.crewMenu.toggle();
-    }
-
-    /**
-     * Handle mouse click on crew menu (delegates to CrewAssignmentMenu)
-     */
-    handleMenuClick(mouseX, mouseY) {
-        return this.crewMenu.handleClick(mouseX, mouseY);
-    }
-
-    /**
-     * Render all UI elements
+     * Render UI elements (repair prompts on canvas)
      */
     render(ctx, shipRenderer, player) {
-        // Render repair prompt if near breach (not showing crew menu)
-        if (this.nearestBreach && !this.playerRepairing && !this.crewMenu.showing) {
-            this.renderer.renderRepairPrompt(ctx, this.nearestBreach.breach, shipRenderer);
+        // Render "Press E to Repair" prompt if near breach
+        if (this.nearestBreach && !this.playerRepairing) {
+            this.renderRepairPrompt(ctx, this.nearestBreach.breach, shipRenderer);
         }
 
-        // Render repair progress if player is repairing
+        // Render repair progress bar if player is repairing
         if (this.playerRepairing && this.currentRepairBreach !== null) {
             const breach = this.state.hazardManager.breaches[this.currentRepairBreach];
             if (breach && player) {
@@ -143,15 +126,113 @@ class HazardUI {
                 const repairTime = Math.max(2, 10 - playerSkill);
                 const progress = Math.min(1, this.repairProgress / repairTime);
 
-                this.renderer.renderPlayerRepairProgress(ctx, breach, progress, shipRenderer);
+                this.renderPlayerRepairProgress(ctx, breach, progress, shipRenderer);
             }
         }
 
-        // Render crew assignment menu
-        this.crewMenu.render(ctx);
+        // Render oxygen HUD
+        this.renderOxygenHUD(ctx, player);
+    }
 
-        // Render oxygen level in HUD
-        this.renderer.renderOxygenHUD(ctx, player);
+    /**
+     * Render repair prompt near breach
+     */
+    renderRepairPrompt(ctx, breach, shipRenderer) {
+        const screenPos = shipRenderer.gridToScreen(breach.x, breach.y);
+
+        ctx.save();
+        ctx.font = 'bold 14px "Rajdhani", sans-serif';
+        ctx.textAlign = 'center';
+
+        // Background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        const text = 'Press E to Repair';
+        const textWidth = ctx.measureText(text).width;
+        ctx.fillRect(screenPos.x - textWidth / 2 - 10, screenPos.y - 50, textWidth + 20, 25);
+
+        // Border
+        ctx.strokeStyle = '#00f0ff';
+        ctx.strokeRect(screenPos.x - textWidth / 2 - 10, screenPos.y - 50, textWidth + 20, 25);
+
+        // Text
+        ctx.fillStyle = '#00f0ff';
+        ctx.fillText(text, screenPos.x, screenPos.y - 33);
+        ctx.restore();
+    }
+
+    /**
+     * Render player repair progress bar
+     */
+    renderPlayerRepairProgress(ctx, breach, progress, shipRenderer) {
+        const screenPos = shipRenderer.gridToScreen(breach.x, breach.y);
+
+        ctx.save();
+        const barWidth = 100;
+        const barHeight = 10;
+        const x = screenPos.x - barWidth / 2;
+        const y = screenPos.y - 60;
+
+        // Background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        // Progress
+        ctx.fillStyle = '#00ff00';
+        ctx.fillRect(x, y, barWidth * progress, barHeight);
+
+        // Border
+        ctx.strokeStyle = '#00f0ff';
+        ctx.strokeRect(x, y, barWidth, barHeight);
+
+        // Text
+        ctx.font = 'bold 12px "Rajdhani", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(`Repairing... ${Math.floor(progress * 100)}%`, screenPos.x, y - 5);
+        ctx.restore();
+    }
+
+    /**
+     * Render oxygen level HUD
+     */
+    renderOxygenHUD(ctx, player) {
+        if (!player || player.oxygenLevel === undefined) return;
+
+        const x = 20;
+        const y = ctx.canvas.height - 100;
+        const barWidth = 200;
+        const barHeight = 30;
+
+        ctx.save();
+
+        // Title
+        ctx.font = 'bold 14px "Rajdhani", sans-serif';
+        ctx.fillStyle = '#00f0ff';
+        ctx.textAlign = 'left';
+        ctx.fillText('OXYGEN', x, y - 10);
+
+        // Background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(x, y, barWidth, barHeight);
+
+        // Oxygen bar
+        const oxygenPercent = player.oxygenLevel / 100;
+        const oxygenColor = oxygenPercent > 0.5 ? '#00ff00' : oxygenPercent > 0.25 ? '#ffaa00' : '#ff0000';
+        ctx.fillStyle = oxygenColor;
+        ctx.fillRect(x, y, barWidth * oxygenPercent, barHeight);
+
+        // Border
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, barWidth, barHeight);
+
+        // Text
+        ctx.font = 'bold 16px "Rajdhani", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(`${Math.floor(player.oxygenLevel)}%`, x + barWidth / 2, y + 20);
+
+        ctx.restore();
     }
 
     /**
