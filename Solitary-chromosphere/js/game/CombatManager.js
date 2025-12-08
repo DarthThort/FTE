@@ -144,8 +144,14 @@ class CombatManager {
                     // Only fire if autofire is enabled (crew assigned)
                     const fired = this.state.weaponManager.fireWeapon(weapon.id, this.enemy);
                     if (fired) {
-                        // Apply damage to enemy
-                        this.applyWeaponDamage(weapon, this.enemy);
+                        // Apply damage to enemy using damage calculator
+                        const weaponModule = this.state.ship.hardpoints.weapon?.find(m => m.weaponId === weapon.id);
+                        this.damageCalculator.applyWeaponDamage(
+                            weapon,
+                            weaponModule,
+                            this.enemy,
+                            this.state.ship
+                        );
                         console.log(`[Auto-Fire] ${weapon.name} fired automatically (crew assigned)`);
                     }
                 }

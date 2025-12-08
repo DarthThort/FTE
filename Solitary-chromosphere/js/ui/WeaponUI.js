@@ -303,8 +303,14 @@ class WeaponUI {
                                 this.game.combatEffects.playLaserSound();
                             }
 
-                            // Apply damage via combat manager
-                            combatManager.applyWeaponDamage(weapon, combatManager.enemy);
+                            // Apply damage via damage calculator
+                            const weaponModule = this.game.state.ship.hardpoints.weapon?.find(m => m.weaponId === weapon.id);
+                            combatManager.damageCalculator.applyWeaponDamage(
+                                weapon,
+                                weaponModule,
+                                combatManager.enemy,
+                                this.game.state.ship
+                            );
                             console.log(`[Manual Fire] ${weapon.name} fired at ${combatManager.enemy.name}!`);
                         }
                     }

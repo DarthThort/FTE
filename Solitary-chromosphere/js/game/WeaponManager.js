@@ -64,7 +64,14 @@
                                 this.state.game.combatEffects.addProjectile(shipX, shipY, enemyX, enemyY, '#00ff55');
                             }
 
-                            this.state.combatManager.applyWeaponDamage(weapon, this.state.combatManager.enemy);
+                            // Apply damage using damage calculator
+                            const weaponModule = this.state.ship.hardpoints.weapon?.find(m => m.weaponId === weapon.id);
+                            this.state.combatManager.damageCalculator.applyWeaponDamage(
+                                weapon,
+                                weaponModule,
+                                this.state.combatManager.enemy,
+                                this.state.ship
+                            );
                             console.log(`[Auto-Fire] ${weapon.name} fired at ${this.state.combatManager.enemy.name}!`);
                         }
                     }
