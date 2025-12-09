@@ -8,6 +8,7 @@ class GameState {
         this.portGenerator = null;
         this.moduleManager = null;
         this.pathfinding = null;
+        this.shipLayoutManager = null;
 
         this.ship = {
             name: "Rusty Tub",
@@ -156,6 +157,7 @@ class GameState {
         this.portGenerator = new PortGenerator(this);
         this.moduleManager = new ModuleManager(this);
         this.pathfinding = new Pathfinding(this);
+        this.shipLayoutManager = new ShipLayoutManager(this);
         this.saveManager = new SaveManager(this);
         this.crewManager = new CrewManager(this);
 
