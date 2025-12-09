@@ -75,6 +75,7 @@ class GameEngine {
             if (this.escapeButton) this.escapeButton.update();
         }
 
+
         // Update hazards (breaches, oxygen depletion) - but not when combat is paused
         if (this.state.hazardManager) {
             const combatPaused = this.state.combatManager && this.state.combatManager.active && this.state.combatManager.paused;
@@ -82,6 +83,15 @@ class GameEngine {
                 this.state.hazardManager.update(dt);
             }
         }
+
+        // Update life support systems (oxygen, fire, shields) - but not when combat is paused
+        if (this.state.lifeSupportManager) {
+            const combatPaused = this.state.combatManager && this.state.combatManager.active && this.state.combatManager.paused;
+            if (!combatPaused) {
+                this.state.lifeSupportManager.tick();
+            }
+        }
+
 
         // Check for oxygen overlay toggle (O key)
         if (this.input.isDown('KeyO')) {
