@@ -32,6 +32,11 @@ class ShieldRenderer {
             } else {
                 const fadeTime = status.fullChargeTime - fadeStartTime;
                 opacity = Math.max(0, 1.0 - (fadeTime / 2.0));
+
+                // DEBUG: Log fade behavior
+                if (fadeTime < 3) { // Only log first 3 seconds of fade
+                    console.log(`[Shield Fade] fullChargeTime: ${status.fullChargeTime.toFixed(1)}s, fadeTime: ${fadeTime.toFixed(1)}s, opacity: ${opacity.toFixed(2)}`);
+                }
             }
         } else {
             const chargePercent = shields.currentLayers / Math.max(shields.maxLayers, 1);
@@ -44,7 +49,8 @@ class ShieldRenderer {
         }
 
         // Calculate ship center for impact effects - USE DYNAMIC OFFSETS
-        const shipCenterX = offsetX + (25 * this.tileSize) / 2;
+        // Shift one tile to the right to center properly
+        const shipCenterX = offsetX + (25 * this.tileSize) / 2 + this.tileSize;
         const shipCenterY = offsetY + (25 * this.tileSize) / 2;
         const baseRadius = 360;
 
