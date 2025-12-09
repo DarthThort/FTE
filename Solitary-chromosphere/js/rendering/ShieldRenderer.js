@@ -5,16 +5,14 @@
  */
 
 class ShieldRenderer {
-    constructor(offsetX, offsetY, tileSize) {
-        this.offsetX = offsetX;
-        this.offsetY = offsetY;
+    constructor(tileSize) {
         this.tileSize = tileSize;
     }
 
     /**
      * Render shield mesh with animated vertices and impact effects
      */
-    render(ctx, ship, shieldManager, combatManager) {
+    render(ctx, ship, shieldManager, combatManager, offsetX, offsetY) {
         const shields = ship.shields;
         if (!shields) return;
 
@@ -45,9 +43,9 @@ class ShieldRenderer {
             opacity = 1.0;
         }
 
-        // Calculate ship center for impact effects
-        const shipCenterX = this.offsetX + (25 * this.tileSize) / 2;
-        const shipCenterY = this.offsetY + (25 * this.tileSize) / 2;
+        // Calculate ship center for impact effects - USE DYNAMIC OFFSETS
+        const shipCenterX = offsetX + (25 * this.tileSize) / 2;
+        const shipCenterY = offsetY + (25 * this.tileSize) / 2;
         const baseRadius = 360;
 
 

@@ -16,13 +16,13 @@ class ShipRenderer {
 
         // Initialize hazard renderer (will get manager reference later)
         this.hazardRenderer = null;
-		// Rendering modules
+        // Rendering modules
         this.tileRenderer = new TileRenderer(gameEngine);
         this.crewUIRenderer = new CrewUIRenderer(gameEngine);
-		this.weaponTurretsRenderer = new WeaponTurretsRenderer(this.tileSize);
-		this.shieldRenderer = new ShieldRenderer(this.offsetX, this.offsetY, this.tileSize);
-		this.oxygenBarsRenderer = new OxygenBarsRenderer(this.tileSize);
-    }	
+        this.weaponTurretsRenderer = new WeaponTurretsRenderer(this.tileSize);
+        this.shieldRenderer = new ShieldRenderer(this.tileSize);
+        this.oxygenBarsRenderer = new OxygenBarsRenderer(this.tileSize);
+    }
 
     initFog(layout) {
         if (this.explored.length !== layout.length || (layout.length > 0 && this.explored[0].length !== layout[0].length)) {
@@ -148,13 +148,14 @@ class ShipRenderer {
      * Shows compact horizontal bars at room centers using HazardManager data
      */
     renderOxygenBars(ctx, ship) {
-    this.oxygenBarsRenderer.render(ctx, ship, this.game.state.hazardManager);
-}
+        this.oxygenBarsRenderer.render(ctx, ship, this.game.state.hazardManager);
+    }
 
     renderShields(ctx) {
-    this.shieldRenderer.render(ctx, this.game.state.ship, 
-        this.game.state.shieldManager, this.game.state.combatManager);
-}
+        this.shieldRenderer.render(ctx, this.game.state.ship,
+            this.game.state.shieldManager, this.game.state.combatManager,
+            this.offsetX, this.offsetY);
+    }
 
     /**
      * Render engine thruster visual based on installed engine module
@@ -319,9 +320,9 @@ class ShipRenderer {
     /**
  * Render weapon turrets using delegated renderer
  */
-renderWeaponTurrets(ctx, ship) {
-    this.weaponTurretsRenderer.render(ctx, ship);
-}
+    renderWeaponTurrets(ctx, ship) {
+        this.weaponTurretsRenderer.render(ctx, ship);
+    }
 
     /**
      * Render a distant Stanford Torus space station
