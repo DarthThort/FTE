@@ -161,19 +161,37 @@
         const shieldSystem = this.state.ship.systems.find(s => s.type === 'shield');
         const shieldModule = getModule(this.state.ship.hardpoints.shield);
 
+        // If no shield module installed, return all zeros
+        if (!shieldModule) {
+            return {
+                currentLayers: 0,
+                maxLayers: 0,
+                layerHP: shields.layerHP,
+                currentLayerHP: 0,
+                rechargeProgress: 0,
+                rechargeRate: 0,
+                rechargeDelay: 0,
+                systemPower: shieldSystem ? shieldSystem.currentPower : 0,
+                systemMaxPower: shieldSystem ? shieldSystem.maxPower : 0,
+                isRecharging: false,
+                fullChargeTime: 0,
+                hasModule: false
+            };
+        }
+
         return {
             currentLayers: shields.currentLayers,
             maxLayers: shields.maxLayers,
             layerHP: shields.layerHP,
             currentLayerHP: shields.currentLayerHP,
-            rechargeProgress: shieldModule ? shields.rechargeTimer / shieldModule.stats.rechargeRate : 0,
-            rechargeRate: shieldModule ? shieldModule.stats.rechargeRate : shields.rechargeRate,
-            rechargeDelay: shieldModule ? shieldModule.stats.rechargeDelay : 0,
+            rechargeProgress: shields.rechargeTimer / shieldModule.stats.rechargeRate,
+            rechargeRate: shieldModule.stats.rechargeRate,
+            rechargeDelay: shieldModule.stats.rechargeDelay,
             systemPower: shieldSystem ? shieldSystem.currentPower : 0,
             systemMaxPower: shieldSystem ? shieldSystem.maxPower : 0,
             isRecharging: shields.currentLayers < shields.maxLayers && shieldSystem?.currentPower > 0,
             fullChargeTime: this.fullChargeTime,
-            hasModule: !!shieldModule
+            hasModule: true
         };
     }
 
