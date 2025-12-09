@@ -103,6 +103,11 @@ class LifeSupportManager {
         if (this.state.powerManager) {
             this.state.powerManager.updateIonization(deltaTime);
         }
+
+        // Update shield recharge
+        if (this.state.shieldManager) {
+            this.state.shieldManager.update(deltaTime);
+        }
     }
 
     // Oxygen Management

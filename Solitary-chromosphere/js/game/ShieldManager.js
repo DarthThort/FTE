@@ -178,12 +178,15 @@
     }
 
     hasActiveShields() {
-        return this.state.ship.shields.currentLayers > 0;
+        const shields = this.state.ship.shields;
+        return shields && shields.currentLayers > 0;
     }
 
+    /**
+     * Refresh shield UI to display current status
+     */
     refreshUI() {
-        if (window.game && window.game.ui && window.game.ui.shieldUI) {
-            window.game.ui.shieldUI.refreshShieldPanel();
-        }
+        // Trigger UI update by notifying game state listeners
+        this.state.notify();
     }
 }
