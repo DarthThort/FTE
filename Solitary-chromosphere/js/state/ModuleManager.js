@@ -164,7 +164,12 @@ class ModuleManager {
         // PHASE 8: Regenerate weapons from equipped modules
         this.state.ship.weapons = this.getEquippedWeapons();
         console.log(`[Modules] Generated ${this.state.ship.weapons.length} weapons from hardpoints`);
+        console.log(`[ModuleManager] Recalculated ship stats. New power: ${this.state.ship.totalPower}, shields: ${this.state.ship.shields.maxLayers}, weapons: ${this.state.ship.weapons.length}`);
 
+        // Refresh all UI panels
+        if (this.state.shieldManager) {
+            this.state.shieldManager.refreshUI();
+        }
         // Refresh weapon UI if available
         if (window.game && window.game.ui && window.game.ui.weaponUI) {
             window.game.ui.weaponUI.refreshWeaponsPanel();
