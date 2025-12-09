@@ -142,4 +142,23 @@ class Pathfinding {
 
         return smoothed;
     }
+
+    /**
+     * Get a random walkable position on the ship
+     */
+    getRandomWalkablePosition() {
+        const walkableTiles = [];
+        for (let y = 0; y < this.state.ship.layout.length; y++) {
+            for (let x = 0; x < this.state.ship.layout[y].length; x++) {
+                if (this.isWalkable(x, y)) {
+                    walkableTiles.push({ x, y });
+                }
+            }
+        }
+
+        if (walkableTiles.length > 0) {
+            return walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
+        }
+        return null;
+    }
 }
