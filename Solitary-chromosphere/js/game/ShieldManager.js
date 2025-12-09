@@ -188,5 +188,10 @@
     refreshUI() {
         // Trigger UI update by notifying game state listeners
         this.state.notify();
+
+        // Also directly refresh shield UI if available
+        if (window.game && window.game.ui && window.game.ui.shieldUI) {
+            window.game.ui.shieldUI.refreshShieldPanel();
+        }
     }
 }
