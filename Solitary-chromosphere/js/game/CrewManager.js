@@ -117,33 +117,32 @@ class CrewManager {
         }
 
         for (const crew of this.state.ship.crew) {
+            // PRIORITY 1: Fire fighting - even assigned crew should fight fires!
+            if (!crew.targetBreach && crew.state !== 'repairing' && crew.state !== 'fighting_fire') {
+                const nearbyFire = this.findNearbyFire(crew);
+                if (nearbyFire) {
+                    crew.state = 'fighting_fire';
+                    crew.targetFire = nearbyFire;
+                    crew.fireFightProgress = 0;
+                    crew.targetX = nearbyFire.x * 32 + 16;
+                    crew.targetY = nearbyFire.y * 32 + 16;
+                    crew.path = [];
+                    console.log(`[CrewManager] 🔥 ${crew.name} detected fire at (${nearbyFire.x}, ${nearbyFire.y}) and going to fight it`);
+                    continue; // Skip everything else - fire is priority!
+                }
+            }
+
             // Check if crew is assigned to a system
             const assignedSystem = this.state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
 
-            // Don't wander if assigned to a system - stay at post
-            if (assignedSystem && crew.state !== 'moving') {
+            // Don't wander if assigned to a system - stay at post (unless fighting fire)
+            if (assignedSystem && crew.state !== 'moving' && crew.state !== 'fighting_fire') {
                 crew.x = assignedSystem.x * 32 + 16;
                 crew.y = assignedSystem.y * 32 + 16;
                 crew.targetX = null;
                 crew.targetY = null;
                 crew.state = 'working';
                 continue; // Skip normal AI for assigned crew
-            }
-
-            // Auto fire fighting: idle crew detects nearby fires and goes to fight them
-            if (crew.state === 'idle' || crew.state === 'wandering') {
-                const nearbyFire = this.findNearbyFire(crew);
-                if (nearbyFire) {
-                    crew.state = 'fighting_fire';
-                    crew.targetFire = nearbyFire;
-                    crew.fireFightProgress = 0;
-                    // Set target to adjacent tile (crew can't stand ON fire)
-                    crew.targetX = nearbyFire.x * 32 + 16;
-                    crew.targetY = nearbyFire.y * 32 + 16;
-                    crew.path = [];
-                    console.log(`[CrewManager] 🔥 ${crew.name} detected fire at (${nearbyFire.x}, ${nearbyFire.y}) and going to fight it`);
-                    continue;
-                }
             }
 
             if (crew.state === 'idle' && (!crew.targetX || !crew.targetY)) {
