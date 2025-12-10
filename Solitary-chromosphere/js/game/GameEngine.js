@@ -5,8 +5,15 @@ class GameEngine {
         this.isRunning = false;
         this.lastTime = 0;
 
-        this.state = new GameState();
-        this.state.game = this; // Give GameState reference to game engine
+        this.state = new GameState(this);
+        this.renderer = new ShipRenderer(this);
+        this.shipRenderer = this.renderer;
+
+        // Input tracking
+        this.input = { keys: {} };
+        this.lastFrameTime = 0;
+        this.oxygenTogglePressed = false;
+        this.eKeyPressed = false;  // For repair and fire fighting (E key)
         this.input = new InputHandler(canvas);
         this.sceneManager = new SceneManager(this);
         this.screenEffects = new ScreenEffects();

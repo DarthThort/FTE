@@ -429,7 +429,7 @@ class HazardManager {
             intensity: 20,
             age: 0,
             roomId,
-            spreadTimer: 5.0 // 5 seconds until next spread attempt
+            spreadTimer: 10.0 // 10 seconds until next spread attempt (reduced from 5s)
         });
 
         console.log(`[Fire] Started at (${x}, ${y}) in room ${roomId}`);
@@ -456,7 +456,7 @@ class HazardManager {
             fire.spreadTimer -= dt;
             if (fire.spreadTimer <= 0) {
                 this.spreadFire(fire);
-                fire.spreadTimer = 5.0; // Reset to 5 seconds
+                fire.spreadTimer = 10.0; // Reset to 10 seconds
             }
 
             // Consume oxygen from the room (slow rate)
@@ -474,73 +474,75 @@ class HazardManager {
     }
 
     /**
-     * Attempt to spread fire to adjacent tiles
+     * Attempt to spread fire to ONE random adjacent tile
      */
     spreadFire(fire) {
         const layout = this.state.ship.layout;
 
-        // Check all 4 adjacent tiles
-        const adjacent = [
+        // All 4 adjacent tiles
+        const allDirections = [
             { x: fire.x + 1, y: fire.y },
             { x: fire.x - 1, y: fire.y },
             { x: fire.x, y: fire.y + 1 },
             { x: fire.x, y: fire.y - 1 }
         ];
 
-        for (const pos of adjacent) {
-            // Check bounds
-            if (!layout[pos.y] || !layout[pos.y][pos.x]) continue;
+        // Pick ONE random direction to try spreading
+        const randomDirection = allDirections[Math.floor(Math.random() * allDirections.length)];
+        const pos = randomDirection;
 
-            const tile = layout[pos.y][pos.x];
+        // Check bounds
+        if (!layout[pos.y] || !layout[pos.y][pos.x]) return;
 
-            // DOOR DETECTION: If tile is a door (4 or 5), spread to tile BEYOND it
-            if (tile === 4 || tile === 5) {
-                // Calculate direction from fire to door
-                const dx = pos.x - fire.x;
-                const dy = pos.y - fire.y;
+        const tile = layout[pos.y][pos.x];
 
-                // The tile beyond the door
-                const beyondX = pos.x + dx;
-                const beyondY = pos.y + dy;
+        // DOOR DETECTION: If tile is a door (4 or 5), spread to tile BEYOND it
+        if (tile === 4 || tile === 5) {
+            // Calculate direction from fire to door
+            const dx = pos.x - fire.x;
+            const dy = pos.y - fire.y;
 
-                // Check if beyond tile exists and is walkable
-                if (layout[beyondY] && layout[beyondY][beyondX]) {
-                    const beyondTile = layout[beyondY][beyondX];
+            // The tile beyond the door
+            const beyondX = pos.x + dx;
+            const beyondY = pos.y + dy;
 
-                    // Can spread to floor or systems beyond the door
-                    if ((beyondTile === 2 || beyondTile === 3) &&
-                        !this.fires.some(f => f.x === beyondX && f.y === beyondY)) {
+            // Check if beyond tile exists and is walkable
+            if (layout[beyondY] && layout[beyondY][beyondX]) {
+                const beyondTile = layout[beyondY][beyondX];
 
-                        // Base spread chance
-                        let spreadChance = 0.05 + (fire.intensity / 100) * 0.25;
+                // Can spread to floor or systems beyond the door
+                if ((beyondTile === 2 || beyondTile === 3) &&
+                    !this.fires.some(f => f.x === beyondX && f.y === beyondY)) {
 
-                        // Closed doors (tile 4) are 3x harder to cross than open doors (tile 5)
-                        if (tile === 4) {
-                            spreadChance = spreadChance / 3.0;
-                        }
+                    // Base spread chance
+                    let spreadChance = 0.05 + (fire.intensity / 100) * 0.25;
 
-                        if (Math.random() < spreadChance) {
-                            this.startFireAt(beyondX, beyondY);
-                            const doorState = tile === 4 ? 'CLOSED' : 'OPEN';
-                            console.log(`[Fire] 🚪 Crossed ${doorState} door from (${fire.x}, ${fire.y}) to (${beyondX}, ${beyondY})`);
-                        }
+                    // Closed doors (tile 4) are 3x harder to cross than open doors (tile 5)
+                    if (tile === 4) {
+                        spreadChance = spreadChance / 3.0;
+                    }
+
+                    if (Math.random() < spreadChance) {
+                        this.startFireAt(beyondX, beyondY);
+                        const doorState = tile === 4 ? 'CLOSED' : 'OPEN';
+                        console.log(`[Fire] 🚪 Crossed ${doorState} door from (${fire.x}, ${fire.y}) to (${beyondX}, ${beyondY})`);
                     }
                 }
-                continue; // Don't burn the door itself
             }
+            return; // Don't try normal spread if it's a door
+        }
 
-            // Normal spread: Can spread to floor (2) and systems (3)
-            if (tile !== 2 && tile !== 3) continue;
+        // Normal spread: Can spread to floor (2) and systems (3)
+        if (tile !== 2 && tile !== 3) return;
 
-            // Check if already on fire
-            if (this.fires.some(f => f.x === pos.x && f.y === pos.y)) continue;
+        // Check if already on fire
+        if (this.fires.some(f => f.x === pos.x && f.y === pos.y)) return;
 
-            // Spread chance based on intensity (5% at low, 30% at high)
-            const spreadChance = 0.05 + (fire.intensity / 100) * 0.25;
+        // Spread chance based on intensity (5% at low, 30% at high)
+        const spreadChance = 0.05 + (fire.intensity / 100) * 0.25;
 
-            if (Math.random() < spreadChance) {
-                this.startFireAt(pos.x, pos.y);
-            }
+        if (Math.random() < spreadChance) {
+            this.startFireAt(pos.x, pos.y);
         }
     }
 
