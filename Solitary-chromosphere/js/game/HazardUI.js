@@ -113,20 +113,21 @@ class HazardUI {
      * Render UI elements (repair prompts on canvas)
      */
     render(ctx, shipRenderer, player) {
+        // Render fire alert banner if there are active fires
+        if (this.state.hazardManager && this.state.hazardManager.fires.length > 0) {
+            this.renderFireAlert(ctx);
+        }
+
         // Render "Press E to Repair" prompt if near breach
         if (this.nearestBreach && !this.playerRepairing) {
             this.renderRepairPrompt(ctx, this.nearestBreach.breach, shipRenderer);
         }
 
-        // Render repair progress bar if player is repairing
+        // Render player repair progress bar
         if (this.playerRepairing && this.currentRepairBreach !== null) {
             const breach = this.state.hazardManager.breaches[this.currentRepairBreach];
-            if (breach && player) {
-                const playerSkill = player.engineeringSkill || 0;
-                const repairTime = Math.max(2, 10 - playerSkill);
-                const progress = Math.min(1, this.repairProgress / repairTime);
-
-                this.renderPlayerRepairProgress(ctx, breach, progress, shipRenderer);
+            if (breach) {
+                this.renderRepairProgress(ctx, breach, player, shipRenderer);
             }
         }
 

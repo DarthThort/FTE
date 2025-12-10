@@ -172,12 +172,17 @@ class HazardRenderer {
     /**
      * Render fires with animated flames
      * Uses tile-based fire system from HazardManager.fires
+     * Only renders fires in visible tiles (fog of war)
      */
     renderFires(ctx, tileSize, offsetX, offsetY) {
         const time = Date.now() / 1000;
+        const visible = this.hazardManager.state.ship.visible || [];
 
         // Render each individual fire tile from HazardManager
         for (const fire of this.hazardManager.fires) {
+            // FOG OF WAR: Only render fire if tile is visible
+            if (!visible[fire.y] || !visible[fire.y][fire.x]) continue;
+
             const posX = fire.x * tileSize;
             const posY = fire.y * tileSize;
             const centerX = posX + tileSize / 2;
