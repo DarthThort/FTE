@@ -172,17 +172,25 @@ class HazardRenderer {
     /**
      * Render fires with animated flames
      * Uses tile-based fire system from HazardManager.fires
-     * Only renders fires in visible tiles (fog of war)
+     * Fires visible within 7 tiles of player position
      */
     renderFires(ctx, tileSize, offsetX, offsetY) {
         const time = Date.now() / 1000;
-        const visible = this.hazardManager.state.ship.visible || [];
+
+        // Get player position for fog of war
+        const player = this.hazardManager.state.sceneManager?.player;
+        const playerTileX = player ? Math.floor(player.x / tileSize) : -100;
+        const playerTileY = player ? Math.floor(player.y / tileSize) : -100;
+        const visibilityRadius = 7; // tiles
 
         // Render each individual fire tile from HazardManager
         for (const fire of this.hazardManager.fires) {
-            // TODO: Re-enable fog of war once visibility system is confirmed working
-            // For now, show all fires since the banner alerts the player anyway
-            // if (!visible[fire.y] || !visible[fire.y][fire.x]) continue;
+            // FOG OF WAR: Only render fire within visibility radius of player
+            const dx = fire.x - playerTileX;
+            const dy = fire.y - playerTileY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > visibilityRadius) continue;
 
             const posX = fire.x * tileSize;
             const posY = fire.y * tileSize;
