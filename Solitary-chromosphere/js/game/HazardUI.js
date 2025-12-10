@@ -8,22 +8,28 @@ class HazardUI {
     constructor(gameState) {
         this.state = gameState;
 
-        // Core state
+        // Breach repair state
         this.nearestBreach = null;
         this.playerRepairing = false;
         this.currentRepairBreach = null;
         this.repairProgress = 0;
+
+        // Fire fighting state
+        this.nearestFire = null;
+        this.playerFightingFire = false;
+        this.currentFire = null;
+        this.fireFightProgress = 0;
     }
 
     /**
-     * Update - check proximity and handle player repair
+     * Update - check proximity and handle player actions
      */
     update(deltaTime, player) {
         if (!player) return;
 
         this.checkPlayerProximity(player);
 
-        // Update player repair progress
+        // Update player breach repair progress
         if (this.playerRepairing && this.currentRepairBreach !== null) {
             const breach = this.state.hazardManager.breaches[this.currentRepairBreach];
 
@@ -58,48 +64,120 @@ class HazardUI {
                 console.log('[HazardUI] Player completed breach repair');
             }
         }
+
+        // Update player fire fighting progress
+        if (this.playerFightingFire && this.currentFire !== null) {
+            const fire = this.state.hazardManager.getFireAt(this.currentFire.x, this.currentFire.y);
+
+            if (!fire) {
+                // Fire was extinguished
+                this.stopPlayerFireFighting();
+                return;
+            }
+
+            // Check if player moved too far
+            const dist = Math.sqrt(
+                Math.pow(player.x / 32 - fire.x, 2) +
+                Math.pow(player.y / 32 - fire.y, 2)
+            );
+
+            if (dist > 1.5) {
+                // Player moved away, cancel fire fighting
+                this.stopPlayerFireFighting();
+                return;
+            }
+
+            // Continue fighting fire
+            const playerSkill = player.engineeringSkill || 0;
+            this.fireFightProgress += deltaTime;
+
+            const fightTime = Math.max(3, 5 - playerSkill); // 3-5 seconds
+
+            // Reduce fire intensity while fighting
+            fire.intensity = Math.max(0, fire.intensity - (20 * deltaTime)); // 20% per second
+
+            if (fire.intensity <= 0 || this.fireFightProgress >= fightTime) {
+                // Fire extinguished!
+                this.state.hazardManager.extinguishFireAt(fire.x, fire.y);
+                this.stopPlayerFireFighting();
+                console.log('[HazardUI] Player extinguished fire');
+            }
+        }
     }
 
     /**
-     * Check if player is near any breach
+     * Check if player is near any breach or fire
      */
     checkPlayerProximity(player) {
-        if (!player) return;
+        const playerGridX = Math.floor((player.x + player.size / 2) / 32);
+        const playerGridY = Math.floor((player.y + player.size / 2) / 32);
 
-        const breaches = this.state.hazardManager.breaches;
+        // Check for nearest breach
+        let nearestBreach = null;
+        let minBreachDist = Infinity;
 
-        let nearest = null;
-        let minDist = 1.5; // Max interaction distance
-
-        for (let i = 0; i < breaches.length; i++) {
-            const breach = breaches[i];
+        for (let i = 0; i < this.state.hazardManager.breaches.length; i++) {
+            const breach = this.state.hazardManager.breaches[i];
             const dist = Math.sqrt(
-                Math.pow(player.x / 32 - breach.x, 2) +
-                Math.pow(player.y / 32 - breach.y, 2)
+                Math.pow(breach.x - playerGridX, 2) +
+                Math.pow(breach.y - playerGridY, 2)
             );
 
-            if (dist < minDist) {
-                minDist = dist;
-                nearest = { breach, index: i, distance: dist };
+            if (dist < minBreachDist && dist <= 1.5) {
+                minBreachDist = dist;
+                nearestBreach = { breach, index: i };
             }
         }
 
-        this.nearestBreach = nearest;
+        this.nearestBreach = nearestBreach;
+
+        // Check for nearest fire (only if not already repairing)
+        if (!this.playerRepairing) {
+            let nearestFire = null;
+            let minFireDist = Infinity;
+
+            for (const fire of this.state.hazardManager.fires) {
+                const dist = Math.sqrt(
+                    Math.pow(fire.x - playerGridX, 2) +
+                    Math.pow(fire.y - playerGridY, 2)
+                );
+
+                if (dist < minFireDist && dist <= 1.5) {
+                    minFireDist = dist;
+                    nearestFire = fire;
+                }
+            }
+
+            this.nearestFire = nearestFire;
+        } else {
+            this.nearestFire = null;
+        }
     }
 
     /**
-     * Start player repair
+     * Attempt to start repair or fire fighting (E key)
      */
-    startPlayerRepair() {
-        if (!this.nearestBreach || this.playerRepairing) return false;
+    attemptRepair() {
+        // Priority: breach repair > fire fighting
+        if (this.nearestBreach && !this.playerRepairing && !this.playerFightingFire) {
+            this.playerRepairing = true;
+            this.currentRepairBreach = this.nearestBreach.index;
+            this.repairProgress = 0;
+            console.log('[HazardUI] Started breach repair');
+            return true;
+        }
 
-        this.playerRepairing = true;
-        this.currentRepairBreach = this.nearestBreach.index;
-        this.repairProgress = 0;
-        console.log('[HazardUI] Player started repairing breach');
-        return true;
+        // Fight fire if near one
+        if (this.nearestFire && !this.playerRepairing && !this.playerFightingFire) {
+            this.playerFightingFire = true;
+            this.currentFire = this.nearestFire;
+            this.fireFightProgress = 0;
+            console.log('[HazardUI] Started fighting fire');
+            return true;
+        }
+
+        return false;
     }
-
     /**
      * Stop player repair
      */
@@ -107,6 +185,15 @@ class HazardUI {
         this.playerRepairing = false;
         this.currentRepairBreach = null;
         this.repairProgress = 0;
+    }
+
+    /**
+     * Stop player fire fighting
+     */
+    stopPlayerFireFighting() {
+        this.playerFightingFire = false;
+        this.currentFire = null;
+        this.fireFightProgress = 0;
     }
 
     /**
@@ -118,9 +205,14 @@ class HazardUI {
             this.renderFireAlert(ctx);
         }
 
-        // Render "Press E to Repair" prompt if near breach
-        if (this.nearestBreach && !this.playerRepairing) {
+        // Render "Press E to Repair" prompt if near breach (and not fighting fire)
+        if (this.nearestBreach && !this.playerRepairing && !this.playerFightingFire) {
             this.renderRepairPrompt(ctx, this.nearestBreach.breach, shipRenderer);
+        }
+
+        // Render "Press E to Fight Fire" prompt if near fire (and not repairing)
+        if (this.nearestFire && !this.playerFightingFire && !this.playerRepairing) {
+            this.renderFirePrompt(ctx, this.nearestFire, shipRenderer);
         }
 
         // Render player repair progress bar
@@ -129,6 +221,11 @@ class HazardUI {
             if (breach) {
                 this.renderRepairProgress(ctx, breach, player, shipRenderer);
             }
+        }
+
+        // Render player fire fighting progress bar
+        if (this.playerFightingFire && this.currentFire) {
+            this.renderFireFightProgress(ctx, this.currentFire, player, shipRenderer);
         }
 
         // Render oxygen HUD
@@ -296,5 +393,94 @@ class HazardUI {
      */
     isPlayerRepairing() {
         return this.playerRepairing;
+    }
+
+    /**
+     * Render "Press E to Fight Fire" prompt
+     */
+    renderFirePrompt(ctx, fire, shipRenderer) {
+        const screenPos = {
+            x: fire.x * shipRenderer.tileSize + shipRenderer.tileSize / 2,
+            y: fire.y * shipRenderer.tileSize + shipRenderer.tileSize / 2
+        };
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 100, 0, 0.9)';
+        ctx.strokeStyle = '#ff6600';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+
+        const text = 'Press E to Fight Fire';
+        const metrics = ctx.measureText(text);
+        const padding = 6;
+        const boxWidth = metrics.width + padding * 2;
+        const boxHeight = 20;
+        const boxX = screenPos.x - boxWidth / 2;
+        const boxY = screenPos.y - 40;
+
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(text, screenPos.x, screenPos.y - 27);
+
+        // Fire extinguisher icon
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '16px Arial';
+        ctx.fillText('🧯', screenPos.x, screenPos.y - 50);
+
+        ctx.restore();
+    }
+
+    /**
+     * Render fire fighting progress bar
+     */
+    renderFireFightProgress(ctx, fire, player, shipRenderer) {
+        const screenPos = {
+            x: fire.x * shipRenderer.tileSize + shipRenderer.tileSize / 2,
+            y: fire.y * shipRenderer.tileSize + shipRenderer.tileSize / 2
+        };
+
+        const playerSkill = player.engineeringSkill || 0;
+        const fightTime = Math.max(3, 5 - playerSkill);
+        const progress = Math.min(1, this.fireFightProgress / fightTime);
+
+        ctx.save();
+
+        // Progress bar background
+        const barWidth = 50;
+        const barHeight = 8;
+        const barX = screenPos.x - barWidth / 2;
+        const barY = screenPos.y - 30;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+
+        // Progress fill (orange/red gradient)
+        const gradient = ctx.createLinearGradient(barX, 0, barX + barWidth * progress, 0);
+        gradient.addColorStop(0, '#ff9933');
+        gradient.addColorStop(1, '#ff3300');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(barX, barY, barWidth * progress, barHeight);
+
+        // Border
+        ctx.strokeStyle = '#ff6600';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+        // Text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Fighting Fire...', screenPos.x, barY - 5);
+
+        // Fire intensity indicator
+        ctx.font = '9px Arial';
+        ctx.fillStyle = '#ffaa00';
+        const intensityText = ` ${Math.round(fire.intensity)}%`;
+        ctx.fillText(intensityText, screenPos.x, barY + barHeight + 12);
+
+        ctx.restore();
     }
 }

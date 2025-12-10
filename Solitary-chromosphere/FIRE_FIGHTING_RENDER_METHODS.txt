@@ -1,0 +1,90 @@
+// Fire fighting render methods to add to HazardUI.js after renderRepairProgress
+
+    /**
+     * Render "Press E to Fight Fire" prompt
+     */
+    renderFirePrompt(ctx, fire, shipRenderer) {
+        const screenPos = {
+            x: fire.x * shipRenderer.tileSize + shipRenderer.tileSize / 2,
+            y: fire.y * shipRenderer.tileSize + shipRenderer.tileSize / 2
+        };
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 100, 0, 0.9)';
+        ctx.strokeStyle = '#ff6600';
+        ctx.lineWidth = 2;
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+
+        const text = 'Press E to Fight Fire';
+        const metrics = ctx.measureText(text);
+        const padding = 6;
+        const boxWidth = metrics.width + padding * 2;
+        const boxHeight = 20;
+        const boxX = screenPos.x - boxWidth / 2;
+        const boxY = screenPos.y - 40;
+
+        ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+        ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(text, screenPos.x, screenPos.y - 27);
+
+        // Fire extinguisher icon
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '16px Arial';
+        ctx.fillText('🧯', screenPos.x, screenPos.y - 50);
+
+        ctx.restore();
+    }
+
+    /**
+     * Render fire fighting progress bar
+     */
+    renderFireFightProgress(ctx, fire, player, shipRenderer) {
+        const screenPos = {
+            x: fire.x * shipRenderer.tileSize + shipRenderer.tileSize / 2,
+            y: fire.y * shipRenderer.tileSize + shipRenderer.tileSize / 2
+        };
+
+        const playerSkill = player.engineeringSkill || 0;
+        const fightTime = Math.max(3, 5 - playerSkill);
+        const progress = Math.min(1, this.fireFightProgress / fightTime);
+
+        ctx.save();
+
+       // Progress bar background
+        const barWidth = 50;
+        const barHeight = 8;
+        const barX = screenPos.x - barWidth / 2;
+        const barY = screenPos.y - 30;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(barX, barY, barWidth, barHeight);
+
+        // Progress fill (orange/red gradient)
+        const gradient = ctx.createLinearGradient(barX, 0, barX + barWidth * progress, 0);
+        gradient.addColorStop(0, '#ff9933');
+        gradient.addColorStop(1, '#ff3300');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(barX, barY, barWidth * progress, barHeight);
+
+        // Border
+        ctx.strokeStyle = '#ff6600';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
+
+        // Text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Fighting Fire...', screenPos.x, barY - 5);
+
+        // Fire intensity indicator
+        ctx.font = '9px Arial';
+        ctx.fillStyle = '#ffaa00';
+        const intensityText = `${Math.round(fire.intensity)}%`;
+        ctx.fillText(intensityText, screenPos.x, barY + barHeight + 12);
+
+        ctx.restore();
+    }
