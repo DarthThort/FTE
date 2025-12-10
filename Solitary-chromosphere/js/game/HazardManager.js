@@ -192,89 +192,89 @@ class HazardManager {
         this.breaches.splice(breachIndex, 1);
     }
 
-	/**
+    /**
  * Create a fire at the specified location
  */
-createFire(x, y) {
-    // Check if fire already exists at this tile
-    if (this.fires.some(f => f.x === x && f.y === y)) return;
-    // Check if tile is walkable
-    const tile = this.state.ship.layout[y]?.[x];
-    if (tile !== 2 && tile !== 3 && tile !== 7) return;
-    const fire = {
-        x,
-        y,
-        intensity: 1.0,  // 0.0 to 1.0
-        spreadTimer: 5.0 + Math.random() * 3.0,  // 5-8 seconds (slow)
-        damageTimer: 0,  // For damage tick
-        animationOffset: Math.random() * Math.PI * 2 // Flame animation
-    };
-    this.fires.push(fire);
-    console.log(`[HazardManager] Fire created at (${x}, ${y})`);
-}
-/**
- * Update all fires - handle spread, oxygen consumption, auto-extinguish
- */
-updateFires(dt) {
-    for (let i = this.fires.length - 1; i >= 0; i--) {
-        const fire = this.fires[i];
-        // Get room oxygen level
-        const roomId = this.getRoomIdAt(fire.x, fire.y);
-        const oxygen = roomId !== -1 ? this.roomOxygen[roomId].level : 100;
-        // Auto-extinguish in low oxygen
-        if (oxygen < 10) {
-            this.fires.splice(i, 1);
-            console.log(`[HazardManager] Fire at (${fire.x}, ${fire.y}) extinguished (low oxygen)`);
-            continue;
-        }
-        // Update spread timer
-        fire.spreadTimer -= dt;
-        if (fire.spreadTimer <= 0) {
-            this.spreadFire(fire);
-            fire.spreadTimer = 5.0 + Math.random() * 3.0; // Reset to 5-8 seconds
-        }
-        // Consume oxygen faster (5 O2/sec per fire)
-        if (roomId !== -1 && this.roomOxygen[roomId]) {
-            this.roomOxygen[roomId].level = Math.max(0, this.roomOxygen[roomId].level - dt * 5);
-        }
-        // Update damage timer
-        fire.damageTimer += dt;
+    createFire(x, y) {
+        // Check if fire already exists at this tile
+        if (this.fires.some(f => f.x === x && f.y === y)) return;
+        // Check if tile is walkable
+        const tile = this.state.ship.layout[y]?.[x];
+        if (tile !== 2 && tile !== 3 && tile !== 7) return;
+        const fire = {
+            x,
+            y,
+            intensity: 1.0,  // 0.0 to 1.0
+            spreadTimer: 5.0 + Math.random() * 3.0,  // 5-8 seconds (slow)
+            damageTimer: 0,  // For damage tick
+            animationOffset: Math.random() * Math.PI * 2 // Flame animation
+        };
+        this.fires.push(fire);
+        console.log(`[HazardManager] Fire created at (${x}, ${y})`);
     }
-}
-/**
- * Attempt to spread fire to adjacent tiles
- */
-spreadFire(fire) {
-    const directions = [
-        { dx: 1, dy: 0 }, { dx: -1, dy: 0 },
-        { dx: 0, dy: 1 }, { dx: 0, dy: -1 }
-    ];
-    for (const dir of directions) {
-        const nx = fire.x + dir.dx;
-        const ny = fire.y + dir.dy;
-        // Check if tile is walkable and no fire exists
-        const tile = this.state.ship.layout[ny]?.[nx];
-        if ((tile === 2 || tile === 3 || tile === 7) &&
-            !this.fires.some(f => f.x === nx && f.y === ny)) {
-            // 20% chance to spread (slow)
-            if (Math.random() < 0.20) {
-                this.createFire(nx, ny);
+    /**
+     * Update all fires - handle spread, oxygen consumption, auto-extinguish
+     */
+    updateFires(dt) {
+        for (let i = this.fires.length - 1; i >= 0; i--) {
+            const fire = this.fires[i];
+            // Get room oxygen level
+            const roomId = this.getRoomIdAt(fire.x, fire.y);
+            const oxygen = roomId !== -1 ? this.roomOxygen[roomId].level : 100;
+            // Auto-extinguish in low oxygen
+            if (oxygen < 10) {
+                this.fires.splice(i, 1);
+                console.log(`[HazardManager] Fire at (${fire.x}, ${fire.y}) extinguished (low oxygen)`);
+                continue;
+            }
+            // Update spread timer
+            fire.spreadTimer -= dt;
+            if (fire.spreadTimer <= 0) {
+                this.spreadFire(fire);
+                fire.spreadTimer = 5.0 + Math.random() * 3.0; // Reset to 5-8 seconds
+            }
+            // Consume oxygen faster (5 O2/sec per fire)
+            if (roomId !== -1 && this.roomOxygen[roomId]) {
+                this.roomOxygen[roomId].level = Math.max(0, this.roomOxygen[roomId].level - dt * 5);
+            }
+            // Update damage timer
+            fire.damageTimer += dt;
+        }
+    }
+    /**
+     * Attempt to spread fire to adjacent tiles
+     */
+    spreadFire(fire) {
+        const directions = [
+            { dx: 1, dy: 0 }, { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 }, { dx: 0, dy: -1 }
+        ];
+        for (const dir of directions) {
+            const nx = fire.x + dir.dx;
+            const ny = fire.y + dir.dy;
+            // Check if tile is walkable and no fire exists
+            const tile = this.state.ship.layout[ny]?.[nx];
+            if ((tile === 2 || tile === 3 || tile === 7) &&
+                !this.fires.some(f => f.x === nx && f.y === ny)) {
+                // 20% chance to spread (slow)
+                if (Math.random() < 0.20) {
+                    this.createFire(nx, ny);
+                }
             }
         }
     }
-}
-/**
- * Extinguish a fire at the specified location
- */
-extinguishFire(x, y) {
-    const index = this.fires.findIndex(f => f.x === x && f.y === y);
-    if (index !== -1) {
-        this.fires.splice(index, 1);
-        console.log(`[HazardManager] Fire at (${x}, ${y}) extinguished`);
-        return true;
+    /**
+     * Extinguish a fire at the specified location
+     */
+    extinguishFire(x, y) {
+        const index = this.fires.findIndex(f => f.x === x && f.y === y);
+        if (index !== -1) {
+            this.fires.splice(index, 1);
+            console.log(`[HazardManager] Fire at (${x}, ${y}) extinguished`);
+            return true;
+        }
+        return false;
     }
-    return false;
-}
 
 
     /**
@@ -399,5 +399,147 @@ extinguishFire(x, y) {
     toggleOxygenOverlay() {
         this.oxygenOverlayEnabled = !this.oxygenOverlayEnabled;
         console.log(`[HazardManager] Oxygen overlay: ${this.oxygenOverlayEnabled ? 'ON' : 'OFF'}`);
+    }
+
+    // ============================================
+    // TILE-BASED FIRE SYSTEM
+    // ============================================
+
+    /**
+     * Start fire at a specific tile
+     */
+    startFireAt(x, y) {
+        const layout = this.state.ship.layout;
+
+        // Check if tile is valid and walkable
+        if (!layout[y] || !layout[y][x]) return false;
+        const tile = layout[y][x];
+        if (tile !== 2 && tile !== 3) return false; // Only floor and system tiles
+
+        // Check if fire already exists at this location
+        if (this.fires.some(f => f.x === x && f.y === y)) return false;
+
+        // Get room ID
+        const roomId = this.getRoomIdAt(x, y);
+
+        // Create fire
+        this.fires.push({
+            x,
+            y,
+            intensity: 20,
+            age: 0,
+            roomId,
+            spreadTimer: 5.0 // 5 seconds until next spread attempt
+        });
+
+        console.log(`[Fire] Started at (${x}, ${y}) in room ${roomId}`);
+        return true;
+    }
+
+    /**
+     * Update all fires - intensity growth, spreading, oxygen consumption
+     */
+    updateFires(dt) {
+        if (this.fires.length === 0) return;
+
+        // Update each fire
+        for (let i = this.fires.length - 1; i >= 0; i--) {
+            const fire = this.fires[i];
+
+            // Age the fire
+            fire.age += dt;
+
+            // Increase intensity over time (caps at 100)
+            fire.intensity = Math.min(100, fire.intensity + 3 * dt);
+
+            // Update spread timer
+            fire.spreadTimer -= dt;
+            if (fire.spreadTimer <= 0) {
+                this.spreadFire(fire);
+                fire.spreadTimer = 5.0; // Reset to 5 seconds
+            }
+
+            // Consume oxygen from the room
+            if (fire.roomId !== -1 && this.roomOxygen[fire.roomId]) {
+                const consumption = 0.5 * (fire.intensity / 100) * dt;
+                this.roomOxygen[fire.roomId].level = Math.max(0, this.roomOxygen[fire.roomId].level - consumption);
+
+                // Extinguish if oxygen too low
+                if (this.roomOxygen[fire.roomId].level < 5) {
+                    console.log(`[Fire] Auto-extinguished at (${fire.x}, ${fire.y}) - low oxygen`);
+                    this.fires.splice(i, 1);
+                }
+            }
+        }
+    }
+
+    /**
+     * Attempt to spread fire to adjacent tiles
+     */
+    spreadFire(fire) {
+        const layout = this.state.ship.layout;
+
+        // Check all 4 adjacent tiles
+        const adjacent = [
+            { x: fire.x + 1, y: fire.y },
+            { x: fire.x - 1, y: fire.y },
+            { x: fire.x, y: fire.y + 1 },
+            { x: fire.x, y: fire.y - 1 }
+        ];
+
+        for (const pos of adjacent) {
+            // Check bounds
+            if (!layout[pos.y] || !layout[pos.y][pos.x]) continue;
+
+            const tile = layout[pos.y][pos.x];
+
+            // Can spread to floor (2), systems (3), and OPEN doors (5)
+            if (tile !== 2 && tile !== 3 && tile !== 5) continue;
+
+            // Check if already on fire
+            if (this.fires.some(f => f.x === pos.x && f.y === pos.y)) continue;
+
+            // Spread chance based on intensity (20% at low, 80% at high)
+            const spreadChance = 0.2 + (fire.intensity / 100) * 0.6;
+
+            if (Math.random() < spreadChance) {
+                this.startFireAt(pos.x, pos.y);
+                console.log(`[Fire] Spread from (${fire.x}, ${fire.y}) to (${pos.x}, ${pos.y})`);
+            }
+        }
+    }
+
+    /**
+     * Extinguish fire at specific tile
+     */
+    extinguishFireAt(x, y) {
+        const index = this.fires.findIndex(f => f.x === x && f.y === y);
+        if (index === -1) return false;
+
+        this.fires.splice(index, 1);
+        console.log(`[Fire] Extinguished at (${x}, ${y})`);
+        return true;
+    }
+
+    /**
+     * Extinguish all fires in a room
+     */
+    extinguishAllFiresInRoom(roomId) {
+        let count = 0;
+        for (let i = this.fires.length - 1; i >= 0; i--) {
+            if (this.fires[i].roomId === roomId) {
+                this.fires.splice(i, 1);
+                count++;
+            }
+        }
+        console.log(`[Fire] Extinguished ${count} fires in room ${roomId}`);
+        return count > 0;
+    }
+
+    /**
+     * Get fire at specific tile
+     */
+    getFireAt(x, y) {
+        return this.fires.find(f => f.x === x && f.y === y);
     }
 }
