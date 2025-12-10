@@ -116,9 +116,15 @@ class CrewManager {
             return;
         }
 
+        // DEBUG: Log when updateCrewAI runs
+        const fireCount = this.state.hazardManager?.fires?.length || 0;
+        if (fireCount > 0 && Math.random() < 0.1) { // Log 10% of the time when there are fires
+            console.log(`[CrewAI] Running with ${this.state.ship.crew.length} crew, ${fireCount} fires`);
+        }
+
         for (const crew of this.state.ship.crew) {
-            // PRIORITY 1: Fire fighting - even assigned crew should fight fires!
-            if (!crew.targetBreach && crew.state !== 'repairing' && crew.state !== 'fighting_fire') {
+            // PRIORITY 1: Fire fighting - ALL crew should fight fires (except if already doing so)
+            if (crew.state !== 'fighting_fire' && crew.state !== 'repairing') {
                 const nearbyFire = this.findNearbyFire(crew);
                 if (nearbyFire) {
                     crew.state = 'fighting_fire';
@@ -405,8 +411,8 @@ class CrewManager {
         }
 
         // Debug logging when fire detection runs
-        if (fires.length > 0 && crew.state === 'idle') {
-            console.log(`[FireDetection] ${crew.name} at (${crewTileX},${crewTileY}) - ${fires.length} fires, nearest=${nearestFire ? `(${nearestFire.x},${nearestFire.y}) dist=${minDist.toFixed(1)}` : 'none in range'}`);
+        if (fires.length > 0) {
+            console.log(`[FireDetection] ${crew.name} state='${crew.state}' at (${crewTileX},${crewTileY}) - ${fires.length} fires, nearest=${nearestFire ? `(${nearestFire.x},${nearestFire.y}) dist=${minDist.toFixed(1)}` : 'none in range'}`);
         }
 
         return nearestFire;
