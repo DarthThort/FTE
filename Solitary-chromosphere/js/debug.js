@@ -134,6 +134,80 @@ window.debug = {
     },
 
     /**
+     * Start fire in a specific room for testing
+     * @param {string} roomId - Room ID (e.g. 'cockpit', 'main_hall')
+     */
+    startFire(roomId = 'main_hall') {
+        if (!window.game || !window.game.state.lifeSupportManager) {
+            console.error('[Debug] Game or LifeSupportManager not loaded');
+            return;
+        }
+
+        const success = window.game.state.lifeSupportManager.startFire(roomId);
+        if (success) {
+            console.log(`[Debug] 🔥 Fire started in room: ${roomId}`);
+        } else {
+            console.error(`[Debug] Failed to start fire in room: ${roomId}. Room may not exist or already on fire.`);
+        }
+    },
+
+    /**
+     * Extinguish fire in a room
+     * @param {string} roomId - Room ID
+     */
+    extinguishFire(roomId) {
+        if (!window.game || !window.game.state.lifeSupportManager) {
+            console.error('[Debug] Game or LifeSupportManager not loaded');
+            return;
+        }
+
+        const success = window.game.state.lifeSupportManager.extinguishFire(roomId);
+        if (success) {
+            console.log(`[Debug] 💧 Fire extinguished in room: ${roomId}`);
+        } else {
+            console.error(`[Debug] Failed to extinguish fire. Room may not exist or not on fire.`);
+        }
+    },
+
+    /**
+     * List all rooms with their IDs and status
+     */
+    listRooms() {
+        if (!window.game || !window.game.state.ship.rooms) {
+            console.error('[Debug] Game or rooms not loaded');
+            return;
+        }
+
+        console.log('=== SHIP ROOMS ===');
+        window.game.state.ship.rooms.forEach(room => {
+            console.log(`Room: ${room.id || 'NO ID'}`);
+            console.log(`  - Tiles: ${room.tiles ? room.tiles.length : 0}`);
+            console.log(`  - On Fire: ${room.onFire || false}`);
+            console.log(`  - Fire Intensity: ${room.fireIntensity || 0}`);
+            console.log(`  - Breached: ${room.breached || false}`);
+            console.log(`  - Oxygen: ${room.oxygen || 100}`);
+        });
+    },
+
+    /**
+     * Create a breach in a room
+     * @param {string} roomId - Room ID
+     */
+    createBreach(roomId = 'main_hall') {
+        if (!window.game || !window.game.state.lifeSupportManager) {
+            console.error('[Debug] Game or LifeSupportManager not loaded');
+            return;
+        }
+
+        const success = window.game.state.lifeSupportManager.createBreach(roomId);
+        if (success) {
+            console.log(`[Debug] 💥 Breach created in room: ${roomId}`);
+        } else {
+            console.error(`[Debug] Failed to create breach. Room may not exist or already breached.`);
+        }
+    },
+
+    /**
      * Create a fire at specified tile coordinates
      * @param {number} x - Tile X coordinate
      * @param {number} y - Tile Y coordinate
@@ -176,6 +250,12 @@ Modules:
                                            Slots: 'weapon1', 'weapon2', 'shield', 'engine', etc.
   debug.upgradeModule(slot)              - Upgrade module to next tier
 
+Hazards:
+  debug.listRooms()                      - List all rooms and their status
+  debug.startFire(roomId)                - Start fire in room (default 'main_hall')
+  debug.extinguishFire(roomId)           - Put out fire in room
+  debug.createBreach(roomId)             - Create hull breach in room
+
 Other:
   debug.heal()                           - Heal ship to full health & shields
   debug.help()                           - Show this help
@@ -183,6 +263,7 @@ Other:
 Examples:
   debug.startCombat()
   debug.addCredits(5000)
+  debug.startFire('cockpit')
   debug.installModule('weapon1', 'railgun')
   debug.upgradeModule('shield')
         `);
