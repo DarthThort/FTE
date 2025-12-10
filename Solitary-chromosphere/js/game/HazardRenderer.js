@@ -180,8 +180,9 @@ class HazardRenderer {
 
         // Render each individual fire tile from HazardManager
         for (const fire of this.hazardManager.fires) {
-            // FOG OF WAR: Only render fire if tile is visible
-            if (!visible[fire.y] || !visible[fire.y][fire.x]) continue;
+            // TODO: Re-enable fog of war once visibility system is confirmed working
+            // For now, show all fires since the banner alerts the player anyway
+            // if (!visible[fire.y] || !visible[fire.y][fire.x]) continue;
 
             const posX = fire.x * tileSize;
             const posY = fire.y * tileSize;
