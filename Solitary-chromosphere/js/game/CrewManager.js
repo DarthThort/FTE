@@ -130,6 +130,22 @@ class CrewManager {
                 continue; // Skip normal AI for assigned crew
             }
 
+            // Auto fire fighting: idle crew detects nearby fires and goes to fight them
+            if (crew.state === 'idle' || crew.state === 'wandering') {
+                const nearbyFire = this.findNearbyFire(crew);
+                if (nearbyFire) {
+                    crew.state = 'fighting_fire';
+                    crew.targetFire = nearbyFire;
+                    crew.fireFightProgress = 0;
+                    // Set target to adjacent tile (crew can't stand ON fire)
+                    crew.targetX = nearbyFire.x * 32 + 16;
+                    crew.targetY = nearbyFire.y * 32 + 16;
+                    crew.path = [];
+                    console.log(`[CrewManager] ${crew.name} detected fire at (${nearbyFire.x}, ${nearbyFire.y}) and going to fight it`);
+                    continue;
+                }
+            }
+
             if (crew.state === 'idle' && (!crew.targetX || !crew.targetY)) {
                 if (!crew.wanderTimer || crew.wanderTimer <= 0) {
                     const wanderSpot = this.getRandomWalkablePosition();
@@ -144,7 +160,52 @@ class CrewManager {
                 crew.wanderTimer -= 1 / 60;
             }
 
-            if ((crew.state === 'moving' || crew.state === 'wandering') && crew.targetX !== null && crew.targetY !== null) {
+            // Handle crew states: moving, wandering, AND fighting_fire
+            if ((crew.state === 'moving' || crew.state === 'wandering' || crew.state === 'fighting_fire') && crew.targetX !== null && crew.targetY !== null) {
+                // Fire fighter check: am I close enough to fight the fire?
+                if (crew.state === 'fighting_fire' && crew.targetFire) {
+                    const dist = Math.sqrt(
+                        Math.pow(crew.x / 32 - crew.targetFire.x, 2) +
+                        Math.pow(crew.y / 32 - crew.targetFire.y, 2)
+                    );
+
+                    // Close enough to fight fire (1.5 tiles range)
+                    if (dist <= 1.5) {
+                        const fire = this.state.hazardManager.getFireAt(crew.targetFire.x, crew.targetFire.y);
+
+                        if (!fire) {
+                            // Fire extinguished, return to idle
+                            crew.state = 'idle';
+                            crew.targetFire = null;
+                            crew.fireFightProgress = 0;
+                            crew.targetX = null;
+                            crew.targetY = null;
+                            console.log(`[CrewManager] ${crew.name} finished fighting fire (already out)`);
+                            continue;
+                        }
+
+                        // Fight the fire!
+                        crew.fireFightProgress += 1 / 60; // Assuming 60fps
+                        const fightTime = Math.max(2, 5 - (crew.engineeringSkill || 0));
+
+                        // Reduce fire intensity
+                        fire.intensity = Math.max(0, fire.intensity - (15 / 60)); // 15% per second
+
+                        if (fire.intensity <= 0 || crew.fireFightProgress >= fightTime) {
+                            // Fire out!
+                            this.state.hazardManager.extinguishFireAt(fire.x, fire.y);
+                            crew.state = 'idle';
+                            crew.targetFire = null;
+                            crew.fireFightProgress = 0;
+                            crew.targetX = null;
+                            crew.targetY = null;
+                            console.log(`[CrewManager] ${crew.name} extinguished fire!`);
+                        }
+                        continue; // Don't move, just fight fire
+                    }
+                }
+
+                // Normal pathfinding and movement
                 // DEBUG: Log if crew has targetBreach
                 if (crew.targetBreach !== undefined) {
                     console.log(`[CrewManager] ${crew.name} moving to breach - state='${crew.state}' targetBreach=${crew.targetBreach} path.length=${crew.path?.length || 0}`);
@@ -157,7 +218,7 @@ class CrewManager {
                     const targetY = Math.floor(crew.targetY / 32);
 
                     let path = this.pathfinding.findPath(startX, startY, targetX, targetY);
-					path = this.pathfinding.smoothPath(path);
+                    path = this.pathfinding.smoothPath(path);
 
                     crew.path = path.map(node => ({
                         x: node.x,
@@ -303,18 +364,47 @@ class CrewManager {
     }
 
     getRandomWalkablePosition() {
-        const walkableTiles = [];
-        for (let y = 0; y < this.state.ship.layout.length; y++) {
-            for (let x = 0; x < this.state.ship.layout[y].length; x++) {
-                if (this.pathfinding.isWalkable(x, y)) {
-                    walkableTiles.push({ x, y });
-                }
+        const layout = this.state.ship.layout;
+        const maxAttempts = 50;
+
+        for (let i = 0; i < maxAttempts; i++) {
+            const x = Math.floor(Math.random() * layout[0].length);
+            const y = Math.floor(Math.random() * layout.length);
+
+            if (layout[y][x] === 2 || layout[y][x] === 3 || layout[y][x] === 5) {
+                return { x, y };
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Find a nearby fire to fight
+     * @param {Object} crew - Crew member
+     * @returns {Object|null} - Fire object or null
+     */
+    findNearbyFire(crew) {
+        const fires = this.state.hazardManager.fires;
+        if (!fires || fires.length === 0) return null;
+
+        const crewTileX = Math.floor(crew.x / 32);
+        const crewTileY = Math.floor(crew.y / 32);
+        const detectionRange = 8; // tiles
+
+        let nearestFire = null;
+        let minDist = Infinity;
+
+        for (const fire of fires) {
+            const dx = fire.x - crewTileX;
+            const dy = fire.y - crewTileY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < minDist && dist <= detectionRange) {
+                minDist = dist;
+                nearestFire = fire;
             }
         }
 
-        if (walkableTiles.length > 0) {
-            return walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
-        }
-        return null;
+        return nearestFire;
     }
 }
