@@ -106,14 +106,14 @@ class GameEngine {
         } else {
             this.oxygenTogglePressed = false;
         }
-        // Check for repair key (E key)
+        // E key handling (check once per press)
         if (this.input.isDown('KeyE')) {
-            if (!this.repairKeyPressed && this.state.hazardUI) {
-                this.repairKeyPressed = true;
-                this.state.hazardUI.startPlayerRepair();
+            if (!this.eKeyPressed && this.state.hazardUI) {
+                this.eKeyPressed = true;
+                this.state.hazardUI.attemptRepair(); // Works for both breaches and fires
             }
         } else {
-            this.repairKeyPressed = false;
+            this.eKeyPressed = false;
         }
 
         // Check for crew assignment key (R key)  
