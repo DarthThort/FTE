@@ -459,9 +459,9 @@ class HazardManager {
                 fire.spreadTimer = 5.0; // Reset to 5 seconds
             }
 
-            // Consume oxygen from the room
+            // Consume oxygen from the room (slow rate)
             if (fire.roomId !== -1 && this.roomOxygen[fire.roomId]) {
-                const consumption = 0.5 * (fire.intensity / 100) * dt;
+                const consumption = 0.05 * (fire.intensity / 100) * dt; // Reduced from 0.5 to 0.05
                 this.roomOxygen[fire.roomId].level = Math.max(0, this.roomOxygen[fire.roomId].level - consumption);
 
                 // Extinguish if oxygen too low
@@ -499,8 +499,8 @@ class HazardManager {
             // Check if already on fire
             if (this.fires.some(f => f.x === pos.x && f.y === pos.y)) continue;
 
-            // Spread chance based on intensity (20% at low, 80% at high)
-            const spreadChance = 0.2 + (fire.intensity / 100) * 0.6;
+            // Spread chance based on intensity (5% at low, 30% at high)
+            const spreadChance = 0.05 + (fire.intensity / 100) * 0.25;
 
             if (Math.random() < spreadChance) {
                 this.startFireAt(pos.x, pos.y);
