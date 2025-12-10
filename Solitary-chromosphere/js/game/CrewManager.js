@@ -141,7 +141,7 @@ class CrewManager {
                     crew.targetX = nearbyFire.x * 32 + 16;
                     crew.targetY = nearbyFire.y * 32 + 16;
                     crew.path = [];
-                    console.log(`[CrewManager] ${crew.name} detected fire at (${nearbyFire.x}, ${nearbyFire.y}) and going to fight it`);
+                    console.log(`[CrewManager] 🔥 ${crew.name} detected fire at (${nearbyFire.x}, ${nearbyFire.y}) and going to fight it`);
                     continue;
                 }
             }
@@ -403,6 +403,11 @@ class CrewManager {
                 minDist = dist;
                 nearestFire = fire;
             }
+        }
+
+        // Debug logging when fire detection runs
+        if (fires.length > 0 && crew.state === 'idle') {
+            console.log(`[FireDetection] ${crew.name} at (${crewTileX},${crewTileY}) - ${fires.length} fires, nearest=${nearestFire ? `(${nearestFire.x},${nearestFire.y}) dist=${minDist.toFixed(1)}` : 'none in range'}`);
         }
 
         return nearestFire;
