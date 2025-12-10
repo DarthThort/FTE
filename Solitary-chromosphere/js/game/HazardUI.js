@@ -136,6 +136,46 @@ class HazardUI {
     }
 
     /**
+     * Render fire alert banner
+     */
+    renderFireAlert(ctx) {
+        const fireCount = this.state.hazardManager.fires.length;
+        const time = Date.now() / 1000;
+
+        ctx.save();
+
+        // Pulsing effect
+        const pulse = 0.7 + Math.sin(time * 3) * 0.3;
+
+        // Banner background
+        const bannerWidth = 300;
+        const bannerHeight = 50;
+        const x = (ctx.canvas.width - bannerWidth) / 2;
+        const y = 80;
+
+        ctx.fillStyle = `rgba(255, 100, 0, ${pulse * 0.9})`;
+        ctx.fillRect(x, y, bannerWidth, bannerHeight);
+
+        // Border
+        ctx.strokeStyle = `rgba(255, 200, 0, ${pulse})`;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, bannerWidth, bannerHeight);
+
+        // Text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🔥 FIRE DETECTED 🔥', x + bannerWidth / 2, y + bannerHeight / 2 - 5);
+
+        // Fire count
+        ctx.font = '14px Arial';
+        ctx.fillText(`${fireCount} tile${fireCount > 1 ? 's' : ''} burning`, x + bannerWidth / 2, y + bannerHeight / 2 + 12);
+
+        ctx.restore();
+    }
+
+    /**
      * Render repair prompt near breach
      */
     renderRepairPrompt(ctx, breach, shipRenderer) {
