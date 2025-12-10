@@ -124,7 +124,7 @@ class ShipRenderer {
             this.hazardRenderer = new HazardRenderer(this.game.state.hazardManager);
         }
         if (this.hazardRenderer) {
-            this.hazardRenderer.render(ctx, this.tileSize, this.offsetX, this.offsetY);
+            this.hazardRenderer.render(ctx, this.tileSize, this.offsetX, this.offsetY, this.visible);
         }
 
         // Render hazard UI (repair prompts, progress bars, oxygen HUD)

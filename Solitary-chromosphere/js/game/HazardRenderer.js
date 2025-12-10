@@ -11,7 +11,7 @@ class HazardRenderer {
     /**
      * Main render method
      */
-    render(ctx, tileSize, offsetX, offsetY) {
+    render(ctx, tileSize, offsetX, offsetY, visible = []) {
         // Render oxygen overlay if enabled
         if (this.hazardManager.oxygenOverlayEnabled) {
             this.renderOxygenOverlay(ctx, tileSize, offsetX, offsetY);
@@ -20,8 +20,8 @@ class HazardRenderer {
         // Render breaches
         this.renderBreaches(ctx, tileSize, offsetX, offsetY);
 
-        // Render fires
-        this.renderFires(ctx, tileSize, offsetX, offsetY);
+        // Render fires with fog of war
+        this.renderFires(ctx, tileSize, offsetX, offsetY, visible);
     }
 
     /**
@@ -172,25 +172,15 @@ class HazardRenderer {
     /**
      * Render fires with animated flames
      * Uses tile-based fire system from HazardManager.fires
-     * Fires visible within 7 tiles of player position
+     * Only visible in explored tiles (fog of war)
      */
-    renderFires(ctx, tileSize, offsetX, offsetY) {
+    renderFires(ctx, tileSize, offsetX, offsetY, visible = []) {
         const time = Date.now() / 1000;
-
-        // Get player position for fog of war
-        const player = this.hazardManager.state.sceneManager?.player;
-        const playerTileX = player ? Math.floor(player.x / tileSize) : -100;
-        const playerTileY = player ? Math.floor(player.y / tileSize) : -100;
-        const visibilityRadius = 7; // tiles
 
         // Render each individual fire tile from HazardManager
         for (const fire of this.hazardManager.fires) {
-            // FOG OF WAR: Only render fire within visibility radius of player
-            const dx = fire.x - playerTileX;
-            const dy = fire.y - playerTileY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance > visibilityRadius) continue;
+            // FOG OF WAR: Only render fire if tile is visible
+            if (!visible[fire.y] || !visible[fire.y][fire.x]) continue;
 
             const posX = fire.x * tileSize;
             const posY = fire.y * tileSize;
