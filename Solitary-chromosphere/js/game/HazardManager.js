@@ -493,8 +493,36 @@ class HazardManager {
 
             const tile = layout[pos.y][pos.x];
 
-            // Can spread to floor (2), systems (3), and doors (4, 5)
-            if (tile !== 2 && tile !== 3 && tile !== 4 && tile !== 5) continue;
+            // DOOR DETECTION: If tile is a door (4 or 5), spread to tile BEYOND it
+            if (tile === 4 || tile === 5) {
+                // Calculate direction from fire to door
+                const dx = pos.x - fire.x;
+                const dy = pos.y - fire.y;
+
+                // The tile beyond the door
+                const beyondX = pos.x + dx;
+                const beyondY = pos.y + dy;
+
+                // Check if beyond tile exists and is walkable
+                if (layout[beyondY] && layout[beyondY][beyondX]) {
+                    const beyondTile = layout[beyondY][beyondX];
+
+                    // Can spread to floor or systems beyond the door  
+                    if ((beyondTile === 2 || beyondTile === 3) &&
+                        !this.fires.some(f => f.x === beyondX && f.y === beyondY)) {
+
+                        const spreadChance = 0.05 + (fire.intensity / 100) * 0.25;
+                        if (Math.random() < spreadChance) {
+                            this.startFireAt(beyondX, beyondY);
+                            console.log(`[Fire] 🚪 Crossed door from (${fire.x}, ${fire.y}) to (${beyondX}, ${beyondY})`);
+                        }
+                    }
+                }
+                continue; // Don't burn the door itself
+            }
+
+            // Normal spread: Can spread to floor (2) and systems (3)
+            if (tile !== 2 && tile !== 3) continue;
 
             // Check if already on fire
             if (this.fires.some(f => f.x === pos.x && f.y === pos.y)) continue;
@@ -504,7 +532,6 @@ class HazardManager {
 
             if (Math.random() < spreadChance) {
                 this.startFireAt(pos.x, pos.y);
-                console.log(`[Fire] Spread from (${fire.x}, ${fire.y}) to (${pos.x}, ${pos.y})`);
             }
         }
     }
