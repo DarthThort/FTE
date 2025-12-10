@@ -507,14 +507,22 @@ class HazardManager {
                 if (layout[beyondY] && layout[beyondY][beyondX]) {
                     const beyondTile = layout[beyondY][beyondX];
 
-                    // Can spread to floor or systems beyond the door  
+                    // Can spread to floor or systems beyond the door
                     if ((beyondTile === 2 || beyondTile === 3) &&
                         !this.fires.some(f => f.x === beyondX && f.y === beyondY)) {
 
-                        const spreadChance = 0.05 + (fire.intensity / 100) * 0.25;
+                        // Base spread chance
+                        let spreadChance = 0.05 + (fire.intensity / 100) * 0.25;
+
+                        // Closed doors (tile 4) are 3x harder to cross than open doors (tile 5)
+                        if (tile === 4) {
+                            spreadChance = spreadChance / 3.0;
+                        }
+
                         if (Math.random() < spreadChance) {
                             this.startFireAt(beyondX, beyondY);
-                            console.log(`[Fire] 🚪 Crossed door from (${fire.x}, ${fire.y}) to (${beyondX}, ${beyondY})`);
+                            const doorState = tile === 4 ? 'CLOSED' : 'OPEN';
+                            console.log(`[Fire] 🚪 Crossed ${doorState} door from (${fire.x}, ${fire.y}) to (${beyondX}, ${beyondY})`);
                         }
                     }
                 }
