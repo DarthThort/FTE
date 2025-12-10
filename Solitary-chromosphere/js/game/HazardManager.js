@@ -493,8 +493,8 @@ class HazardManager {
 
             const tile = layout[pos.y][pos.x];
 
-            // Can spread to floor (2), systems (3), and OPEN doors (5)
-            if (tile !== 2 && tile !== 3 && tile !== 5) continue;
+            // Can spread to floor (2), systems (3), and doors (4, 5)
+            if (tile !== 2 && tile !== 3 && tile !== 4 && tile !== 5) continue;
 
             // Check if already on fire
             if (this.fires.some(f => f.x === pos.x && f.y === pos.y)) continue;
