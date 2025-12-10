@@ -81,6 +81,8 @@ class GameEngine {
             const combatPaused = this.state.combatManager && this.state.combatManager.active && this.state.combatManager.paused;
             if (!combatPaused) {
                 this.state.hazardManager.update(dt);
+                // Update tile-based fire spread and oxygen consumption
+                this.state.hazardManager.updateFires(dt);
             }
         }
 
