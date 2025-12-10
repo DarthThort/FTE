@@ -20,7 +20,8 @@ class HazardRenderer {
         // Render breaches
         this.renderBreaches(ctx, tileSize, offsetX, offsetY);
 
-        // Fires will be added in Phase 2
+        // Render fires
+        this.renderFires(ctx, tileSize, offsetX, offsetY);
     }
 
     /**
@@ -157,6 +158,7 @@ class HazardRenderer {
             const alpha = (1 - progress) * 0.6;
             const size = (1 - progress) * (2 + severity);
 
+
             ctx.fillStyle = `rgba(200, 220, 255, ${alpha})`;
             ctx.shadowColor = `rgba(200, 220, 255, ${alpha})`;
             ctx.shadowBlur = 4;
@@ -166,4 +168,91 @@ class HazardRenderer {
         }
         ctx.shadowBlur = 0;
     }
+
+    /**
+     * Render fires with animated flames
+     * Renders fire on all tiles in rooms marked as onFire from game state
+     */
+    renderFires(ctx, tileSize, offsetX, offsetY) {
+        const time = Date.now() / 1000;
+        const state = this.hazardManager.state;
+
+        // Get rooms from LifeSupportManager or GameState
+        const rooms = state.ship.rooms;
+        if (!rooms) return;
+
+        // Render fire for each room that's on fire
+        for (const room of rooms) {
+            if (!room.onFire || !room.tiles) continue;
+
+            const fireIntensity = room.fireIntensity || 50; // Default 50% if not set
+
+            // Render fire on each tile in the burning room
+            for (const tile of room.tiles) {
+                const x = tile[0];
+                const y = tile[1];
+                const posX = x * tileSize;
+                const posY = y * tileSize;
+                const centerX = posX + tileSize / 2;
+                const centerY = posY + tileSize / 2;
+
+                ctx.save();
+
+                // Animated flame height based on intensity
+                const intensityFactor = fireIntensity / 100;
+                const animationOffset = (x * 0.5 + y * 0.3); // Vary by position
+                const flameHeight = (15 + Math.sin(time * 5 + animationOffset) * 5) * intensityFactor;
+                const flameWidth = 12 * intensityFactor;
+
+                // Fire gradient - more intense = more red
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 20);
+                if (intensityFactor > 0.7) {
+                    // High intensity - red/white core
+                    gradient.addColorStop(0, 'rgba(255, 255, 200, 0.95)');
+                    gradient.addColorStop(0.2, 'rgba(255, 220, 100, 0.9)');
+                    gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.8)');
+                    gradient.addColorStop(1, 'rgba(200, 0, 0, 0.4)');
+                } else {
+                    // Lower intensity - more orange
+                    gradient.addColorStop(0, 'rgba(255, 255, 200, 0.85)');
+                    gradient.addColorStop(0.3, 'rgba(255, 200, 0, 0.8)');
+                    gradient.addColorStop(0.6, 'rgba(255, 100, 0, 0.6)');
+                    gradient.addColorStop(1, 'rgba(200, 50, 0, 0.2)');
+                }
+
+                // Main flame shape
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.moveTo(centerX, posY + tileSize - 4);
+                ctx.lineTo(centerX - flameWidth / 2, posY + tileSize - flameHeight);
+                ctx.quadraticCurveTo(centerX, posY + tileSize - flameHeight - 10,
+                    centerX + flameWidth / 2, posY + tileSize - flameHeight);
+                ctx.lineTo(centerX, posY + tileSize - 4);
+                ctx.fill();
+
+                // Fire particles rising
+                const numParticles = Math.floor(3 + intensityFactor * 3);
+                for (let i = 0; i < numParticles; i++) {
+                    const particleTime = (time * 2 + i * 0.3 + animationOffset) % 1.0;
+                    const px = centerX + (Math.sin(time * 3 + i + animationOffset) * 8 * intensityFactor);
+                    const py = centerY - (particleTime * 30);
+                    const alpha = (1 - particleTime) * 0.7 * intensityFactor;
+                    const size = (1 - particleTime * 0.5) * 3;
+
+                    ctx.fillStyle = `rgba(255, 150, 0, ${alpha})`;
+                    ctx.beginPath();
+                    ctx.arc(px, py, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Glow effect on tile - intensity based
+                const glowAlpha = 0.1 + (intensityFactor * 0.15);
+                ctx.fillStyle = `rgba(255, 100, 0, ${glowAlpha})`;
+                ctx.fillRect(posX, posY, tileSize, tileSize);
+
+                ctx.restore();
+            }
+        }
+    }
 }
+
