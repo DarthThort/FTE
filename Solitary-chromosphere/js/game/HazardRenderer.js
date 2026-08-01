@@ -40,6 +40,15 @@ class HazardRenderer {
     }
 
     /**
+     * Master render method called by ShipRenderer.js
+     */
+    render(ctx, tileSize, offsetX, offsetY, visible = []) {
+        this.renderOxygenOverlay(ctx, tileSize, offsetX, offsetY);
+        this.renderBreaches(ctx, tileSize, offsetX, offsetY);
+        this.renderFires(ctx, tileSize, offsetX, offsetY, visible);
+    }
+
+    /**
      * Render oxygen depletion overlay
      */
     renderOxygenOverlay(ctx, tileSize, offsetX, offsetY) {
