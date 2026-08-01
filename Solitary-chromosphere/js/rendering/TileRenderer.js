@@ -139,45 +139,54 @@ class TileRenderer {
             }
         }
         // 3. CORNERS (L-Junctions)
-        else if (S && E && !N && !W) { // Top-Left Corner
-            ctx.beginPath();
-            ctx.moveTo(posX + 4, posY + p); ctx.lineTo(posX + 4, posY + 4);
-            ctx.lineTo(posX + p, posY + 4); ctx.lineTo(posX + p, posY + p - 4);
-            ctx.lineTo(posX + p - 4, posY + p - 4); ctx.lineTo(posX + p - 4, posY + p);
-            ctx.closePath(); ctx.fill(); ctx.stroke();
-            // Corner Brace
-            ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(posX + 6, posY + 6); ctx.lineTo(posX + 16, posY + 16); ctx.stroke();
-        }
-        else if (S && W && !N && !E) { // Top-Right Corner
-            ctx.beginPath();
-            ctx.moveTo(posX + p - 4, posY + p); ctx.lineTo(posX + p - 4, posY + 4);
-            ctx.lineTo(posX, posY + 4); ctx.lineTo(posX, posY + p - 4);
-            ctx.lineTo(posX + 4, posY + p - 4); ctx.lineTo(posX + 4, posY + p);
-            ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(posX + p - 6, posY + 6); ctx.lineTo(posX + p - 16, posY + 16); ctx.stroke();
-        }
-        else if (N && E && !S && !W) { // Bottom-Left Corner
-            ctx.beginPath();
-            ctx.moveTo(posX + 4, posY); ctx.lineTo(posX + 4, posY + p - 4);
-            ctx.lineTo(posX + p, posY + p - 4); ctx.lineTo(posX + p, posY + 4);
-            ctx.lineTo(posX + p - 4, posY + 4); ctx.lineTo(posX + p - 4, posY);
-            ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(posX + 6, posY + p - 6); ctx.lineTo(posX + 16, posY + p - 16); ctx.stroke();
-        }
-        else if (N && W && !S && !E) { // Bottom-Right Corner
-            ctx.beginPath();
-            ctx.moveTo(posX + p - 4, posY); ctx.lineTo(posX + p - 4, posY + p - 4);
-            ctx.lineTo(posX, posY + p - 4); ctx.lineTo(posX, posY + 4);
-            ctx.lineTo(posX + 4, posY + 4); ctx.lineTo(posX + 4, posY);
-            ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(posX + p - 6, posY + p - 6); ctx.lineTo(posX + p - 16, posY + p - 16); ctx.stroke();
+        else if ((S && E && !N && !W) || (S && W && !N && !E) || (N && E && !S && !W) || (N && W && !S && !E)) {
+            const cornerVariant = Math.abs(gridX * 13 + gridY * 37) % 4;
+
+            if (S && E && !N && !W) { // Top-Left Corner
+                ctx.beginPath();
+                ctx.moveTo(posX + 4, posY + p); ctx.lineTo(posX + 4, posY + 4);
+                ctx.lineTo(posX + p, posY + 4); ctx.lineTo(posX + p, posY + p - 4);
+                ctx.lineTo(posX + p - 4, posY + p - 4); ctx.lineTo(posX + p - 4, posY + p);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            } else if (S && W && !N && !E) { // Top-Right Corner
+                ctx.beginPath();
+                ctx.moveTo(posX + p - 4, posY + p); ctx.lineTo(posX + p - 4, posY + 4);
+                ctx.lineTo(posX, posY + 4); ctx.lineTo(posX, posY + p - 4);
+                ctx.lineTo(posX + 4, posY + p - 4); ctx.lineTo(posX + 4, posY + p);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            } else if (N && E && !S && !W) { // Bottom-Left Corner
+                ctx.beginPath();
+                ctx.moveTo(posX + 4, posY); ctx.lineTo(posX + 4, posY + p - 4);
+                ctx.lineTo(posX + p, posY + p - 4); ctx.lineTo(posX + p, posY + 4);
+                ctx.lineTo(posX + p - 4, posY + 4); ctx.lineTo(posX + p - 4, posY);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            } else if (N && W && !S && !E) { // Bottom-Right Corner
+                ctx.beginPath();
+                ctx.moveTo(posX + p - 4, posY); ctx.lineTo(posX + p - 4, posY + p - 4);
+                ctx.lineTo(posX, posY + p - 4); ctx.lineTo(posX, posY + 4);
+                ctx.lineTo(posX + 4, posY + 4); ctx.lineTo(posX + 4, posY);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+            }
+
+            // CORNER DETAILS (Occasional screens / lights / braces)
+            if (cornerVariant === 1) { // Energy Conduit Brace
+                ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(posX + 8, posY + 8); ctx.lineTo(posX + p - 8, posY + p - 8); ctx.stroke();
+            } else if (cornerVariant === 2) { // Occasional Small Monitor Screen
+                ctx.fillStyle = '#090d16'; ctx.fillRect(posX + h - 4, posY + h - 4, 8, 8);
+                ctx.strokeStyle = '#38bdf8'; ctx.strokeRect(posX + h - 4, posY + h - 4, 8, 8);
+                ctx.fillStyle = '#00f0ff'; ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 3;
+                ctx.fillRect(posX + h - 2, posY + h - 1, 4, 2); ctx.shadowBlur = 0;
+            } else if (cornerVariant === 3) { // Occasional Switch Toggle
+                ctx.fillStyle = '#334155'; ctx.fillRect(posX + h - 3, posY + h - 3, 6, 6);
+                ctx.fillStyle = '#f59e0b'; ctx.shadowColor = '#f59e0b'; ctx.shadowBlur = 3;
+                ctx.fillRect(posX + h - 1, posY + h - 1, 2, 2); ctx.shadowBlur = 0;
+            }
         }
         // 4. T-JUNCTIONS & CROSSES / GENERAL CONNECTED WALLS
         else {
+            const junctionVariant = Math.abs(gridX * 19 + gridY * 41) % 4;
+
             ctx.fillRect(posX + 4, posY + 4, p - 8, p - 8);
             ctx.strokeRect(posX + 4, posY + 4, p - 8, p - 8);
 
@@ -187,11 +196,26 @@ class TileRenderer {
             if (W) ctx.fillRect(posX, posY + 4, 6, p - 8);
             if (E) ctx.fillRect(posX + p - 6, posY + 4, 6, p - 8);
 
-            // Center Rivet Core
-            ctx.fillStyle = '#00f0ff';
-            ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 4;
-            ctx.fillRect(posX + h - 2, posY + h - 2, 4, 4);
-            ctx.shadowBlur = 0;
+            // JUNCTION DETAILS (Occasional LED, Screen, or Switchboard)
+            if (junctionVariant === 0) { // Clean Metallic Rivet Core
+                ctx.fillStyle = '#475569';
+                ctx.fillRect(posX + h - 3, posY + h - 3, 6, 6);
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(posX + h - 1, posY + h - 1, 2, 2);
+            } else if (junctionVariant === 1) { // Status LED Light Node
+                ctx.fillStyle = '#10b981'; ctx.shadowColor = '#10b981'; ctx.shadowBlur = 5;
+                ctx.beginPath(); ctx.arc(posX + h, posY + h, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+            } else if (junctionVariant === 2) { // Occasional Telemetry Screen Core
+                ctx.fillStyle = '#090d16'; ctx.fillRect(posX + h - 5, posY + h - 4, 10, 8);
+                ctx.strokeStyle = '#38bdf8'; ctx.strokeRect(posX + h - 5, posY + h - 4, 10, 8);
+                ctx.fillStyle = '#00f0ff'; ctx.shadowColor = '#00f0ff'; ctx.shadowBlur = 3;
+                ctx.fillRect(posX + h - 3, posY + h - 1, 6, 2); ctx.shadowBlur = 0;
+            } else if (junctionVariant === 3) { // Occasional Switch Matrix
+                ctx.fillStyle = '#1e293b'; ctx.fillRect(posX + h - 5, posY + h - 4, 10, 8);
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(posX + h - 3, posY + h - 2, 2, 2);
+                ctx.fillStyle = '#10b981'; ctx.fillRect(posX + h + 1, posY + h - 2, 2, 2);
+                ctx.fillStyle = '#38bdf8'; ctx.fillRect(posX + h - 1, posY + h + 1, 2, 2);
+            }
         }
 
         ctx.restore();
