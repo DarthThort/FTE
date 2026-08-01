@@ -1,4 +1,4 @@
-﻿class GameState {
+class GameState {
     constructor() {
         this.credits = 10000; // Testing: Start with more credits
         this.scrap = 0; // Phase 11: Scrap resource for upgrades
@@ -258,7 +258,79 @@
         this.ship.health = Math.max(0, this.ship.health - amount);
         this.saveGame();
         this.notify();
+        if (this.ship.health <= 0) {
+            this.triggerShipDestruction();
+        }
     }
+
+    triggerShipDestruction() {
+        console.warn('[GameState] SHIP DESTROYED! Displaying Game Over modal...');
+        if (this.combatManager) {
+            this.combatManager.paused = true;
+        }
+        if (window.game && window.game.ui) {
+            window.game.ui.showShipDestroyedModal();
+        }
+    }
+
+    savePreTravelState() {
+        try {
+            const saveData = {
+                credits: this.credits,
+                scrap: this.scrap,
+                fuel: this.fuel,
+                shipHealth: this.ship.health > 0 ? this.ship.health : (this.ship.maxHealth || 100),
+                shipFuel: this.ship.fuel,
+                currentPlanet: this.currentPlanet,
+                currentSystem: this.currentSystem,
+                crew: this.ship.crew.map(c => ({ ...c })),
+                timestamp: Date.now()
+            };
+            localStorage.setItem('system_checkpoint_save', JSON.stringify(saveData));
+            console.log('[GameState] System entry checkpoint saved');
+        } catch (e) {
+            console.error('[GameState] Failed to save system checkpoint:', e);
+        }
+    }
+
+    restoreSystemEntryPoint() {
+        console.log('[GameState] Restoring system entry checkpoint...');
+        const checkpointData = localStorage.getItem('system_checkpoint_save') || localStorage.getItem('pre_travel_save');
+        
+        // Restore hull health back to 100% or checkpoint value
+        this.ship.health = this.ship.maxHealth || 100;
+
+        // Extinguish fires and repair breaches
+        if (this.hazardManager) {
+            this.hazardManager.fires = [];
+            this.hazardManager.breaches = [];
+        }
+
+        // Close active combat
+        if (this.combatManager) {
+            this.combatManager.active = false;
+            this.combatManager.paused = false;
+        }
+
+        if (checkpointData) {
+            try {
+                const data = JSON.parse(checkpointData);
+                if (data.credits !== undefined) this.credits = data.credits;
+                if (data.fuel !== undefined) this.fuel = data.fuel;
+                if (data.shipHealth !== undefined) this.ship.health = data.shipHealth;
+            } catch (e) {
+                console.error('[GameState] Error parsing checkpoint:', e);
+            }
+        }
+
+        this.saveGame();
+        this.notify();
+
+        if (window.game && window.game.sceneManager) {
+            window.game.sceneManager.changeScene('PORT');
+        }
+    }
+
 
     buyItem(itemId, amount) {
         const item = this.market.find(i => i.id === itemId);
@@ -401,6 +473,9 @@
                 message: `Target system is ${distance.toFixed(1)} LY away. Your jump drive can only reach ${this.ship.jumpRange} LY.`
             };
         }
+
+        // Save pre-travel checkpoint before executing jump
+        this.savePreTravelState();
 
         // Execute jump
         this.currentSystem = targetSystem;

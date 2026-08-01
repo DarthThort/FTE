@@ -1,4 +1,4 @@
-﻿class UIManager {
+class UIManager {
     constructor(rootElement, gameEngine) {
         this.root = rootElement;
         this.game = gameEngine;
@@ -48,140 +48,98 @@
             fontFamily: 'var(--font-tech)',
             fontSize: '0.9rem',
             cursor: 'pointer',
-            zIndex: '999',
-            transition: 'all 0.2s'
+            zIndex: '1000'
         });
-
-        optionsBtn.addEventListener('mouseover', () => {
-            optionsBtn.style.background = 'rgba(0, 150, 200, 0.5)';
-        });
-        optionsBtn.addEventListener('mouseout', () => {
-            optionsBtn.style.background = 'rgba(0, 100, 150, 0.3)';
-        });
-        optionsBtn.addEventListener('click', () => {
-            this.showOptionsMenu();
-        });
-
-        document.body.appendChild(optionsBtn);
+        optionsBtn.onclick = () => this.showOptionsMenu();
+        this.root.appendChild(optionsBtn);
     }
 
     showOptionsMenu() {
         const content = `
-            <div style="padding: 20px;">
-                <h2 style="color: var(--primary); margin-bottom: 20px; font-family: var(--font-tech);">GAME OPTIONS</h2>
-                
+            <div style="font-family: var(--font-tech);">
                 <div style="margin-bottom: 30px;">
                     <h3 style="color: var(--secondary); font-size: 1rem; margin-bottom: 15px;">Save Data</h3>
                     <button id="btn-reset-save-options" style="padding: 12px 24px; background: rgba(200, 0, 0, 0.2); color: #ff4444; border: 1px solid #ff4444; cursor: pointer; font-family: var(--font-tech); border-radius: 4px; font-size: 0.9rem; transition: all 0.2s;">
-                        ??? RESET SAVE DATA
+                        🗑️ RESET SAVE DATA
                     </button>
                     <p style="color: #aaa; font-size: 0.8rem; margin-top: 10px; font-style: italic;">Warning: This will erase all progress</p>
-                </div>
-                
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <p style="color: #888; font-size: 0.8rem; text-align: center;">More options coming soon...</p>
                 </div>
             </div>
         `;
 
-        this.createModal('OPTIONS', content);
+        this.createModal('OPCIONES', content);
 
-        // Add reset button handler
+        // Attach event listener
         setTimeout(() => {
-            const resetBtn = document.getElementById('btn-reset-save-options');
-            if (resetBtn) {
-                resetBtn.addEventListener('mouseover', () => {
-                    resetBtn.style.background = 'rgba(255, 0, 0, 0.8)';
-                    resetBtn.style.color = '#fff';
-                });
-                resetBtn.addEventListener('mouseout', () => {
-                    resetBtn.style.background = 'rgba(200, 0, 0, 0.2)';
-                    resetBtn.style.color = '#ff4444';
-                });
-                resetBtn.addEventListener('click', () => {
-                    if (confirm("WARNING: ALL PROGRESS WILL BE LOST.\n\nAre you sure you want to wipe your save data and restart?")) {
-                        localStorage.clear();
+            const btnReset = document.getElementById('btn-reset-save-options');
+            if (btnReset) {
+                btnReset.onclick = () => {
+                    if (confirm('Are you sure you want to reset all save data? This cannot be undone.')) {
+                        this.game.state.clearSave();
                         location.reload();
                     }
-                });
+                };
             }
-        }, 100);
+        }, 50);
     }
 
-    showNotification(message, type = 'info') {
-        this.hud.showNotification(message, type);
-    }
+    setMode(sceneName) {
+        console.log(`UIManager: Setting mode to ${sceneName}`);
 
+        // Hide Port Menu if leaving PORT scene
+        if (sceneName !== 'PORT') {
+            const portMenu = document.getElementById('port-main-menu');
+            if (portMenu) portMenu.style.display = 'none';
+        }
 
+        // Show/Hide HUD elements based on scene
+        if (sceneName === 'SHIP') {
+            this.hud.renderHUD();
+            // Attach PowerUI event listeners after HUD is rendered
+            setTimeout(() => {
+                this.powerUI.attachPowerEventListeners();
+                this.powerUI.attachDoorEventListeners();
+                
+                // Attach weapon panel event listeners if weaponUI exists
+                if (this.weaponUI) {
+                    this.weaponUI.attachWeaponEventListeners();
+                }
 
+                // Add Shield Panel if shieldUI exists
+                if (this.shieldUI) {
+                    const shieldPanelHTML = this.shieldUI.renderShieldPanel();
+                    if (shieldPanelHTML) {
+                        const existingShield = document.getElementById('shield-panel');
+                        if (existingShield) existingShield.remove();
 
-    clearUI() {
-        this.hud.clearUI();
-    }
-
-    setMode(mode) {
-        this.clearUI();
-        if (mode === 'SHIP') {
-            this.renderHUD();
-        } else if (mode === 'PORT') {
-            this.renderPortUI();
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = shieldPanelHTML;
+                        this.root.appendChild(tempDiv.firstElementChild);
+                        this.shieldUI.attachShieldEventListeners();
+                    }
+                }
+            }, 100);
+        } else if (sceneName === 'PORT') {
+            this.hud.renderHUD();
+            this.portUI.renderPortUI();
+        } else if (sceneName === 'COMBAT') {
+            this.hud.renderHUD();
+            // CombatUI handles its own layout
+            // Add weapon panel in combat
+            setTimeout(() => {
+                if (this.weaponUI) {
+                    this.weaponUI.attachWeaponEventListeners();
+                }
+            }, 100);
         }
     }
 
-    renderHUD() {
-        this.hud.renderHUD();
-
-        // Add power management and door control panels
-        const powerPanelHTML = this.powerUI.renderPowerPanel();
-        const doorPanelHTML = this.powerUI.renderDoorPanel();
-
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = powerPanelHTML + doorPanelHTML;
-
-        while (tempDiv.firstChild) {
-            this.root.appendChild(tempDiv.firstChild);
-        }
-
-        // Attach event listeners
-        setTimeout(() => {
-            this.powerUI.attachPowerEventListeners();
-            this.powerUI.attachDoorEventListeners();
-
-            // Add weapon panel
-            const weaponPanelHTML = this.weaponUI.renderWeaponsPanel();
-            if (weaponPanelHTML) {
-                const tempDiv2 = document.createElement('div');
-                tempDiv2.innerHTML = weaponPanelHTML;
-                this.root.appendChild(tempDiv2.firstElementChild);
-                this.weaponUI.attachWeaponEventListeners();
-            }
-            const shieldPanelHTML = this.shieldUI.renderShieldPanel();
-            if (shieldPanelHTML) {
-                const tempDiv3 = document.createElement('div');
-                tempDiv3.innerHTML = shieldPanelHTML;
-                this.root.appendChild(tempDiv3.firstElementChild);
-                this.shieldUI.attachShieldEventListeners();
-            }
-        }, 100);
+    showCrewDetail(crewId) {
+        this.shipSystemUI.showCrewDetail(crewId);
     }
 
-    updateHUD(element) {
-        this.hud.updateHUD(element);
-    }
-
-
-    showInteractionPrompt(text) {
-        this.hud.showInteractionPrompt(text);
-    }
-
-    hideInteractionPrompt() {
-        this.hud.hideInteractionPrompt();
-    }
-
-    // --- NAVIGATION & MAPS ---
-
-    renderGalaxyMap() {
-        this.mapUI.renderGalaxyMap();
+    showSystemDetail(systemId) {
+        this.shipSystemUI.showSystemDetail(systemId);
     }
 
     renderSystemMap() {
@@ -208,6 +166,76 @@
 
     renderContracts() {
         this.portUI.renderContracts();
+    }
+
+    showShipDestroyedModal() {
+        const existing = document.getElementById('ship-destroyed-modal');
+        if (existing) return;
+
+        const overlay = document.createElement('div');
+        overlay.id = 'ship-destroyed-modal';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 3, 3, 0.94); backdrop-filter: blur(10px);
+            z-index: 10000; display: flex; align-items: center; justify-content: center;
+            font-family: 'Orbitron', var(--font-tech, monospace);
+        `;
+
+        overlay.innerHTML = `
+            <div style="
+                width: 650px; max-width: 90vw;
+                background: rgba(35, 10, 10, 0.95);
+                border: 2px solid #ef4444;
+                border-radius: 12px;
+                padding: 40px;
+                box-shadow: 0 0 60px rgba(239, 68, 68, 0.5), inset 0 0 30px rgba(239, 68, 68, 0.2);
+                text-align: center;
+                position: relative; overflow: hidden;
+            ">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.05) 1px, transparent 1px, transparent 4px); pointer-events: none;"></div>
+
+                <div style="font-size: 3.5rem; margin-bottom: 10px;">💥</div>
+
+                <h1 style="color: #ef4444; font-size: 2.2rem; font-weight: 900; letter-spacing: 4px; margin: 0 0 10px 0; text-shadow: 0 0 20px rgba(239, 68, 68, 0.8);">
+                    NAVE DESTRUIDA
+                </h1>
+                <div style="color: #fca5a5; font-size: 0.9rem; letter-spacing: 2px; margin-bottom: 20px; font-weight: 700;">
+                    INTEGRIDAD DEL CASCO: 0% • FALLO ESTRUCTURAL CRÍTICO
+                </div>
+
+                <p style="color: #cbd5e1; font-size: 1.05rem; line-height: 1.6; margin-bottom: 30px; font-family: 'Rajdhani', sans-serif;">
+                    Tu nave ha sufrido daños irreparables y se ha desintegrado en el espacio profundo. Todos los sistemas han colapsado.
+                </p>
+
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="btn-restart-system" style="
+                        padding: 16px 28px;
+                        font-family: 'Orbitron', monospace;
+                        font-weight: 900;
+                        font-size: 1rem;
+                        letter-spacing: 2px;
+                        color: #000000;
+                        background: #ef4444;
+                        border: none;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+                        transition: all 0.2s;
+                    ">
+                        🔄 CARGAR PUNTO DE ENTRADA AL SISTEMA
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        document.getElementById('btn-restart-system').onclick = () => {
+            overlay.remove();
+            if (this.game.state.restoreSystemEntryPoint) {
+                this.game.state.restoreSystemEntryPoint();
+            }
+        };
     }
 
     createModal(title, contentHTML) {
@@ -244,39 +272,5 @@
 
         // Close handlers
         overlay.querySelector('.modal-close').onclick = closeModal;
-        // Disabled overlay click-to-close to allow panning in galaxy map
-        // overlay.onclick = (e) => {
-        //     if (e.target === overlay) closeModal();
-        // };
     }
-
-    // --- SYSTEM CONSOLES ---
-
-    renderSystemConsole(system) {
-        this.shipSystemUI.renderSystemConsole(system);
-    }
-
-    renderInstallMenu(x, y) {
-        this.shipSystemUI.renderInstallMenu(x, y);
-    }
-
-    renderCrewRoster() {
-        this.portUI.renderCrewRoster();
-
-    }
-
-    showCrewDetail(crewId) {
-        this.shipSystemUI.showCrewDetail(crewId);
-    }
-
-    renderMarket() {
-        this.portUI.renderMarket();
-    }
-    buyItem(commodityId, price) {
-        this.portUI.buyItem(commodityId, price);
-    }
-    sellItem(commodityId, price) {
-        this.portUI.sellItem(commodityId, price);
-    }
-
 }

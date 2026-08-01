@@ -410,6 +410,9 @@ class CombatManager {
         // Player destroyed
         if (this.state.ship.health <= 0) {
             this.victor = 'enemy';
+            if (this.state.triggerShipDestruction) {
+                this.state.triggerShipDestruction();
+            }
             return true;
         }
 
