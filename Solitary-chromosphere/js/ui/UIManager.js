@@ -161,7 +161,11 @@ class UIManager {
             if (btnReset) {
                 btnReset.onclick = () => {
                     if (confirm('¿Estás seguro de que deseas borrar todos los datos de guardado? Esta acción no se puede deshacer.')) {
-                        this.game.state.clearSave();
+                        if (this.game.state && typeof this.game.state.clearSave === 'function') {
+                            this.game.state.clearSave();
+                        } else {
+                            localStorage.clear();
+                        }
                         location.reload();
                     }
                 };

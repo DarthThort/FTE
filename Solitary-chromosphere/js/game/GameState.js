@@ -233,7 +233,19 @@ class GameState {
     }
 
     saveGame() {
-        this.saveManager.saveGame();
+        if (this.saveManager) {
+            this.saveManager.saveGame();
+        }
+    }
+
+    clearSave() {
+        if (this.saveManager) {
+            this.saveManager.clearSave();
+        } else {
+            localStorage.removeItem('ftl_savegame');
+        }
+        localStorage.clear();
+        console.log('[GameState] Save cleared');
     }
 
     initializeGalaxy() {
