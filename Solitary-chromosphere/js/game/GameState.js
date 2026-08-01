@@ -352,6 +352,75 @@ class GameState {
         return true;
     }
 
+    upgradeSystem(systemId) {
+        const system = this.ship.systems.find(s => s.id === systemId);
+        if (!system) return { success: false, message: 'Sistema no encontrado' };
+
+        const currentLevel = system.level || 1;
+        const scrapCost = currentLevel * 30;
+
+        if (this.scrap < scrapCost) {
+            return { success: false, message: `Chatarra insuficiente (tienes ${this.scrap}, requiere ${scrapCost})` };
+        }
+
+        this.scrap -= scrapCost;
+        system.level = currentLevel + 1;
+        system.maxPower = (system.maxPower || 1) + 1;
+
+        if (system.type === 'reactor') {
+            this.ship.reactor.maxPower += 1;
+        }
+
+        this.saveGame();
+        this.notify();
+
+        return { success: true, message: `¡${system.name} mejorado a Nivel ${system.level}! (+1 Potencia Máxima)` };
+    }
+
+    assignCaptainToSystem(systemId) {
+        const system = this.ship.systems.find(s => s.id === systemId);
+        if (!system) return { success: false, message: 'Sistema no encontrado' };
+
+        // Unassign Captain from any previous system
+        this.ship.systems.forEach(s => {
+            if (s.assignedCaptain) {
+                s.assignedCaptain = false;
+            }
+            if (s.assignedCrew && s.assignedCrew.id === 'captain') {
+                s.assignedCrew = null;
+            }
+        });
+
+        // Assign Captain to this system
+        system.assignedCaptain = true;
+        system.assignedCrew = {
+            id: 'captain',
+            name: '👨‍✈️ Capitán (Jugador)',
+            role: 'Capitán',
+            skills: { piloting: { level: 3 }, engineering: { level: 3 }, combat: { level: 3 } }
+        };
+
+        this.saveGame();
+        this.notify();
+
+        return { success: true, message: `👨‍✈️ El Capitán ha tomado el mando de ${system.name} (+25% Bonificación de Eficiencia)` };
+    }
+
+    unassignCaptainFromSystem(systemId) {
+        const system = this.ship.systems.find(s => s.id === systemId);
+        if (!system) return { success: false, message: 'Sistema no encontrado' };
+
+        system.assignedCaptain = false;
+        if (system.assignedCrew && system.assignedCrew.id === 'captain') {
+            system.assignedCrew = null;
+        }
+
+        this.saveGame();
+        this.notify();
+
+        return { success: true, message: `Capitán liberado de la consola ${system.name}` };
+    }
+
     uninstallSystem(system) {
         this.ship.systems = this.ship.systems.filter(s => s !== system);
         this.saveGame();

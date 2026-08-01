@@ -74,7 +74,12 @@ class PowerManager {
 
         // Power factor: 50% at minimum power, 100% at max power
         const powerRatio = system.currentPower / system.maxPower;
-        const powerFactor = 0.5 + (powerRatio * 0.5);
+        let powerFactor = 0.5 + (powerRatio * 0.5);
+
+        // Manned bonus by crew or Captain (+25% boost)
+        if (system.assignedCrew || system.assignedCaptain) {
+            powerFactor *= 1.25;
+        }
 
         return healthFactor * powerFactor;
     }
