@@ -122,45 +122,132 @@ class UIManager {
         }
 
         // Show/Hide HUD elements based on scene
-        if (sceneName === 'SHIP') {
+        if (sceneName === 'SHIP' || sceneName === 'COMBAT') {
             this.hud.renderHUD();
-            // Attach PowerUI event listeners after HUD is rendered
             setTimeout(() => {
-                this.powerUI.attachPowerEventListeners();
-                this.powerUI.attachDoorEventListeners();
-                
-                // Attach weapon panel event listeners if weaponUI exists
-                if (this.weaponUI) {
-                    this.weaponUI.attachWeaponEventListeners();
-                }
-
-                // Add Shield Panel if shieldUI exists
-                if (this.shieldUI) {
-                    const shieldPanelHTML = this.shieldUI.renderShieldPanel();
-                    if (shieldPanelHTML) {
-                        const existingShield = document.getElementById('shield-panel');
-                        if (existingShield) existingShield.remove();
-
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = shieldPanelHTML;
-                        this.root.appendChild(tempDiv.firstElementChild);
-                        this.shieldUI.attachShieldEventListeners();
-                    }
-                }
+                this.renderSidePanels();
             }, 100);
         } else if (sceneName === 'PORT') {
             this.hud.renderHUD();
             this.portUI.renderPortUI();
-        } else if (sceneName === 'COMBAT') {
-            this.hud.renderHUD();
-            // CombatUI handles its own layout
-            // Add weapon panel in combat
-            setTimeout(() => {
-                if (this.weaponUI) {
+        }
+    }
+
+    renderSidePanels() {
+        if (!this.game || !this.game.state) return;
+
+        // 1. Power & Reactor Panel
+        const existingPower = document.getElementById('power-panel');
+        if (existingPower) existingPower.remove();
+
+        if (this.powerUI && this.powerUI.renderPowerPanel) {
+            const powerHTML = this.powerUI.renderPowerPanel();
+            if (powerHTML) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = powerHTML;
+                const el = tempDiv.firstElementChild;
+                if (el) {
+                    this.root.appendChild(el);
+                    this.powerUI.attachPowerEventListeners();
+                }
+            }
+        }
+
+        // 2. Door Control Panel (Abrir / Cerrar todas las puertas)
+        const existingDoor = document.getElementById('door-panel');
+        if (existingDoor) existingDoor.remove();
+
+        if (this.powerUI && this.powerUI.renderDoorPanel) {
+            const doorHTML = this.powerUI.renderDoorPanel();
+            if (doorHTML) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = doorHTML;
+                const el = tempDiv.firstElementChild;
+                if (el) {
+                    this.root.appendChild(el);
+                    this.powerUI.attachDoorEventListeners();
+                }
+            }
+        }
+
+        // 3. Weapons Panel
+        const existingWeapons = document.getElementById('weapons-panel');
+        if (existingWeapons) existingWeapons.remove();
+
+        if (this.weaponUI && this.weaponUI.renderWeaponsPanel) {
+            const weaponsHTML = this.weaponUI.renderWeaponsPanel();
+            if (weaponsHTML) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = weaponsHTML;
+                const el = tempDiv.firstElementChild;
+                if (el) {
+                    this.root.appendChild(el);
                     this.weaponUI.attachWeaponEventListeners();
                 }
-            }, 100);
+            }
         }
+
+        // 4. Shield Panel
+        const existingShield = document.getElementById('shield-panel');
+        if (existingShield) existingShield.remove();
+
+        if (this.shieldUI && this.shieldUI.renderShieldPanel) {
+            const shieldHTML = this.shieldUI.renderShieldPanel();
+            if (shieldHTML) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = shieldHTML;
+                const el = tempDiv.firstElementChild;
+                if (el) {
+                    this.root.appendChild(el);
+                    this.shieldUI.attachShieldEventListeners();
+                }
+            }
+        }
+
+        // Attach minimize buttons to all side panels
+        this.attachPanelMinimizeToggles();
+    }
+
+    attachPanelMinimizeToggles() {
+        const panels = document.querySelectorAll('#power-panel, #door-panel, #weapons-panel, #shield-panel');
+        panels.forEach(panel => {
+            const handle = panel.querySelector('.drag-handle, h3, div');
+            if (!handle || panel.querySelector('.btn-minimize-panel')) return;
+
+            handle.style.display = 'flex';
+            handle.style.justifyContent = 'space-between';
+            handle.style.alignItems = 'center';
+
+            const minBtn = document.createElement('button');
+            minBtn.className = 'btn-minimize-panel';
+            minBtn.textContent = '➖';
+            minBtn.title = 'Minimizar / Expandir panel';
+            minBtn.style.cssText = `
+                background: rgba(0, 240, 255, 0.15);
+                border: 1px solid var(--primary, #00f0ff);
+                border-radius: 4px;
+                color: #ffffff;
+                font-size: 0.75rem;
+                padding: 2px 6px;
+                cursor: pointer;
+                margin-left: 10px;
+                transition: all 0.2s;
+            `;
+
+            minBtn.onclick = (e) => {
+                e.stopPropagation();
+                const isCollapsed = panel.classList.toggle('panel-collapsed');
+                minBtn.textContent = isCollapsed ? '➕' : '➖';
+
+                Array.from(panel.children).forEach(child => {
+                    if (child !== handle && !child.classList.contains('drag-handle')) {
+                        child.style.display = isCollapsed ? 'none' : '';
+                    }
+                });
+            };
+
+            handle.appendChild(minBtn);
+        });
     }
 
     // --- INTERACTION PROMPTS ---

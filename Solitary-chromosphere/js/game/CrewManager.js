@@ -114,22 +114,22 @@ class CrewManager {
         }
 
         for (const crew of this.state.ship.crew) {
-            // Auto-recovery: If crew is standing outside walkable ship tiles, teleport them inside
-            const tileX = Math.floor(crew.x / 32);
-            const tileY = Math.floor(crew.y / 32);
-            if (this.state.shipCoords && this.state.ship && this.state.ship.layout) {
-                if (!this.state.shipCoords.isWalkable(this.state.ship.layout, tileX, tileY)) {
-                    console.warn(`[CrewAI] ${crew.name} was stuck outside walkable ship area at (${tileX}, ${tileY}). Teleporting inside!`);
-                    const validTile = this.state.shipCoords.getRandomWalkableTile(this.state.ship.layout);
-                    const validPos = this.state.shipCoords.tileToPixel(validTile.x, validTile.y);
-                    crew.x = validPos.x;
-                    crew.y = validPos.y;
-                    crew.tileX = validTile.x;
-                    crew.tileY = validTile.y;
-                    crew.targetX = null;
-                    crew.targetY = null;
-                    crew.path = [];
-                    crew.state = 'idle';
+            // Auto-recovery: ONLY if crew is idle/standing motionless outside walkable tiles
+            if (crew.state === 'idle' && (!crew.path || crew.path.length === 0)) {
+                const tileX = Math.floor(crew.x / 32);
+                const tileY = Math.floor(crew.y / 32);
+                if (this.state.shipCoords && this.state.ship && this.state.ship.layout) {
+                    if (!this.state.shipCoords.isWalkable(this.state.ship.layout, tileX, tileY)) {
+                        console.warn(`[CrewAI] ${crew.name} was stuck outside walkable ship area at (${tileX}, ${tileY}). Repositioning inside!`);
+                        const validTile = this.state.shipCoords.getRandomWalkableTile(this.state.ship.layout);
+                        const validPos = this.state.shipCoords.tileToPixel(validTile.x, validTile.y);
+                        crew.x = validPos.x;
+                        crew.y = validPos.y;
+                        crew.tileX = validTile.x;
+                        crew.tileY = validTile.y;
+                        crew.targetX = null;
+                        crew.targetY = null;
+                    }
                 }
             }
 
