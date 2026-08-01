@@ -61,49 +61,106 @@ class UIManager {
     }
 
     createOptionsButton() {
-        // Create OPTIONS button in top-right corner
+        // Remove existing button if any
+        const existing = document.getElementById('btn-global-options');
+        if (existing) existing.remove();
+
+        // Create OPTIONS button in top-right corner (Always visible with high z-index)
         const optionsBtn = document.createElement('button');
-        optionsBtn.id = 'btn-options';
+        optionsBtn.id = 'btn-global-options';
         optionsBtn.innerHTML = '⚙️ OPCIONES';
         Object.assign(optionsBtn.style, {
             position: 'fixed',
-            top: '20px',
-            right: '20px',
-            padding: '10px 20px',
-            background: 'rgba(0, 100, 150, 0.3)',
-            color: 'var(--primary)',
-            border: '1px solid var(--primary)',
-            borderRadius: '4px',
-            fontFamily: 'var(--font-tech)',
-            fontSize: '0.9rem',
+            top: '15px',
+            right: '15px',
+            padding: '8px 16px',
+            background: 'rgba(10, 15, 30, 0.9)',
+            color: '#00f0ff',
+            border: '1.5px solid #00f0ff',
+            borderRadius: '6px',
+            fontFamily: '"Rajdhani", sans-serif',
+            fontWeight: 'bold',
+            fontSize: '0.95rem',
+            letterSpacing: '1px',
             cursor: 'pointer',
-            zIndex: '1000'
+            zIndex: '20000',
+            boxShadow: '0 0 15px rgba(0, 240, 255, 0.3)',
+            transition: 'all 0.2s ease'
         });
+
+        optionsBtn.onmouseenter = () => {
+            optionsBtn.style.background = '#00f0ff';
+            optionsBtn.style.color = '#000';
+            optionsBtn.style.boxShadow = '0 0 25px rgba(0, 240, 255, 0.7)';
+        };
+        optionsBtn.onmouseleave = () => {
+            optionsBtn.style.background = 'rgba(10, 15, 30, 0.9)';
+            optionsBtn.style.color = '#00f0ff';
+            optionsBtn.style.boxShadow = '0 0 15px rgba(0, 240, 255, 0.3)';
+        };
+
         optionsBtn.onclick = () => this.showOptionsMenu();
-        this.root.appendChild(optionsBtn);
+        document.body.appendChild(optionsBtn);
     }
 
     showOptionsMenu() {
+        const settings = this.game.settings || {
+            musicVolume: 80,
+            sfxVolume: 100,
+            autoPause: true,
+            showGrid: true
+        };
+
         const content = `
-            <div style="font-family: var(--font-tech);">
-                <div style="margin-bottom: 30px;">
-                    <h3 style="color: var(--secondary); font-size: 1rem; margin-bottom: 15px;">Save Data</h3>
-                    <button id="btn-reset-save-options" style="padding: 12px 24px; background: rgba(200, 0, 0, 0.2); color: #ff4444; border: 1px solid #ff4444; cursor: pointer; font-family: var(--font-tech); border-radius: 4px; font-size: 0.9rem; transition: all 0.2s;">
-                        🗑️ RESET SAVE DATA
+            <div style="font-family: 'Rajdhani', sans-serif; display: flex; flex-direction: column; gap: 20px; color: #fff;">
+                <!-- Audio Section -->
+                <div>
+                    <h3 style="color: #00f0ff; font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid rgba(0,240,255,0.3); padding-bottom: 5px; font-family: 'Orbitron', sans-serif;">🔊 SONIDO Y MÚSICA</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Música de Fondo:</span>
+                            <input type="range" id="opt-music-vol" min="0" max="100" value="${settings.musicVolume}" style="cursor: pointer; width: 160px; accent-color: #00f0ff;">
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Efectos de Sonido (SFX):</span>
+                            <input type="range" id="opt-sfx-vol" min="0" max="100" value="${settings.sfxVolume}" style="cursor: pointer; width: 160px; accent-color: #00f0ff;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gameplay & Controls -->
+                <div>
+                    <h3 style="color: #00f0ff; font-size: 1.1rem; margin-bottom: 12px; border-bottom: 1px solid rgba(0,240,255,0.3); padding-bottom: 5px; font-family: 'Orbitron', sans-serif;">⚙️ AJUSTES DE JUEGO</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Pausa automática en combate:</span>
+                            <input type="checkbox" id="opt-auto-pause" ${settings.autoPause ? 'checked' : ''} style="cursor: pointer; transform: scale(1.3); accent-color: #00f0ff;">
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Mostrar cuadrícula de nave:</span>
+                            <input type="checkbox" id="opt-show-grid" ${settings.showGrid ? 'checked' : ''} style="cursor: pointer; transform: scale(1.3); accent-color: #00f0ff;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Data Reset -->
+                <div style="border-top: 1px solid rgba(255,255,255,0.15); padding-top: 15px;">
+                    <h3 style="color: #ff0055; font-size: 1.1rem; margin-bottom: 12px; font-family: 'Orbitron', sans-serif;">⚠️ GESTIÓN DE GUARDADO</h3>
+                    <button id="btn-reset-save-options" style="width: 100%; padding: 12px; background: rgba(255, 0, 85, 0.2); color: #ff0055; border: 1.5px solid #ff0055; cursor: pointer; font-family: 'Rajdhani', sans-serif; font-weight: bold; border-radius: 6px; font-size: 1rem; letter-spacing: 1px; transition: all 0.2s;">
+                        🗑️ REINICIAR NAVE Y BORRAR GUARDADO
                     </button>
-                    <p style="color: #aaa; font-size: 0.8rem; margin-top: 10px; font-style: italic;">Warning: This will erase all progress</p>
+                    <p style="color: #888; font-size: 0.8rem; margin-top: 8px; font-style: italic; text-align: center;">Advertencia: Borrará el progreso actual y reiniciará la partida.</p>
                 </div>
             </div>
         `;
 
-        this.createModal('OPCIONES', content);
+        this.createModal('OPCIONES DEL JUEGO', content);
 
-        // Attach event listener
         setTimeout(() => {
             const btnReset = document.getElementById('btn-reset-save-options');
             if (btnReset) {
                 btnReset.onclick = () => {
-                    if (confirm('Are you sure you want to reset all save data? This cannot be undone.')) {
+                    if (confirm('¿Estás seguro de que deseas borrar todos los datos de guardado? Esta acción no se puede deshacer.')) {
                         this.game.state.clearSave();
                         location.reload();
                     }
