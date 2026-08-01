@@ -8,6 +8,7 @@ class TileRenderer {
     constructor(gameEngine) {
         this.game = gameEngine;
         this.tileSize = 32;
+        this.exteriorHullRenderer = new ModularExteriorHullRenderer(gameEngine);
     }
 
     /**
@@ -17,7 +18,12 @@ class TileRenderer {
      * @param {Array} systems - Ship systems array
      */
     render(ctx, layout, systems) {
-        this.drawExteriorHull(ctx, layout);
+        const ship = this.game.state?.ship;
+        if (this.exteriorHullRenderer && ship) {
+            this.exteriorHullRenderer.render(ctx, layout, ship);
+        } else {
+            this.drawExteriorHull(ctx, layout);
+        }
         this.drawGrid(ctx, layout);
         this.drawSystems(ctx, systems);
     }
