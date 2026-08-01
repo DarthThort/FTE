@@ -1,4 +1,4 @@
-﻿class WeaponManager {
+class WeaponManager {
     constructor(gameState) {
         this.state = gameState;
     }
@@ -55,13 +55,14 @@
 
                         // Apply damage if in combat
                         if (fired && this.state.combatManager && this.state.combatManager.active && this.state.combatManager.enemy) {
+                            const game = this.state.game || window.game;
                             // Add laser projectile effect
-                            if (this.state.game && this.state.game.combatEffects) {
-                                const shipX = this.state.game.canvas.width / 2;
-                                const shipY = this.state.game.canvas.height / 2;
+                            if (game && game.combatEffects) {
+                                const shipX = game.canvas.width / 2;
+                                const shipY = game.canvas.height / 2;
                                 const enemyX = 405;
                                 const enemyY = 80;
-                                this.state.game.combatEffects.addProjectile(shipX, shipY, enemyX, enemyY, '#00ff55');
+                                game.combatEffects.addProjectile(shipX, shipY, enemyX, enemyY, '#00ff55');
                             }
 
                             // Apply damage using damage calculator
