@@ -1,14 +1,13 @@
 /**
  * TileRenderer.js
- * Handles rendering of ship tiles, walls, doors, floors, and system modules.
- * Overhauled to match high-definition 3D molded sci-fi floorplan aesthetic.
+ * Handles rendering of ship tiles, walls, doors, floors, and system modules
+ * Extracted from ShipRenderer.js to reduce file size
  */
 
 class TileRenderer {
     constructor(gameEngine) {
         this.game = gameEngine;
         this.tileSize = 32;
-        this.exteriorHullRenderer = new ModularExteriorHullRenderer(gameEngine);
     }
 
     /**
@@ -18,197 +17,175 @@ class TileRenderer {
      * @param {Array} systems - Ship systems array
      */
     render(ctx, layout, systems) {
-        const ship = this.game.state?.ship;
-
-        // 1. Draw Molded Outer Hull Chassis
-        if (this.exteriorHullRenderer && ship) {
-            this.exteriorHullRenderer.render(ctx, layout, ship);
-        }
-
-        // 2. Draw Floor & Wall Interior Layout
         this.drawGrid(ctx, layout);
-
-        // 3. Draw Embedded 3D Consoles & Systems
         this.drawSystems(ctx, systems);
     }
 
     /**
-     * Draw the ship grid with molded walls, pneumatic doors, and slate floor panels
+     * Draw the ship grid with tiles, walls, doors, floors
      */
     drawGrid(ctx, layout) {
-        const p = this.tileSize;
-
         for (let y = 0; y < layout.length; y++) {
             for (let x = 0; x < layout[y].length; x++) {
                 const tile = layout[y][x];
-                const posX = x * p;
-                const posY = y * p;
+                const posX = x * this.tileSize;
+                const posY = y * this.tileSize;
 
-                if (tile === 0) continue;
-
-                // FLOOR TILES (2 = floor, 3 = system slot, 7 = infirmary)
-                if (tile !== 1) {
-                    this.drawFloorTile(ctx, posX, posY, tile, x, y);
+                // Tile 0 = outer space, skip (let starfield show through)
+                if (tile === 0) {
+                    continue;
                 }
 
-                // WALLS & DOORS
+                // Base floor
+                ctx.fillStyle = '#0b1120';
+                ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(posX, posY, this.tileSize, this.tileSize);
+
+                // Tile types
                 if (tile === 1) {
-                    this.drawMoldedWall(ctx, posX, posY, layout, x, y);
+                    // Wall
+                    this.drawWall(ctx, posX, posY);
+                } else if (tile === 3) {
+                    // System slot
+                    this.drawSystemSlot(ctx, posX, posY);
                 } else if (tile === 4) {
-                    this.drawPneumaticDoor(ctx, posX, posY, false);
+                    // Closed door
+                    this.drawClosedDoor(ctx, posX, posY);
                 } else if (tile === 5) {
-                    this.drawPneumaticDoor(ctx, posX, posY, true);
+                    // Open door
+                    this.drawOpenDoor(ctx, posX, posY);
+                } else if (tile === 7) {
+                    // Infirmary
+                    this.drawInfirmary(ctx, posX, posY);
                 }
             }
         }
     }
 
-    drawFloorTile(ctx, posX, posY, tile, x, y) {
-        const p = this.tileSize;
-
-        // Dark Slate Blue Metal Floor Base (Matches reference image!)
-        const isHazard = (x + y) % 7 === 0;
-        const grad = ctx.createLinearGradient(posX, posY, posX + p, posY + p);
-
-        if (isHazard) {
-            // Orange Hazard Accent Floor Panel
-            grad.addColorStop(0, '#f97316');
-            grad.addColorStop(1, '#ea580c');
-        } else {
-            // Deep Slate Blue Floor Panel
-            grad.addColorStop(0, '#1e293b');
-            grad.addColorStop(1, '#0f172a');
-        }
-
-        ctx.fillStyle = grad;
-        ctx.fillRect(posX, posY, p, p);
-
-        // Floor Seam Lines & Rivet Joints
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(posX + 1, posY + 1, p - 2, p - 2);
-
-        // Corner Rivets
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.fillRect(posX + 3, posY + 3, 2, 2);
-        ctx.fillRect(posX + p - 5, posY + 3, 2, 2);
-        ctx.fillRect(posX + 3, posY + p - 5, 2, 2);
-        ctx.fillRect(posX + p - 5, posY + p - 5, 2, 2);
-    }
-
-    drawMoldedWall(ctx, posX, posY, layout, x, y) {
-        const p = this.tileSize;
-
-        ctx.save();
-
-        // Wall Shadow for 3D Bulkhead Depth
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(posX + 2, posY + 4, p, p);
-
-        // Molded Light Slate Wall Body (Matches reference image!)
-        const wallGrad = ctx.createLinearGradient(posX, posY, posX, posY + p);
-        wallGrad.addColorStop(0, '#f8fafc'); // Top Bevel Highlight
-        wallGrad.addColorStop(0.4, '#e2e8f0'); // Wall Face
-        wallGrad.addColorStop(1, '#cbd5e1'); // Base Shadow
-
-        ctx.fillStyle = wallGrad;
-        ctx.beginPath();
-        ctx.roundRect(posX, posY, p, p, 5);
-        ctx.fill();
-
-        // Molded Bulkhead Inner Border Seam
-        ctx.strokeStyle = '#94a3b8';
+    drawWall(ctx, posX, posY) {
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 1.5;
-        ctx.stroke();
-
-        // Panel Groove Line
-        ctx.strokeStyle = '#64748b';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(posX + 4, posY + p / 2);
-        ctx.lineTo(posX + p - 4, posY + p / 2);
-        ctx.stroke();
-
-        ctx.restore();
+        ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
+        ctx.shadowBlur = 0;
     }
 
-    drawPneumaticDoor(ctx, posX, posY, isOpen) {
-        const p = this.tileSize;
+    drawSystemSlot(ctx, posX, posY) {
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
+        ctx.fillStyle = '#64748b';
+        const s = 4;
+        ctx.fillRect(posX + 4, posY + 4, s, s);
+        ctx.fillRect(posX + this.tileSize - 4 - s, posY + 4, s, s);
+        ctx.fillRect(posX + 4, posY + this.tileSize - 4 - s, s, s);
+        ctx.fillRect(posX + this.tileSize - 4 - s, posY + this.tileSize - 4 - s, s, s);
+    }
 
+    drawClosedDoor(ctx, posX, posY) {
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
         ctx.save();
-        // Door Frame
-        ctx.fillStyle = '#475569';
-        ctx.fillRect(posX, posY, p, p);
-
-        if (isOpen) {
-            // Open Door Pocket
-            ctx.fillStyle = '#0f172a';
-            ctx.fillRect(posX + 4, posY + 4, p - 8, p - 8);
-
-            // Green Sensor Light
-            ctx.fillStyle = '#00ff55';
-            ctx.shadowColor = '#00ff55';
-            ctx.shadowBlur = 6;
-            ctx.fillRect(posX + p / 2 - 4, posY + 2, 8, 3);
-        } else {
-            // Closed Blast Door Plates (Orange & Dark Steel)
-            ctx.fillStyle = '#f97316';
-            ctx.fillRect(posX + 3, posY + 3, (p - 6) / 2 - 1, p - 6);
-            ctx.fillRect(posX + p / 2 + 1, posY + 3, (p - 6) / 2 - 1, p - 6);
-
-            ctx.strokeStyle = '#0f172a';
-            ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.rect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
+        ctx.clip();
+        ctx.fillStyle = '#d97706';
+        ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
+        ctx.fillStyle = '#000';
+        ctx.lineWidth = 4;
+        for (let i = -this.tileSize; i < this.tileSize * 2; i += 8) {
             ctx.beginPath();
-            ctx.moveTo(posX + p / 2, posY + 3);
-            ctx.lineTo(posX + p / 2, posY + p - 3);
-            ctx.stroke();
-
-            // Red Lock Light
-            ctx.fillStyle = '#ff0055';
-            ctx.shadowColor = '#ff0055';
-            ctx.shadowBlur = 6;
-            ctx.fillRect(posX + p / 2 - 4, posY + 2, 8, 3);
+            ctx.moveTo(posX + i, posY);
+            ctx.lineTo(posX + i + 8, posY + this.tileSize);
+            ctx.lineTo(posX + i + 4, posY + this.tileSize);
+            ctx.lineTo(posX + i - 4, posY);
+            ctx.fill();
         }
-
         ctx.restore();
+        ctx.strokeStyle = '#d97706';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
     }
 
+    drawOpenDoor(ctx, posX, posY) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
+        ctx.fillStyle = '#059669';
+        ctx.fillRect(posX, posY, 6, this.tileSize);
+        ctx.fillRect(posX + this.tileSize - 6, posY, 6, this.tileSize);
+        ctx.fillStyle = '#34d399';
+        ctx.fillRect(posX + 2, posY + this.tileSize / 2 - 2, 2, 4);
+        ctx.fillRect(posX + this.tileSize - 4, posY + this.tileSize / 2 - 2, 2, 4);
+    }
+
+    drawInfirmary(ctx, posX, posY) {
+        // Dark red floor
+        ctx.fillStyle = '#2d1a1a';
+        ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
+
+        // Medical cross
+        ctx.fillStyle = '#ff5555';
+        const centerX = posX + this.tileSize / 2;
+        const centerY = posY + this.tileSize / 2;
+        const crossSize = this.tileSize * 0.4;
+        const crossWidth = crossSize * 0.3;
+
+        // Vertical bar
+        ctx.fillRect(centerX - crossWidth / 2, centerY - crossSize / 2, crossWidth, crossSize);
+        // Horizontal bar
+        ctx.fillRect(centerX - crossSize / 2, centerY - crossWidth / 2, crossSize, crossWidth);
+
+        // Border
+        ctx.strokeStyle = 'rgba(255, 85, 85, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(posX, posY, this.tileSize, this.tileSize);
+    }
+
+    /**
+     * Draw system modules on the grid
+     */
     drawSystems(ctx, systems) {
-        if (!systems) return;
+        for (const sys of systems) {
+            const posX = sys.x * this.tileSize;
+            const posY = sys.y * this.tileSize;
 
-        const p = this.tileSize;
+            // Check if system has a module installed
+            const systemToHardpoint = {
+                'bridge': 'bridge',
+                'shield': 'shield',
+                'engine': 'engine',
+                'jumpdrive': 'jumpDrive',
+                'reactor': 'reactor',
+                'weapon': sys.id === 'weapons1' ? 'weapon1' : 'weapon2'
+            };
+            const hardpointKey = systemToHardpoint[sys.type];
+            const hasModule = hardpointKey && this.game.state.ship.hardpoints[hardpointKey];
 
-        systems.forEach(sys => {
-            const posX = sys.x * p;
-            const posY = sys.y * p;
+            // Darker appearance if no module installed
+            const alpha = hasModule ? 0.2 : 0.05;
+            const shadowBlur = hasModule ? 15 : 5;
 
-            ctx.save();
-
-            // Console Base Housing
-            ctx.fillStyle = '#0f172a';
-            ctx.beginPath();
-            ctx.roundRect(posX + 2, posY + 2, p - 4, p - 4, 4);
-            ctx.fill();
-
-            ctx.strokeStyle = sys.color || '#00f0ff';
-            ctx.shadowColor = sys.color || '#00f0ff';
-            ctx.shadowBlur = 8;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Screen / Interface Monitor
-            ctx.fillStyle = sys.color || '#00f0ff';
-            ctx.fillRect(posX + 6, posY + 6, p - 12, p - 16);
-
-            // System Abbreviation Badge
-            ctx.fillStyle = '#ffffff';
-            ctx.font = '900 9px "Rajdhani", var(--font-tech, monospace)';
-            ctx.textAlign = 'center';
+            ctx.shadowColor = sys.color;
+            ctx.shadowBlur = shadowBlur;
+            ctx.fillStyle = sys.color;
+            ctx.globalAlpha = alpha;
+            ctx.fillRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
+            ctx.globalAlpha = 1.0;
             ctx.shadowBlur = 0;
-            const code = sys.type.substring(0, 3).toUpperCase();
-            ctx.fillText(code, posX + p / 2, posY + p - 4);
+            ctx.strokeStyle = hasModule ? sys.color : '#444';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
 
-            ctx.restore();
-        });
+            // Draw system ID
+            ctx.fillStyle = hasModule ? '#fff' : '#666';
+            ctx.font = 'bold 10px "Courier New", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(sys.id.substring(0, 3).toUpperCase(), posX + this.tileSize / 2, posY + this.tileSize / 2 + 4);
+        }
     }
 }
