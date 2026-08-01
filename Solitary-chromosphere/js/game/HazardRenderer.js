@@ -1,56 +1,71 @@
 /**
  * HazardRenderer.js
- * Renders visual effects for ship hazards (breaches, fires, oxygen overlays)
+ * Handles high-detail realistic particle & plasma rendering for Fires, Breaches, and Oxygen Depletion.
  */
 
 class HazardRenderer {
     constructor(hazardManager) {
         this.hazardManager = hazardManager;
+        this.fireEmbers = [];
+        this.smokePuffs = [];
+        this.breachVapors = [];
+
+        // Initialize particle systems
+        this._initParticles();
     }
 
-    /**
-     * Main render method
-     */
-    render(ctx, tileSize, offsetX, offsetY, visible = []) {
-        // Render oxygen overlay if enabled
-        if (this.hazardManager.oxygenOverlayEnabled) {
-            this.renderOxygenOverlay(ctx, tileSize, offsetX, offsetY);
+    _initParticles() {
+        // Pre-create ember & smoke pools for high performance
+        for (let i = 0; i < 40; i++) {
+            this.fireEmbers.push({
+                x: Math.random() * 32,
+                y: Math.random() * 32,
+                vy: -15 - Math.random() * 25,
+                vx: (Math.random() - 0.5) * 10,
+                size: 1 + Math.random() * 2,
+                life: Math.random(),
+                maxLife: 0.6 + Math.random() * 0.6
+            });
+
+            this.smokePuffs.push({
+                x: Math.random() * 32,
+                y: Math.random() * 32,
+                vy: -8 - Math.random() * 12,
+                vx: (Math.random() - 0.5) * 8,
+                size: 3 + Math.random() * 4,
+                life: Math.random(),
+                maxLife: 0.8 + Math.random() * 0.7
+            });
         }
-
-        // Render breaches
-        this.renderBreaches(ctx, tileSize, offsetX, offsetY);
-
-        // Render fires with fog of war
-        this.renderFires(ctx, tileSize, offsetX, offsetY, visible);
     }
 
     /**
-     * Render oxygen level overlay for all rooms
+     * Render oxygen depletion overlay
      */
     renderOxygenOverlay(ctx, tileSize, offsetX, offsetY) {
+        if (!this.hazardManager || !this.hazardManager.gameState) return;
+
+        const state = this.hazardManager.gameState;
+        if (!state.showOxygenOverlay) return;
+
+        const rooms = state.ship.rooms || [];
         ctx.save();
 
-        for (const roomId in this.hazardManager.roomOxygen) {
-            const room = this.hazardManager.roomOxygen[roomId];
-            const oxygenLevel = room.level;
-
-            // Determine overlay color based on oxygen level
+        for (const room of rooms) {
+            const oxygenLevel = room.oxygen !== undefined ? room.oxygen : 100;
             let overlayColor;
+
             if (oxygenLevel >= 70) {
-                continue; // No overlay for good oxygen
+                continue;
             } else if (oxygenLevel >= 30) {
-                // Light blue tint for low oxygen
                 overlayColor = `rgba(100, 150, 255, ${(70 - oxygenLevel) / 70 * 0.2})`;
             } else if (oxygenLevel >= 1) {
-                // Yellow tint for very low oxygen
                 overlayColor = `rgba(255, 200, 0, ${(30 - oxygenLevel) / 30 * 0.3})`;
             } else {
-                // Pulsing red for no oxygen
-                const pulse = Math.sin(Date.now() / 300) * 0.1 + 0.3;
+                const pulse = Math.sin(Date.now() / 300) * 0.1 + 0.35;
                 overlayColor = `rgba(255, 50, 50, ${pulse})`;
             }
 
-            // Draw overlay on all tiles in this room
             ctx.fillStyle = overlayColor;
             for (const tile of room.tiles) {
                 const posX = tile.x * tileSize;
@@ -63,123 +78,114 @@ class HazardRenderer {
     }
 
     /**
-     * Render breach cracks and venting particles
+     * Render realistic breaches with torn metal, vacuum suction, and decompression vapor
      */
     renderBreaches(ctx, tileSize, offsetX, offsetY) {
         const time = Date.now() / 1000;
+        const breaches = this.hazardManager.breaches || [];
 
-        for (const breach of this.hazardManager.breaches) {
+        for (const breach of breaches) {
             const posX = breach.x * tileSize;
             const posY = breach.y * tileSize;
+            const centerX = posX + tileSize / 2;
+            const centerY = posY + tileSize / 2;
+            const severity = breach.severity || 1;
 
             ctx.save();
 
-            // Draw crack based on severity
-            this.renderCrack(ctx, posX, posY, tileSize, breach.severity);
+            // 1. Vacuum Decompression Suction Aura (Swirling Cyan Lines)
+            const pulse = Math.sin(time * 6 + breach.x) * 0.15 + 0.35;
+            ctx.fillStyle = `rgba(0, 240, 255, ${pulse * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, tileSize * (0.6 + severity * 0.15), 0, Math.PI * 2);
+            ctx.fill();
 
-            // Draw venting air particles
-            this.renderVentingAir(ctx, posX, posY, tileSize, breach.severity, time);
+            // Swirling inward suction ring
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            const ringRadius = (tileSize * 0.4) * (1 - (time * 1.5 % 1.0));
+            ctx.arc(centerX, centerY, Math.max(2, ringRadius), 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 2. Torn Metal Hull Breach Hole (Dark Space Void Center)
+            const holeRadius = tileSize * (0.18 + severity * 0.08);
+
+            // Red/Orange hot torn metal edge slag
+            ctx.strokeStyle = '#ff3300';
+            ctx.shadowColor = '#ff3300';
+            ctx.shadowBlur = 10;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, holeRadius + 2, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Deep void center
+            ctx.fillStyle = '#030712';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, holeRadius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Jagged Metal Cracks radiating out
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            const numCracks = 4 + severity;
+            for (let i = 0; i < numCracks; i++) {
+                const angle = (Math.PI * 2 / numCracks) * i + (i % 2 === 0 ? 0.2 : -0.2);
+                const len = (tileSize * 0.35) * (0.9 + severity * 0.2);
+
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                const endX = centerX + Math.cos(angle) * len;
+                const endY = centerY + Math.sin(angle) * len;
+                ctx.lineTo(endX, endY);
+
+                if (severity >= 2) {
+                    const branchAngle = angle + (i % 2 === 0 ? 0.5 : -0.5);
+                    ctx.lineTo(endX + Math.cos(branchAngle) * 6, endY + Math.sin(branchAngle) * 6);
+                }
+                ctx.stroke();
+            }
+
+            // 3. Decompression Air/Ice Crystal Vapor Spraying Out
+            const numParticles = 8 + severity * 4;
+            for (let i = 0; i < numParticles; i++) {
+                const pTime = (time * (1.2 + severity * 0.2) + i * 0.15) % 1.0;
+                const pAngle = (i / numParticles) * Math.PI * 2 + time * 0.5;
+                const pDist = pTime * tileSize * (0.7 + severity * 0.25);
+
+                const px = centerX + Math.cos(pAngle) * pDist;
+                const py = centerY + Math.sin(pAngle) * pDist;
+                const pAlpha = (1 - pTime) * 0.8;
+                const pSize = (1 - pTime * 0.4) * (2 + severity);
+
+                ctx.fillStyle = `rgba(200, 240, 255, ${pAlpha})`;
+                ctx.beginPath();
+                ctx.arc(px, py, pSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 4. Red Emergency Warning Strobe Light
+            const strobe = Math.sin(time * 10) > 0;
+            if (strobe) {
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+                ctx.fillRect(posX, posY, tileSize, tileSize);
+            }
 
             ctx.restore();
         }
     }
 
     /**
-     * Render crack visual for a breach
-     */
-    renderCrack(ctx, x, y, tileSize, severity) {
-        ctx.strokeStyle = '#888';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-
-        const centerX = x + tileSize / 2;
-        const centerY = y + tileSize / 2;
-
-        // Draw cracks radiating from center
-        const numCracks = 3 + severity;
-        for (let i = 0; i < numCracks; i++) {
-            const angle = (Math.PI * 2 / numCracks) * i + Math.random() * 0.5;
-            const length = (tileSize / 3) * (1 + severity * 0.3);
-
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-
-            // Main crack line
-            const endX = centerX + Math.cos(angle) * length;
-            const endY = centerY + Math.sin(angle) * length;
-            ctx.lineTo(endX, endY);
-
-            // Add branches for higher severity
-            if (severity >= 2) {
-                const branchAngle = angle + (Math.random() - 0.5) * 0.8;
-                const branchLength = length * 0.5;
-                const branchX = endX + Math.cos(branchAngle) * branchLength;
-                const branchY = endY + Math.sin(branchAngle) * branchLength;
-                ctx.moveTo(endX, endY);
-                ctx.lineTo(branchX, branchY);
-            }
-
-            ctx.stroke();
-        }
-
-        // Draw hole for severity 3
-        if (severity >= 3) {
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, tileSize * 0.15, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Glow around hole
-            ctx.strokeStyle = '#444';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, tileSize * 0.2, 0, Math.PI * 2);
-            ctx.stroke();
-        }
-    }
-
-    /**
-     * Render venting air particles
-     */
-    renderVentingAir(ctx, x, y, tileSize, severity, time) {
-        const centerX = x + tileSize / 2;
-        const centerY = y + tileSize / 2;
-        const numParticles = 5 + severity * 3;
-
-        for (let i = 0; i < numParticles; i++) {
-            // Particle animation based on time and index
-            const progress = ((time * (1 + severity * 0.3) + i * 0.2) % 1.0);
-            const angle = (i / numParticles) * Math.PI * 2 + time;
-            const distance = progress * tileSize * (0.8 + severity * 0.2);
-
-            const px = centerX + Math.cos(angle) * distance;
-            const py = centerY + Math.sin(angle) * distance;
-
-            const alpha = (1 - progress) * 0.6;
-            const size = (1 - progress) * (2 + severity);
-
-
-            ctx.fillStyle = `rgba(200, 220, 255, ${alpha})`;
-            ctx.shadowColor = `rgba(200, 220, 255, ${alpha})`;
-            ctx.shadowBlur = 4;
-            ctx.beginPath();
-            ctx.arc(px, py, size, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.shadowBlur = 0;
-    }
-
-    /**
-     * Render fires with animated flames
-     * Uses tile-based fire system from HazardManager.fires
-     * Only visible in explored tiles (fog of war)
+     * Render realistic animated fires with multi-layer flames, embers, smoke & dynamic light pulse
      */
     renderFires(ctx, tileSize, offsetX, offsetY, visible = []) {
         const time = Date.now() / 1000;
+        const fires = this.hazardManager.fires || [];
 
-        // Render each individual fire tile from HazardManager
-        for (const fire of this.hazardManager.fires) {
-            // FOG OF WAR: Only render fire if tile is visible
+        for (const fire of fires) {
             if (!visible[fire.y] || !visible[fire.y][fire.x]) continue;
 
             const posX = fire.x * tileSize;
@@ -187,62 +193,84 @@ class HazardRenderer {
             const centerX = posX + tileSize / 2;
             const centerY = posY + tileSize / 2;
 
+            const intensity = (fire.intensity || 50) / 100;
+            const flicker = Math.sin(time * 18 + fire.x * 3 + fire.y * 7) * 0.15;
+            const currentIntensity = Math.min(1.0, Math.max(0.2, intensity + flicker));
+
             ctx.save();
 
-            // Animated flame height based on intensity
-            const intensityFactor = fire.intensity / 100;
-            const animationOffset = fire.age * 2; // Use fire age for animation
-            const flameHeight = (15 + Math.sin(time * 5 + animationOffset) * 5) * intensityFactor;
-            const flameWidth = 12 * intensityFactor;
+            // 1. Ambient Fire Light Glow on Floor (Flickering Pulse)
+            const lightRadius = tileSize * (1.2 + currentIntensity * 0.8);
+            const lightGrad = ctx.createRadialGradient(centerX, centerY, 2, centerX, centerY, lightRadius);
+            lightGrad.addColorStop(0, `rgba(255, 120, 0, ${0.4 * currentIntensity})`);
+            lightGrad.addColorStop(0.5, `rgba(255, 60, 0, ${0.2 * currentIntensity})`);
+            lightGrad.addColorStop(1, 'rgba(255, 0, 0, 0)');
 
-            // Fire gradient - more intense = more red
-            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 20);
-            if (intensityFactor > 0.7) {
-                // High intensity - red/white core
-                gradient.addColorStop(0, 'rgba(255, 255, 200, 0.95)');
-                gradient.addColorStop(0.2, 'rgba(255, 220, 100, 0.9)');
-                gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.8)');
-                gradient.addColorStop(1, 'rgba(200, 0, 0, 0.4)');
-            } else {
-                // Lower intensity - more orange
-                gradient.addColorStop(0, 'rgba(255, 255, 200, 0.85)');
-                gradient.addColorStop(0.3, 'rgba(255, 200, 0, 0.8)');
-                gradient.addColorStop(0.6, 'rgba(255, 100, 0, 0.6)');
-                gradient.addColorStop(1, 'rgba(200, 50, 0, 0.2)');
-            }
-
-            // Main flame shape
-            ctx.fillStyle = gradient;
+            ctx.fillStyle = lightGrad;
             ctx.beginPath();
-            ctx.moveTo(centerX, posY + tileSize - 4);
-            ctx.lineTo(centerX - flameWidth / 2, posY + tileSize - flameHeight);
-            ctx.quadraticCurveTo(centerX, posY + tileSize - flameHeight - 10,
-                centerX + flameWidth / 2, posY + tileSize - flameHeight);
-            ctx.lineTo(centerX, posY + tileSize - 4);
+            ctx.arc(centerX, centerY, lightRadius, 0, Math.PI * 2);
             ctx.fill();
 
-            // Fire particles rising
-            const numParticles = Math.floor(3 + intensityFactor * 3);
-            for (let i = 0; i < numParticles; i++) {
-                const particleTime = (time * 2 + i * 0.3 + animationOffset) % 1.0;
-                const px = centerX + (Math.sin(time * 3 + i + animationOffset) * 8 * intensityFactor);
-                const py = centerY - (particleTime * 30);
-                const alpha = (1 - particleTime) * 0.7 * intensityFactor;
-                const size = (1 - particleTime * 0.5) * 3;
+            // 2. Dark Smoke Puffs Curling Upwards
+            for (let i = 0; i < 3; i++) {
+                const sProgress = (time * 1.5 + i * 0.33 + fire.x) % 1.0;
+                const sx = centerX + Math.sin(time * 3 + i + fire.y) * 6 * currentIntensity;
+                const sy = centerY - sProgress * 22;
+                const sAlpha = (1 - sProgress) * 0.45 * currentIntensity;
+                const sRadius = (3 + sProgress * 8) * currentIntensity;
 
-                ctx.fillStyle = `rgba(255, 150, 0, ${alpha})`;
+                ctx.fillStyle = `rgba(15, 20, 30, ${sAlpha})`;
                 ctx.beginPath();
-                ctx.arc(px, py, size, 0, Math.PI * 2);
+                ctx.arc(sx, sy, sRadius, 0, Math.PI * 2);
                 ctx.fill();
             }
 
-            // Glow effect on tile - intensity based
-            const glowAlpha = 0.1 + (intensityFactor * 0.15);
-            ctx.fillStyle = `rgba(255, 100, 0, ${glowAlpha})`;
-            ctx.fillRect(posX, posY, tileSize, tileSize);
+            // 3. Multi-Layer Animated Fire Flame Tongues
+            const numFlames = 5;
+            for (let i = 0; i < numFlames; i++) {
+                const fAngle = (i / numFlames) * Math.PI * 2;
+                const fOffsetX = Math.cos(fAngle) * 5 * currentIntensity;
+                const fOffsetY = Math.sin(fAngle) * 5 * currentIntensity;
+                const fHeight = (12 + Math.sin(time * 14 + i * 2 + fire.x) * 6) * currentIntensity;
+
+                // Outer Red/Orange Flame
+                ctx.fillStyle = `rgba(239, 68, 68, ${0.8 * currentIntensity})`;
+                ctx.beginPath();
+                ctx.arc(centerX + fOffsetX, centerY + fOffsetY - fHeight * 0.3, fHeight * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Middle Bright Yellow Flame
+                ctx.fillStyle = `rgba(245, 158, 11, ${0.9 * currentIntensity})`;
+                ctx.beginPath();
+                ctx.arc(centerX + fOffsetX * 0.6, centerY + fOffsetY * 0.6 - fHeight * 0.4, fHeight * 0.35, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Inner White/Cyan Hot Core
+                ctx.fillStyle = `rgba(255, 255, 220, ${0.95 * currentIntensity})`;
+                ctx.beginPath();
+                ctx.arc(centerX + fOffsetX * 0.3, centerY + fOffsetY * 0.3 - fHeight * 0.45, fHeight * 0.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 4. Rising Glowing Embers & Sparks
+            const numEmbers = Math.floor(4 + currentIntensity * 4);
+            for (let i = 0; i < numEmbers; i++) {
+                const eProgress = (time * 3 + i * 0.2 + fire.x * 2) % 1.0;
+                const ex = centerX + Math.sin(time * 5 + i * 3) * 10 * currentIntensity;
+                const ey = centerY + 6 - eProgress * 28;
+                const eAlpha = (1 - eProgress) * currentIntensity;
+                const eSize = (1 - eProgress * 0.5) * 2;
+
+                ctx.fillStyle = i % 2 === 0 ? `rgba(255, 220, 100, ${eAlpha})` : `rgba(255, 100, 0, ${eAlpha})`;
+                ctx.shadowColor = '#ffaa00';
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(ex, ey, eSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
 
             ctx.restore();
         }
     }
 }
-
