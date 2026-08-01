@@ -75,7 +75,16 @@ class WeaponUI {
                     : 'IDLE';
 
         const powerStatus = weapon.hasPower ? '⚡' : '⚠ NO POWER';
-        const crewStatus = weapon.autofire ? '👤 AUTO' : '👤 MANUAL';
+
+        const weaponsSystem = this.game.state.ship.systems.find(s => s.type === 'weapon');
+        const isCaptain = weaponsSystem && (weaponsSystem.assignedCaptain || (weaponsSystem.assignedCrew && weaponsSystem.assignedCrew.id === 'captain'));
+        const isManned = weaponsSystem && (isCaptain || !!weaponsSystem.assignedCrew);
+
+        const crewStatusBadge = isCaptain
+            ? `<span style="font-size: 0.65rem; background: rgba(0,240,255,0.2); border: 1px solid #00f0ff; color: #00f0ff; padding: 2px 6px; border-radius: 3px; font-weight: bold; box-shadow: 0 0 8px rgba(0,240,255,0.5);">👨‍✈️ CAPITÁN (+20% RECARGA)</span>`
+            : isManned
+                ? `<span style="font-size: 0.65rem; background: rgba(0,255,85,0.2); border: 1px solid #00ff55; color: #00ff55; padding: 2px 6px; border-radius: 3px; font-weight: bold; box-shadow: 0 0 8px rgba(0,255,85,0.5);">👥 AUTO-DISPARO (+20%)</span>`
+                : `<span style="font-size: 0.7rem; color: #ffaa00; font-weight: bold;">👤 MANUAL</span>`;
 
         return `
             <div class="weapon-slot" style="
@@ -89,13 +98,9 @@ class WeaponUI {
                     <span style="color: #fff; font-size: 0.85rem; font-weight: 500;">
                         ${weapon.name}
                     </span>
-                    <div style="display: flex; gap: 10px; font-size: 0.7rem;">
-                        <span style="color: ${weapon.hasPower ? '#00ff55' : '#ff0055'};">
-                            ${powerStatus}
-                        </span>
-                        <span style="color: ${weapon.autofire ? '#00ff55' : '#ffaa00'};">
-                            ${crewStatus}
-                        </span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="color: #aaa; font-size: 0.75rem;">${powerStatus}</span>
+                        ${crewStatusBadge}
                     </div>
                 </div>
 

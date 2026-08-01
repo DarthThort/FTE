@@ -8,6 +8,12 @@ class ShieldUI {
         if (!this.game.state.shieldManager) return '';
 
         const status = this.game.state.shieldManager.getShieldStatus();
+        const shieldSystem = this.game.state.ship.systems.find(s => s.type === 'shield');
+        const isCaptain = shieldSystem && (shieldSystem.assignedCaptain || (shieldSystem.assignedCrew && shieldSystem.assignedCrew.id === 'captain'));
+        const isManned = shieldSystem && (isCaptain || !!shieldSystem.assignedCrew);
+
+        const badgeColor = isCaptain ? '#00f0ff' : '#00ff55';
+        const badgeText = isCaptain ? '👨‍✈️ CAPITÁN (+25% RECARGA ESCUDO)' : '👥 TRIPULANTE (+25% RECARGA)';
 
         return `
             <div id="shield-panel" class="draggable-panel" style="position:absolute;bottom:380px;left:20px;width:280px;background:rgba(0,0,0,0.85);border:2px solid #00ff55;border-radius:6px;padding:12px;font-family:var(--font-tech);box-shadow:0 0 15px rgba(0,255,85,0.3);">
@@ -37,8 +43,13 @@ class ShieldUI {
                 ` : ''}
                 <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:#aaa;padding-top:8px;border-top:1px solid rgba(255,255,255,0.1);">
                     <span>⚡ Power: <span style="color:${status.systemPower > 0 ? '#00ff55' : '#ff0055'};">${status.systemPower}/${status.systemMaxPower}</span></span>
-                    <span>🔄 Rate: ${status.rechargeRate}s/layer</span>
+                    <span>⏱️ Rate: ${status.rechargeRate}s/layer</span>
                 </div>
+                ${isManned ? `
+                    <div style="margin-top: 8px; font-size: 0.65rem; color: ${badgeColor}; font-weight: bold; text-align: center; background: ${isCaptain ? 'rgba(0,240,255,0.15)' : 'rgba(0,255,85,0.15)'}; border-radius: 4px; padding: 4px; border: 1px solid ${badgeColor}; box-shadow: 0 0 8px ${badgeColor}44;">
+                        ${badgeText}
+                    </div>
+                ` : ''}
             </div>
         `;
     }
