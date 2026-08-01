@@ -407,7 +407,7 @@ class PortUI {
                                 </div>
                                 <div>
                                     <p style="color: #f59e0b; font-weight: bold; margin: 0 0 8px 0; font-size: 0.9rem;">${m.cost} CR</p>
-                                    <button style="width: 100%; padding: 6px; background: var(--primary); color: #000; border: none; font-weight: bold; border-radius: 4px; cursor: pointer;" onclick="alert('Componente adquirido')">COMPRAR</button>
+                                    <button style="width: 100%; padding: 6px; background: var(--primary); color: #000; border: none; font-weight: bold; border-radius: 4px; cursor: pointer;" onclick="window.game.ui.portUI.buyShipyardModule('${m.id}', ${m.cost})">COMPRAR</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -416,6 +416,41 @@ class PortUI {
             </div>
         `;
         this.uiManager.createModal('ASTILLERO Y TALLER DE CASCO', content);
+    }
+
+    buyShipyardModule(moduleId, cost) {
+        const state = this.game.state;
+        const mod = typeof getModule === 'function' ? getModule(moduleId) : null;
+        const name = mod ? mod.name : moduleId;
+
+        if (state.credits < cost) {
+            this.uiManager.hud.showNotification(`¡Créditos insuficientes! Se requieren ${cost} CR.`, 'error');
+            return;
+        }
+
+        // Deduct credits
+        state.credits -= cost;
+
+        // Save module into state.ownedModules
+        if (!state.ownedModules) state.ownedModules = [];
+        state.ownedModules.push(moduleId);
+
+        // Also add to cargo inventory items so it shows in inventory UI
+        if (state.ship && state.ship.cargo) {
+            if (!state.ship.cargo.items) state.ship.cargo.items = [];
+            state.ship.cargo.items.push({
+                id: moduleId,
+                name: name,
+                type: 'module',
+                quantity: 1
+            });
+        }
+
+        if (state.saveGame) state.saveGame();
+        if (state.notify) state.notify();
+
+        this.uiManager.hud.showNotification(`¡Módulo ${name} adquirido y guardado en tu inventario!`, 'success');
+        this.renderShipyard();
     }
 
     repairShip(amount, cost) {

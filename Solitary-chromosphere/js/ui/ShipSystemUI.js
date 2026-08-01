@@ -240,6 +240,143 @@ class ShipSystemUI {
                     }
                 };
             }
+
+            // Install Module Button
+            const btnInstall = document.getElementById('btn-install-module');
+            if (btnInstall) {
+                btnInstall.onclick = () => {
+                    this.renderInstallMenuForSystem(system);
+                };
+            }
+
+            // Uninstall Module Button
+            const btnUninstall = document.getElementById('btn-uninstall-module');
+            if (btnUninstall) {
+                btnUninstall.onclick = () => {
+                    const hardpointKey = systemToHardpoint[system.type];
+                    const installedId = hardpointKey ? this.game.state.ship.hardpoints[hardpointKey] : null;
+
+                    if (installedId) {
+                        this.game.state.ship.hardpoints[hardpointKey] = null;
+                        if (!this.game.state.ownedModules) this.game.state.ownedModules = [];
+                        this.game.state.ownedModules.push(installedId);
+
+                        if (this.game.state.ship?.cargo) {
+                            if (!this.game.state.ship.cargo.items) this.game.state.ship.cargo.items = [];
+                            const modObj = typeof getModule === 'function' ? getModule(installedId) : null;
+                            this.game.state.ship.cargo.items.push({
+                                id: installedId,
+                                name: modObj ? modObj.name : installedId,
+                                type: 'module',
+                                quantity: 1
+                            });
+                        }
+
+                        if (this.game.state.saveGame) this.game.state.saveGame();
+                        if (this.game.state.notify) this.game.state.notify();
+
+                        this.uiManager.hud.showNotification('Módulo desinstalado y guardado en tu inventario', 'info');
+                        this.renderSystemConsole(system);
+                    }
+                };
+            }
+        }, 50);
+    }
+
+    renderInstallMenuForSystem(system) {
+        const state = this.game.state;
+        const systemToHardpoint = {
+            'bridge': 'bridge',
+            'engine': 'engine',
+            'shield': 'shield',
+            'jumpdrive': 'jumpDrive',
+            'reactor': 'reactor',
+            'weapon': system.id === 'weapons1' ? 'weapon1' : 'weapon2'
+        };
+        const hardpointKey = systemToHardpoint[system.type];
+
+        // Gather all owned module IDs from state.ownedModules and state.ship.cargo.items
+        const rawList = [];
+        if (Array.isArray(state.ownedModules)) {
+            state.ownedModules.forEach(m => rawList.push(typeof m === 'string' ? m : m.id));
+        }
+        if (state.ship && state.ship.cargo && Array.isArray(state.ship.cargo.items)) {
+            state.ship.cargo.items.forEach(item => {
+                if (item.id && !rawList.includes(item.id)) {
+                    rawList.push(item.id);
+                }
+            });
+        }
+
+        // Map to module objects via getModule
+        const availableModules = rawList
+            .map(id => typeof getModule === 'function' ? getModule(id) : { id, name: id, tier: 1 })
+            .filter(mod => mod !== null);
+
+        const content = `
+            <div style="font-family: 'Orbitron', var(--font-tech, monospace); color: #fff; max-width: 500px; margin: 0 auto;">
+                <h3 style="color: #00f0ff; margin-bottom: 12px; font-size: 1.1rem; text-align: center;">
+                    INSTALAR COMPONENTE EN ${system.name.toUpperCase()}
+                </h3>
+                <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 16px; text-align: center;">
+                    Selecciona un componente de tu inventario de carga para equiparlo en esta consola.
+                </p>
+
+                ${availableModules.length === 0 ? `
+                    <div style="padding: 20px; background: rgba(255,255,255,0.05); border: 1px dashed #475569; border-radius: 8px; text-align: center; color: #94a3b8;">
+                        <p style="margin-bottom: 8px;">No tienes módulos disponibles en tu inventario de carga.</p>
+                        <p style="font-size: 0.78rem; color: #f59e0b;">Visita los Astilleros en un puerto para comprar módulos y componentes.</p>
+                    </div>
+                ` : `
+                    <div style="display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                        ${availableModules.map(m => `
+                            <div style="padding: 12px; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="color: #38bdf8; font-weight: bold; font-size: 0.95rem;">${m.name}</div>
+                                    <div style="color: #64748b; font-size: 0.78rem;">Tier ${m.tier || 1} ${m.category || ''}</div>
+                                </div>
+                                <button class="btn-install-mod-confirm" data-mod-id="${m.id}" style="padding: 8px 14px; background: #00f0ff; color: #000; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; font-family: 'Rajdhani', sans-serif;">
+                                    EQUIPAR
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+        `;
+
+        this.uiManager.createModal('INSTALAR COMPONENTE DE NAVE', content);
+
+        // Attach click handlers to confirm buttons
+        setTimeout(() => {
+            const confirmBtns = document.querySelectorAll('.btn-install-mod-confirm');
+            confirmBtns.forEach(btn => {
+                btn.onclick = () => {
+                    const modId = btn.dataset.modId;
+                    if (hardpointKey) {
+                        state.ship.hardpoints[hardpointKey] = modId;
+                    }
+                    // Remove from ownedModules & cargo items
+                    if (Array.isArray(state.ownedModules)) {
+                        state.ownedModules = state.ownedModules.filter(id => (typeof id === 'string' ? id : id.id) !== modId);
+                    }
+                    if (state.ship?.cargo?.items) {
+                        state.ship.cargo.items = state.ship.cargo.items.filter(item => item.id !== modId);
+                    }
+
+                    if (state.saveGame) state.saveGame();
+                    if (state.notify) state.notify();
+
+                    const modObj = typeof getModule === 'function' ? getModule(modId) : null;
+                    const modName = modObj ? modObj.name : modId;
+                    this.uiManager.hud.showNotification(`¡${modName} instalado en ${system.name}!`, 'success');
+
+                    // Close modal and refresh system console
+                    const modalOverlay = document.querySelector('.modal-overlay');
+                    if (modalOverlay) modalOverlay.remove();
+                    this.renderSystemConsole(system);
+                };
+            });
         }, 50);
     }
 
