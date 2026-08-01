@@ -267,20 +267,113 @@ class ShipSystemUI {
     }
 
     showCrewDetail(crewId) {
-        const crew = this.game.state.ship.crew.find(c => c.id === crewId);
+        const state = this.game.state;
+        const crew = state.ship.crew.find(c => c.id === crewId) || (state.port?.crew ? state.port.crew.find(c => c.id === crewId) : null);
         if (!crew) return;
 
+        const avatarUrl = window.getCrewAvatarURL ? window.getCrewAvatarURL(crew) : '';
+        const currentAssignment = state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
+        const primarySkill = state.getRolePrimarySkill(crew.role);
+        const primaryLevel = crew.skills?.[primarySkill]?.level || 1;
+
+        const skillNames = {
+            piloting: '🚀 Pilotaje / Evasión',
+            combat: '💥 Armas / Combate',
+            engineering: '🔧 Ingeniería / Reparación',
+            medical: '💉 Medicina / Curación',
+            shields: '🛡️ Escudos / Recarga'
+        };
+
         const content = `
-            <div style="font-family: var(--font-tech); text-align: center;">
-                <h2 style="color: var(--secondary); margin-bottom: 5px;">${crew.name}</h2>
-                <p style="color: #aaa; margin-bottom: 15px;">${crew.role}</p>
-                <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px;">
-                    <p style="color: #fff;">Nivel de Ingeniería: ${crew.engineeringSkill || 1}</p>
-                    <p style="color: #fff;">Estado Actual: ${crew.state}</p>
+            <div style="font-family: 'Orbitron', var(--font-tech, monospace); max-width: 520px; margin: 0 auto; color: #fff;">
+                <!-- Header with Avatar -->
+                <div style="display: flex; align-items: center; gap: 16px; background: rgba(15, 23, 42, 0.9); border: 2px solid #00f0ff; border-radius: 10px; padding: 16px; margin-bottom: 16px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);">
+                    <img src="${avatarUrl}" style="width: 70px; height: 70px; border-radius: 50%; border: 3px solid #00f0ff; background: #030712; flex-shrink: 0; box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);" />
+                    <div style="text-align: left; flex: 1;">
+                        <h2 style="color: #00f0ff; margin: 0 0 4px 0; font-size: 1.4rem; letter-spacing: 2px;">${crew.name.toUpperCase()}</h2>
+                        <div style="color: #94a3b8; font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">
+                            ${crew.species || 'Humano'} • ${crew.role} (Nivel Principal: ${primaryLevel})
+                        </div>
+                        <div style="display: flex; gap: 12px; font-size: 0.78rem; color: #cbd5e1; flex-wrap: wrap;">
+                            <span>❤️ Salud: <b style="color: #00ff55;">${crew.health || 100}/${crew.maxHealth || 100}</b></span>
+                            <span>😊 Moral: <b style="color: ${crew.morale > 70 ? '#00ff55' : '#ffaa00'};">${crew.morale || 100}/100</b></span>
+                            <span>⚡ Estado: <b style="color: #ffaa00;">${crew.state || 'En espera'}</b></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ASSIGNMENT CONTROL DIRECTLY IN DOSSIER -->
+                <div style="background: rgba(0, 240, 255, 0.08); border: 1.5px solid #00f0ff; border-radius: 8px; padding: 14px; margin-bottom: 16px; text-align: left;">
+                    <h3 style="color: #00f0ff; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+                        🎯 ASIGNAR ESTACIÓN DE TRABAJO
+                    </h3>
+                    <p style="color: #94a3b8; font-size: 0.78rem; margin-bottom: 10px;">
+                        Estación Actual: <b style="color: ${currentAssignment ? '#00ff55' : '#ffaa00'};">${currentAssignment ? currentAssignment.name : 'En Espera / Sin Estación'}</b>
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="dossier-system-selector" style="flex: 1; padding: 8px; background: rgba(0,0,0,0.7); border: 1px solid #00f0ff; color: #fff; border-radius: 4px; font-family: var(--font-tech); font-size: 0.85rem;">
+                            <option value="">-- Seleccionar Estación de la Nave --</option>
+                            ${state.ship.systems.map(s => `
+                                <option value="${s.id}" ${currentAssignment?.id === s.id ? 'selected' : ''}>${s.name} (${s.type.toUpperCase()})</option>
+                            `).join('')}
+                        </select>
+                        <button id="btn-dossier-assign" style="padding: 8px 14px; background: #00f0ff; border: none; color: #000; font-weight: 900; border-radius: 4px; cursor: pointer; font-family: var(--font-tech); font-size: 0.85rem;">
+                            ASIGNAR
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SKILLS & EXPERIENCE XP BARS -->
+                <div style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 16px; text-align: left;">
+                    <h3 style="color: #ffaa00; font-size: 0.9rem; margin-bottom: 12px; border-bottom: 1px solid rgba(255,170,0,0.3); padding-bottom: 6px;">
+                        📊 NIVELES DE HABILIDAD Y EXPERIENCIA (XP)
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        ${Object.entries(crew.skills || {}).map(([skillKey, data]) => {
+                            const label = skillNames[skillKey] || skillKey.toUpperCase();
+                            const level = data.level || 1;
+                            const xp = data.xp || 0;
+                            const maxXP = level * 100;
+                            const pct = Math.min(100, Math.round((xp / maxXP) * 100));
+                            const bonusVal = Math.round(15 + level * 5);
+
+                            return `
+                                <div>
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 3px;">
+                                        <span style="color: #e2e8f0; font-weight: bold;">${label}</span>
+                                        <span style="color: #00f0ff; font-weight: bold;">Nivel ${level} (${pct}% XP) <span style="color: #00ff55; font-size: 0.72rem;">[+${bonusVal}% Bonus]</span></span>
+                                    </div>
+                                    <div style="width: 100%; height: 8px; background: rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
+                                        <div style="width: ${pct}%; height: 100%; background: linear-gradient(90deg, #00f0ff, #00ff55); box-shadow: 0 0 6px #00f0ff; transition: width 0.3s;"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             </div>
         `;
+
         this.uiManager.createModal('EXPEDIENTE DE TRIPULANTE', content);
+
+        setTimeout(() => {
+            const btnAssign = document.getElementById('btn-dossier-assign');
+            if (btnAssign) {
+                btnAssign.onclick = () => {
+                    const selector = document.getElementById('dossier-system-selector');
+                    const systemId = selector.value;
+                    if (!systemId) {
+                        this.uiManager.hud.showNotification('Por favor, selecciona una estación de la nave', 'error');
+                        return;
+                    }
+                    const result = state.assignCrewToSystem(crew.id, systemId);
+                    this.uiManager.hud.showNotification(result.message, result.success ? 'success' : 'error');
+                    if (result.success) {
+                        this.showCrewDetail(crew.id);
+                    }
+                };
+            }
+        }, 50);
     }
 
     showSystemDetail(systemId) {

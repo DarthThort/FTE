@@ -76,9 +76,15 @@ class PowerManager {
         const powerRatio = system.currentPower / system.maxPower;
         let powerFactor = 0.5 + (powerRatio * 0.5);
 
-        // Manned bonus by crew or Captain (+25% boost)
-        if (system.assignedCrew || system.assignedCaptain) {
-            powerFactor *= 1.25;
+        // Manned bonus scaling with skill level!
+        if (system.assignedCaptain) {
+            powerFactor *= 1.30; // Captain gives +30% boost
+        } else if (system.assignedCrew) {
+            const crew = system.assignedCrew;
+            const primarySkill = this.state.getRolePrimarySkill ? this.state.getRolePrimarySkill(crew.role) : 'engineering';
+            const skillLevel = crew.skills?.[primarySkill]?.level || 1;
+            const skillBonus = 0.15 + (skillLevel * 0.05); // Lvl 1: +20%, Lvl 2: +25%, Lvl 3: +30%, Lvl 4: +35%
+            powerFactor *= (1 + skillBonus);
         }
 
         return healthFactor * powerFactor;
