@@ -451,8 +451,12 @@ class PortUI {
             return;
         }
 
-        const cargoUsed = state.getCargoUsed();
-        const cargoCapacity = state.ship.cargo.capacity;
+        const marketItems = Array.isArray(planet.market)
+            ? planet.market
+            : (planet.market.commodities || planet.market.items || []);
+
+        const cargoUsed = state.getCargoUsed ? state.getCargoUsed() : (state.ship.cargo.items ? state.ship.cargo.items.reduce((a, b) => a + (b.quantity || 1), 0) : 0);
+        const cargoCapacity = state.ship.cargo.capacity || 20;
 
         const content = `
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
@@ -460,18 +464,25 @@ class PortUI {
                 <div>
                     <h3 style="color: var(--secondary); margin-bottom: 10px;">PRODUCTOS EN EL MERCADO</h3>
                     <div style="display: flex; flex-direction: column; gap: 8px; max-height: 400px; overflow-y: auto;">
-                        ${planet.market.map(item => `
-                            <div style="background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <span style="color: #fff; font-weight: bold;">${item.name}</span>
-                                    <span style="color: #888; font-size: 0.8rem; margin-left: 8px;">(Disponibles: ${item.quantity})</span>
+                        ${marketItems.length === 0 ? '<p style="color: #888;">No hay productos a la venta.</p>' : marketItems.map(item => {
+                            const commodity = (window.Economy && window.Economy.getCommodity) ? window.Economy.getCommodity(item.id) : null;
+                            const name = commodity?.name || item.name || item.id.toUpperCase();
+                            const price = item.price || commodity?.basePrice || 10;
+                            const quantity = item.stock !== undefined ? item.stock : (item.quantity || 0);
+
+                            return `
+                                <div style="background: rgba(255,255,255,0.05); padding: 10px; border: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <span style="color: #fff; font-weight: bold;">${name}</span>
+                                        <span style="color: #888; font-size: 0.8rem; margin-left: 8px;">(Stock: ${quantity})</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span style="color: var(--warning); font-weight: bold;">${price} CR</span>
+                                        <button style="font-size: 0.75rem; padding: 4px 10px; background: var(--primary); color: #000; border: none; font-weight: bold; border-radius: 4px; cursor: pointer;" onclick="window.game.ui.buyItem('${item.id}', ${price})">COMPRAR</button>
+                                    </div>
                                 </div>
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <span style="color: var(--warning); font-weight: bold;">${item.price} CR</span>
-                                    <button style="font-size: 0.75rem; padding: 4px 10px;" onclick="window.game.ui.buyItem('${item.id}', ${item.price})">COMPRAR</button>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </div>
                 </div>
 
