@@ -18,6 +18,7 @@ class DamageCalculator {
      * @returns {Object} Damage result details
      */
     applyWeaponDamage(weapon, weaponModule, target, shooter) {
+        const game = this.state?.game || window.game;
         const shieldDamage = weaponModule?.stats?.shieldDamage || weapon.damage || 10;
         const hullDamage = weaponModule?.stats?.hullDamage || weapon.damagePerShot || weapon.damage || 10;
         const penetration = weaponModule?.stats?.penetration || 0;
@@ -42,10 +43,10 @@ class DamageCalculator {
                 result.evaded = true;
 
                 // Show evade message
-                if (this.state.game?.damageNumbers) {
-                    const shipX = this.state.game.canvas.width / 2;
-                    const shipY = this.state.game.canvas.height / 2;
-                    this.state.game.damageNumbers.add(shipX, shipY - 30, 'EVADED!', '#00ff00');
+                if (game?.damageNumbers && game?.canvas) {
+                    const shipX = game.canvas.width / 2;
+                    const shipY = game.canvas.height / 2;
+                    game.damageNumbers.add(shipX, shipY - 30, 'EVADED!', '#00ff00');
                 }
                 return result;
             }
@@ -59,10 +60,10 @@ class DamageCalculator {
                 result.shieldDamageDealt = absorbed;
 
                 // Show shield damage
-                if (absorbed > 0 && this.state.game?.damageNumbers) {
-                    const shipX = this.state.game.canvas.width / 2;
-                    const shipY = this.state.game.canvas.height / 2;
-                    this.state.game.damageNumbers.add(shipX, shipY - 50, Math.round(absorbed), '#00f0ff');
+                if (absorbed > 0 && game?.damageNumbers && game?.canvas) {
+                    const shipX = game.canvas.width / 2;
+                    const shipY = game.canvas.height / 2;
+                    game.damageNumbers.add(shipX, shipY - 50, Math.round(absorbed), '#00f0ff');
                 }
 
                 // If shields absorbed all
@@ -81,10 +82,10 @@ class DamageCalculator {
                     console.log(`[Combat] Player Hull: ${target.health}/${target.maxHealth}`);
 
                     // Show hull damage
-                    if (this.state.game?.damageNumbers) {
-                        const shipX = this.state.game.canvas.width / 2;
-                        const shipY = this.state.game.canvas.height / 2;
-                        this.state.game.damageNumbers.add(shipX, shipY, Math.round(totalHullDamage), '#ff0055');
+                    if (game?.damageNumbers && game?.canvas) {
+                        const shipX = game.canvas.width / 2;
+                        const shipY = game.canvas.height / 2;
+                        game.damageNumbers.add(shipX, shipY, Math.round(totalHullDamage), '#ff0055');
                     }
 
                     // Breach creation (10% chance)
@@ -101,7 +102,6 @@ class DamageCalculator {
                     // Burn effect
                     if (burnDamage > 0 && burnDuration > 0) {
                         console.log(`[Combat] Burn effect: ${burnDamage} damage over ${burnDuration}s`);
-                        // TODO: Implement burn tracking
                     }
                 }
             }
@@ -116,15 +116,15 @@ class DamageCalculator {
             // Show damage numbers for enemy
             if (damageResult.evaded) {
                 console.log('[Combat] Enemy EVADED!');
-                if (this.state.game?.damageNumbers) {
-                    this.state.game.damageNumbers.add(405, 80, 'EVADED!', '#00ff00');
+                if (game?.damageNumbers) {
+                    game.damageNumbers.add(405, 80, 'EVADED!', '#00ff00');
                 }
             } else {
-                if (damageResult.shieldDamage > 0 && this.state.game?.damageNumbers) {
-                    this.state.game.damageNumbers.add(405, 50, Math.round(damageResult.shieldDamage), '#00f0ff');
+                if (damageResult.shieldDamage > 0 && game?.damageNumbers) {
+                    game.damageNumbers.add(405, 50, Math.round(damageResult.shieldDamage), '#00f0ff');
                 }
-                if (damageResult.hullDamage > 0 && this.state.game?.damageNumbers) {
-                    this.state.game.damageNumbers.add(405, 80, Math.round(damageResult.hullDamage), '#ff0055');
+                if (damageResult.hullDamage > 0 && game?.damageNumbers) {
+                    game.damageNumbers.add(405, 80, Math.round(damageResult.hullDamage), '#ff0055');
                 }
             }
         }

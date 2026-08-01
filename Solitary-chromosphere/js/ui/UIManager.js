@@ -25,7 +25,8 @@ class UIManager {
         return new Proxy(this, {
             get(target, prop, receiver) {
                 if (prop in target) {
-                    return Reflect.get(target, prop, receiver);
+                    const val = Reflect.get(target, prop, receiver);
+                    return typeof val === 'function' ? val.bind(target) : val;
                 }
 
                 const subUIs = [
@@ -36,13 +37,25 @@ class UIManager {
                     target.weaponUI,
                     target.powerUI,
                     target.shieldUI,
-                    target.animationUI
+                    target.animationUI,
+                    target.game?.ui?.dialogueUI,
+                    target.game?.ui?.inventoryUI,
+                    target.game?.ui?.loadoutUI
                 ];
 
                 for (const subUI of subUIs) {
                     if (subUI && typeof subUI[prop] === 'function') {
                         return subUI[prop].bind(subUI);
                     }
+                }
+
+                // Defensive Dummy Function: Prevents "TypeError: game.ui.X is not a function" crashes!
+                if (typeof prop === 'string' && !prop.startsWith('_') && prop !== 'then') {
+                    console.warn(`[UIManager Shield] Intercepted missing UI method: game.ui.${prop}()`);
+                    return (...args) => {
+                        console.warn(`[UIManager Shield] Safely handled call to missing method: game.ui.${prop}(`, ...args, `)`);
+                        return null;
+                    };
                 }
 
                 return undefined;

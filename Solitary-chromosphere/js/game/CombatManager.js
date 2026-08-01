@@ -163,16 +163,17 @@ class CombatManager {
         if (this.enemy.weapons && this.enemy.weapons.length > 0) {
             this.enemy.weapons.forEach(weapon => {
                 if (weapon.state === 'ready') {
+                    const game = this.state?.game || window.game;
                     // Add visual effects for enemy firing
-                    if (this.state.game && this.state.game.combatEffects) {
+                    if (game && game.combatEffects) {
                         const enemyX = 405;  // Enemy overlay position
                         const enemyY = 80;
-                        const playerX = this.state.game.canvas.width / 2;
-                        const playerY = this.state.game.canvas.height / 2;
+                        const playerX = game.canvas ? game.canvas.width / 2 : 400;
+                        const playerY = game.canvas ? game.canvas.height / 2 : 300;
 
                         // Red projectile from enemy to player
-                        this.state.game.combatEffects.addProjectile(enemyX, enemyY, playerX, playerY, '#ff0055');
-                        this.state.game.combatEffects.playLaserSound();
+                        game.combatEffects.addProjectile(enemyX, enemyY, playerX, playerY, '#ff0055');
+                        game.combatEffects.playLaserSound();
                     }
 
                     // Fire at player using damage calculator
@@ -289,11 +290,12 @@ class CombatManager {
         // Tier 1: 10s, Tier 2: 9s, Tier 3: 8s, Tier 4: 7s
         const cooldown = Math.max(5, this.escapeCooldownBase - (bridgeTier - 1));
         const timeSinceLastAttempt = now - this.lastEscapeAttempt;
+        const game = this.state?.game || window.game;
 
         if (timeSinceLastAttempt < cooldown) {
             const remaining = Math.ceil(cooldown - timeSinceLastAttempt);
-            if (this.state.game && this.state.game.hud) {
-                this.state.game.hud.showNotification(`Escape on cooldown! (${remaining}s remaining)`, 'error');
+            if (game?.hud) {
+                game.hud.showNotification(`Escape on cooldown! (${remaining}s remaining)`, 'error');
             }
             console.log(`[Combat] Escape on cooldown, ${remaining}s remaining`);
             return;
@@ -347,15 +349,15 @@ class CombatManager {
             console.log(`[Combat] ESCAPE SUCCESSFUL! (rolled ${(roll * 100).toFixed(1)}% vs ${(escapeChance * 100).toFixed(1)}%)`);
 
             // Show success message
-            if (this.state.game && this.state.game.hud) {
-                this.state.game.hud.showNotification('Escape successful!', 'success');
+            if (game?.hud) {
+                game.hud.showNotification('Escape successful!', 'success');
             }
 
             // Show escape message with damage numbers
-            if (this.state.game && this.state.game.damageNumbers) {
-                const shipX = this.state.game.canvas.width / 2;
-                const shipY = this.state.game.canvas.height / 2;
-                this.state.game.damageNumbers.add(shipX, shipY - 50, 'ESCAPED!', '#00ff55');
+            if (game?.damageNumbers && game?.canvas) {
+                const shipX = game.canvas.width / 2;
+                const shipY = game.canvas.height / 2;
+                game.damageNumbers.add(shipX, shipY - 50, 'ESCAPED!', '#00ff55');
             }
 
             // Successful escape - end combat
@@ -366,15 +368,15 @@ class CombatManager {
             console.log(`[Combat] ESCAPE FAILED! (rolled ${(roll * 100).toFixed(1)}% vs ${(escapeChance * 100).toFixed(1)}%)`);
 
             // Show failure message
-            if (this.state.game && this.state.game.hud) {
-                this.state.game.hud.showNotification(`Escape failed! (${(escapeChance * 100).toFixed(0)}% chance)`, 'error');
+            if (game?.hud) {
+                game.hud.showNotification(`Escape failed! (${(escapeChance * 100).toFixed(0)}% chance)`, 'error');
             }
 
             // Show failed message with damage numbers
-            if (this.state.game && this.state.game.damageNumbers) {
-                const shipX = this.state.game.canvas.width / 2;
-                const shipY = this.state.game.canvas.height / 2;
-                this.state.game.damageNumbers.add(shipX, shipY - 50, 'FAILED!', '#ff0055');
+            if (game?.damageNumbers && game?.canvas) {
+                const shipX = game.canvas.width / 2;
+                const shipY = game.canvas.height / 2;
+                game.damageNumbers.add(shipX, shipY - 50, 'FAILED!', '#ff0055');
             }
 
             // Failed escape - combat continues
