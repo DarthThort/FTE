@@ -413,42 +413,6 @@ class TileRenderer {
         ctx.fillRect(posX + this.tileSize - 4 - s, posY + this.tileSize - 4 - s, s, s);
     }
 
-    drawClosedDoor(ctx, posX, posY) {
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-        ctx.clip();
-        ctx.fillStyle = '#d97706';
-        ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-        ctx.fillStyle = '#000';
-        ctx.lineWidth = 4;
-        for (let i = -this.tileSize; i < this.tileSize * 2; i += 8) {
-            ctx.beginPath();
-            ctx.moveTo(posX + i, posY);
-            ctx.lineTo(posX + i + 8, posY + this.tileSize);
-            ctx.lineTo(posX + i + 4, posY + this.tileSize);
-            ctx.lineTo(posX + i - 4, posY);
-            ctx.fill();
-        }
-        ctx.restore();
-        ctx.strokeStyle = '#d97706';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-    }
-
-    drawOpenDoor(ctx, posX, posY) {
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(posX, posY, this.tileSize, this.tileSize);
-        ctx.fillStyle = '#059669';
-        ctx.fillRect(posX, posY, 6, this.tileSize);
-        ctx.fillRect(posX + this.tileSize - 6, posY, 6, this.tileSize);
-        ctx.fillStyle = '#34d399';
-        ctx.fillRect(posX + 2, posY + this.tileSize / 2 - 2, 2, 4);
-        ctx.fillRect(posX + this.tileSize - 4, posY + this.tileSize / 2 - 2, 2, 4);
-    }
-
     drawInfirmary(ctx, posX, posY) {
         // Dark red floor
         ctx.fillStyle = '#2d1a1a';
