@@ -377,6 +377,22 @@ class GameState {
         return { success: true, message: `¡${system.name} mejorado a Nivel ${system.level}! (+1 Potencia Máxima)` };
     }
 
+    getPlayer() {
+        if (this.game && this.game.sceneManager && this.game.sceneManager.player) {
+            return this.game.sceneManager.player;
+        }
+        if (this.game && this.game.player) {
+            return this.game.player;
+        }
+        if (window.game && window.game.sceneManager && window.game.sceneManager.player) {
+            return window.game.sceneManager.player;
+        }
+        if (window.game && window.game.player) {
+            return window.game.player;
+        }
+        return null;
+    }
+
     assignCaptainToSystem(systemId) {
         const system = this.ship.systems.find(s => s.id === systemId);
         if (!system) return { success: false, message: 'Sistema no encontrado' };
@@ -398,10 +414,12 @@ class GameState {
             skills: { piloting: { level: 3 }, engineering: { level: 3 }, combat: { level: 3 } }
         };
 
-        // Position Player character right at the console tile
-        if (window.game && window.game.player) {
-            window.game.player.x = system.x * 32 + 4;
-            window.game.player.y = system.y * 32 + 4;
+        // Position Player character right at the console tile and set working state for animation
+        const player = this.getPlayer();
+        if (player) {
+            player.x = system.x * 32 + 8;
+            player.y = system.y * 32 + 8;
+            player.state = 'working';
         }
 
         this.saveGame();
@@ -411,33 +429,44 @@ class GameState {
     }
 
     updateCaptainConsolePresence() {
-        if (!window.game || !window.game.player || !this.ship || !this.ship.systems) return;
+        const player = this.getPlayer();
+        if (!player || !this.ship || !this.ship.systems) return;
 
-        const player = window.game.player;
-        const playerTileX = Math.floor((player.x + 12) / 32);
-        const playerTileY = Math.floor((player.y + 12) / 32);
+        const playerPixelX = player.x + (player.size ? player.size / 2 : 8);
+        const playerPixelY = player.y + (player.size ? player.size / 2 : 8);
+        const playerTileX = Math.floor(playerPixelX / 32);
+        const playerTileY = Math.floor(playerPixelY / 32);
 
+        let anyCaptainWorking = false;
         let changed = false;
 
         this.ship.systems.forEach(system => {
             if (system.assignedCaptain) {
-                // Calculate distance in tiles from Captain to system console
                 const dist = Math.hypot(playerTileX - system.x, playerTileY - system.y);
 
-                // If Captain moves more than 1.5 tiles away from console, remove bonus!
-                if (dist > 1.5) {
-                    console.log(`[Captain] Player walked away from ${system.name}. Removing bonus.`);
+                // Distance check: standing at console tile
+                if (dist <= 1.2) {
+                    anyCaptainWorking = true;
+                } else {
+                    console.log(`[Captain] Player walked away from ${system.name}. Removing bonus!`);
                     system.assignedCaptain = false;
                     if (system.assignedCrew && system.assignedCrew.id === 'captain') {
                         system.assignedCrew = null;
                     }
                     changed = true;
-                    if (window.game.ui && window.game.ui.hud) {
-                        window.game.ui.hud.showNotification(`Capitán se alejó de ${system.name}. Bonificación desactivada.`, 'info');
+                    if (this.game && this.game.ui && this.game.ui.hud) {
+                        this.game.ui.hud.showNotification(`Capitán se alejó de ${system.name}. Bonificación desactivada.`, 'info');
                     }
                 }
             }
         });
+
+        // Set player state to 'working' while operating a console so working animation renders!
+        if (anyCaptainWorking) {
+            player.state = 'working';
+        } else if (player.state === 'working') {
+            player.state = 'idle';
+        }
 
         if (changed) {
             this.saveGame();
