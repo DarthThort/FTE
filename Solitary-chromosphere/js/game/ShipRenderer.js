@@ -1,4 +1,4 @@
-﻿class ShipRenderer {
+class ShipRenderer {
     constructor(gameEngine) {
         this.game = gameEngine;
         this.tileSize = 32;
@@ -140,6 +140,10 @@
         this.renderStation(ctx);
 
         this.renderShields(ctx);
+
+        if (this.game.crewCommandController) {
+            this.game.crewCommandController.renderTacticalOverlay(ctx);
+        }
     }
 
 

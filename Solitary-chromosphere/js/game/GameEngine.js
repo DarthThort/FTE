@@ -1,4 +1,4 @@
-﻿class GameEngine {
+class GameEngine {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
@@ -16,6 +16,7 @@
         this.eKeyPressed = false;  // For repair and fire fighting (E key)
         this.input = new InputHandler(canvas);
         this.sceneManager = new SceneManager(this);
+        this.crewCommandController = new CrewCommandController(this);
         this.screenEffects = new ScreenEffects();
         this.damageNumbers = new DamageNumbers(this);
         this.combatEffects = new CombatEffects(this);
