@@ -93,23 +93,30 @@ class TileRenderer {
 
         // Homogeneous Metallic Base Gradient
         const wallGrad = ctx.createLinearGradient(posX, posY, posX + p, posY + p);
-        wallGrad.addColorStop(0, '#2a3447');
+        wallGrad.addColorStop(0, '#334155');
         wallGrad.addColorStop(0.5, '#1e293b');
         wallGrad.addColorStop(1, '#0f172a');
 
         ctx.fillStyle = wallGrad;
-        ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#cbd5e1'; // Bright, crisp metallic steel border outline!
+        ctx.lineWidth = 2;
 
         // 1. HORIZONTAL WALL (W && E && !N && !S)
         if (W && E && !N && !S) {
             ctx.fillRect(posX, posY + 4, p, p - 8);
             ctx.strokeRect(posX, posY + 4, p, p - 8);
 
+            // Highlight Top & Bottom Border Bevel Edges
+            ctx.strokeStyle = '#94a3b8';
+            ctx.beginPath();
+            ctx.moveTo(posX, posY + 4); ctx.lineTo(posX + p, posY + 4);
+            ctx.moveTo(posX, posY + p - 4); ctx.lineTo(posX + p, posY + p - 4);
+            ctx.stroke();
+
             // Metallic Center Beam
             ctx.fillStyle = '#334155';
             ctx.fillRect(posX, posY + 10, p, 12);
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
             ctx.beginPath(); ctx.moveTo(posX, posY + 16); ctx.lineTo(posX + p, posY + 16); ctx.stroke();
 
             // Sparse Detail (LED or Monitor every 4 tiles)
@@ -126,10 +133,17 @@ class TileRenderer {
             ctx.fillRect(posX + 4, posY, p - 8, p);
             ctx.strokeRect(posX + 4, posY, p - 8, p);
 
+            // Highlight Left & Right Border Bevel Edges
+            ctx.strokeStyle = '#94a3b8';
+            ctx.beginPath();
+            ctx.moveTo(posX + 4, posY); ctx.lineTo(posX + 4, posY + p);
+            ctx.moveTo(posX + p - 4, posY); ctx.lineTo(posX + p - 4, posY + p);
+            ctx.stroke();
+
             // Metallic Center Pillar
             ctx.fillStyle = '#334155';
             ctx.fillRect(posX + 10, posY, 12, p);
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.25)';
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
             ctx.beginPath(); ctx.moveTo(posX + 16, posY); ctx.lineTo(posX + 16, posY + p); ctx.stroke();
 
             // Sparse Detail (Vertical Conduit Line)
