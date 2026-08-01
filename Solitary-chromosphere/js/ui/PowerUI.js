@@ -1,4 +1,4 @@
-﻿class PowerUI {
+class PowerUI {
     constructor(game, uiManager) {
         this.game = game;
         this.uiManager = uiManager;
@@ -81,6 +81,21 @@
         const offline = status.offline ? ' (OFFLINE)' : '';
         const ionized = status.ionized ? ' ⚡' : '';
 
+        const isCaptain = system.assignedCaptain || (system.assignedCrew && system.assignedCrew.id === 'captain');
+        const isManned = isCaptain || !!system.assignedCrew;
+        const badgeColor = isCaptain ? '#00f0ff' : '#00ff55';
+        const badgeText = isCaptain ? '👨‍✈️ CAPITÁN' : '👥 TRIPULANTE';
+
+        const bonusEffects = {
+            'bridge': '+15% Evasión Táctica',
+            'weapon': 'Auto-Disparo / +20% Recarga',
+            'shield': '+25% Recarga Escudo',
+            'engine': '+15% Evasión / Salto FTL',
+            'reactor': '+1 Energía Emergencia',
+            'jumpdrive': '-30% Carga Salto'
+        };
+        const bonusDesc = bonusEffects[system.type] || '+25% Eficiencia';
+
         return `
             <div style="
                 margin-bottom: 12px;
@@ -90,9 +105,26 @@
                 border-left: 3px solid ${system.color};
             ">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <span style="color: #fff; font-size: 0.85rem; font-weight: 500;">
-                        ${system.name}${offline}${ionized}
-                    </span>
+                    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                        <span style="color: #fff; font-size: 0.85rem; font-weight: 500;">
+                            ${system.name}${offline}${ionized}
+                        </span>
+                        ${isManned ? `
+                            <span style="
+                                background: ${isCaptain ? 'rgba(0,240,255,0.2)' : 'rgba(0,255,85,0.2)'};
+                                border: 1px solid ${badgeColor};
+                                color: ${badgeColor};
+                                font-size: 0.65rem;
+                                padding: 1px 5px;
+                                border-radius: 3px;
+                                font-weight: bold;
+                                letter-spacing: 0.5px;
+                                box-shadow: 0 0 6px ${badgeColor}66;
+                            " title="${bonusDesc}">
+                                ${badgeText}: ${bonusDesc}
+                            </span>
+                        ` : ''}
+                    </div>
                     <span style="color: ${healthColor}; font-size: 0.75rem;">
                         ${Math.round(status.health)}% HP
                     </span>

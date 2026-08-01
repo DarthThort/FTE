@@ -1,4 +1,4 @@
-﻿class WeaponUI {
+class WeaponUI {
     constructor(game, uiManager) {
         this.game = game;
         this.uiManager = uiManager;
@@ -8,6 +8,12 @@
     renderWeaponsPanel() {
         const weapons = this.game.state.weaponManager.getAllWeaponsStatus();
         if (!weapons || weapons.length === 0) return '';
+
+        const weaponsSystem = this.game.state.ship.systems.find(s => s.type === 'weapon');
+        const isCaptain = weaponsSystem && (weaponsSystem.assignedCaptain || (weaponsSystem.assignedCrew && weaponsSystem.assignedCrew.id === 'captain'));
+        const isManned = weaponsSystem && (isCaptain || !!weaponsSystem.assignedCrew);
+        const badgeColor = isCaptain ? '#00f0ff' : '#00ff55';
+        const badgeText = isCaptain ? '👨‍✈️ CAPITÁN (DISPARO AUT. + RECARGA)' : '👥 TRIPULANTE (AUTO-DISPARO)';
 
         const content = `
             <div id="weapons-panel" class="draggable-panel" style="
@@ -22,18 +28,21 @@
                 font-family: var(--font-tech);
                 z-index: 100;
             ">
-                <h3 class="drag-handle" style="
+                <div class="drag-handle" style="
                     margin: 0 0 15px 0; 
-                    color: var(--warning); 
-                    text-transform: uppercase; 
                     border-bottom: 1px solid var(--warning); 
                     padding-bottom: 8px; 
-                    font-size: 0.9rem;
+                    display: flex; justify-content: space-between; align-items: center;
                     cursor: move;
                     user-select: none;
                 ">
-                    ⚡ WEAPONS
-                </h3>
+                    <span style="color: var(--warning); font-weight: bold; font-size: 0.9rem;">💥 WEAPONS</span>
+                    ${isManned ? `
+                        <span style="font-size: 0.65rem; background: ${isCaptain ? 'rgba(0,240,255,0.2)' : 'rgba(0,255,85,0.2)'}; border: 1px solid ${badgeColor}; color: ${badgeColor}; padding: 2px 6px; border-radius: 3px; font-weight: bold; box-shadow: 0 0 8px ${badgeColor}66;">
+                            ${badgeText}
+                        </span>
+                    ` : ''}
+                </div>
                 
                 ${weapons.map(w => this.renderWeaponSlot(w)).join('')}
             </div>

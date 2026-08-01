@@ -32,6 +32,16 @@ class ShipSystemUI {
         const currentLevel = system.level || 1;
         const upgradeCost = currentLevel * 30;
 
+        const bonusMap = {
+            'bridge': '🛡️ +15% Evasión Táctica y Pilotaje de Combate Activo',
+            'weapon': '💥 Disparo Automático y +20% Recarga de Armas',
+            'shield': '🛡️ +25% Velocidad de Recarga de Capas de Escudo',
+            'engine': '⚡ +15% Evasión y Carga de Salto FTL Acelerada',
+            'reactor': '🔋 +1 Energía Temporal de Reserva de Emergencia',
+            'jumpdrive': '🌌 -30% Tiempo de Preparación de Salto FTL'
+        };
+        const systemBonusText = bonusMap[system.type] || '✨ +25% Efectividad de Rendimiento General';
+
         const content = `
             <div style="text-align: center; font-family: var(--font-tech);">
                 <h1 style="color: ${system.color}; margin-bottom: 5px; font-size: 1.8rem; letter-spacing: 2px;">${system.name.toUpperCase()}</h1>
@@ -42,10 +52,13 @@ class ShipSystemUI {
                 <div style="background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <span style="color: var(--primary); font-weight: bold; font-size: 0.95rem;">👨‍✈️ MANDO DEL CAPITÁN / JUGADOR</span>
-                        <span style="font-size: 0.8rem; color: ${isCaptainAssigned ? '#00ff55' : '#aaa'};">${isCaptainAssigned ? 'OPERANDO ESTACIÓN (+25% BONUS)' : 'INACTIVO'}</span>
+                        <span style="font-size: 0.8rem; color: ${isCaptainAssigned ? '#00ff55' : '#aaa'}; font-weight: bold;">${isCaptainAssigned ? 'OPERANDO ESTACIÓN' : 'INACTIVO'}</span>
+                    </div>
+                    <div style="color: #00f0ff; font-size: 0.85rem; font-weight: bold; margin-bottom: 10px; padding: 6px 10px; background: rgba(0,240,255,0.15); border-radius: 4px; border: 1px solid rgba(0,240,255,0.3);">
+                        EFECTO DE CONSOLA: ${systemBonusText}
                     </div>
                     <p style="color: #cbd5e1; font-size: 0.8rem; margin-bottom: 12px;">
-                        El Capitán (Jugador) puede atender personalmente esta consola para otorgar una bonificación táctica del 25% de efectividad.
+                        El Capitán (Jugador) puede atender personalmente esta consola para activar la bonificación de mando mientras permanezca físicamente en la estación.
                     </p>
                     ${isCaptainAssigned ? `
                         <button id="btn-unassign-captain" style="width: 100%; padding: 10px; background: rgba(255,0,85,0.2); border: 1px solid #ff0055; color: #ff0055; border-radius: 4px; cursor: pointer; font-weight: bold;">
