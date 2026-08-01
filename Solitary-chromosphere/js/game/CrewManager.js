@@ -108,10 +108,65 @@ class CrewManager {
         return skillMap[role] || 'engineering';
     }
 
+    updateAutomaticDoors() {
+        const ship = this.state.ship;
+        if (!ship || !ship.layout) return;
+
+        const layout = ship.layout;
+        const player = this.state.game?.sceneManager?.player || this.state.game?.player;
+        const crewList = ship.crew || [];
+
+        // Collect all entities with grid tile positions
+        const entities = [];
+        if (player) {
+            entities.push({
+                x: (player.x + (player.size ? player.size / 2 : 8)) / 32,
+                y: (player.y + (player.size ? player.size / 2 : 8)) / 32
+            });
+        }
+        crewList.forEach(c => {
+            entities.push({
+                x: (c.x || 0) / 32,
+                y: (c.y || 0) / 32
+            });
+        });
+
+        let layoutChanged = false;
+
+        // Iterate over all tiles in layout
+        for (let y = 0; y < layout.length; y++) {
+            for (let x = 0; x < layout[0].length; x++) {
+                const tile = layout[y][x];
+                // Check if tile is a door (4 = closed door, 5 = open door)
+                if (tile === 4 || tile === 5) {
+                    // Check if any entity is near this door tile (within 1.3 tiles)
+                    const isNear = entities.some(e => Math.hypot(e.x - (x + 0.5), e.y - (y + 0.5)) <= 1.3);
+
+                    if (isNear && tile === 4) {
+                        // Open door automatically for passing crew / player
+                        layout[y][x] = 5;
+                        layoutChanged = true;
+                    } else if (!isNear && tile === 5) {
+                        // Close door automatically after crew / player has passed
+                        layout[y][x] = 4;
+                        layoutChanged = true;
+                    }
+                }
+            }
+        }
+
+        if (layoutChanged) {
+            this.state.notify();
+        }
+    }
+
     updateCrewAI() {
         if (this.state.combatManager && this.state.combatManager.paused) {
             return;
         }
+
+        // Update automatic proximity doors opening and closing
+        this.updateAutomaticDoors();
 
         for (const crew of this.state.ship.crew) {
             // Auto-recovery: ONLY if crew is idle/standing motionless outside walkable tiles
