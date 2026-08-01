@@ -130,12 +130,22 @@ class HazardUI {
         this.repairProgress += repairSpeed / 2.5;
 
         if (this.repairProgress >= 1.0) {
-            this.state.hazardManager.repairBreach(breachIndex, 1);
+            // Remove breach permanently
+            if (this.state.hazardManager) {
+                if (typeof this.state.hazardManager.removeBreach === 'function') {
+                    this.state.hazardManager.removeBreach(breachIndex);
+                } else if (typeof this.state.hazardManager.completeBreach === 'function') {
+                    this.state.hazardManager.completeBreach(breachIndex);
+                }
+            }
+
             this.repairProgress = 0;
             this.playerRepairing = false;
+            this.currentRepairBreach = null;
 
-            if (this.state.hud) {
-                this.state.hud.showNotification('Brecha de casco reparada con éxito', 'success');
+            const hud = this.state.hud || (this.state.game ? this.state.game.hud : null) || (window.game ? window.game.hud : null);
+            if (hud && hud.showNotification) {
+                hud.showNotification('Brecha de casco reparada con éxito', 'success');
             }
         }
     }
