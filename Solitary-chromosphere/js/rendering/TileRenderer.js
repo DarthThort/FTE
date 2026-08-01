@@ -17,8 +17,144 @@ class TileRenderer {
      * @param {Array} systems - Ship systems array
      */
     render(ctx, layout, systems) {
+        this.drawExteriorHull(ctx, layout);
         this.drawGrid(ctx, layout);
         this.drawSystems(ctx, systems);
+    }
+
+    /**
+     * Draw procedural modular exterior hull around the perimeter of the ship grid
+     */
+    drawExteriorHull(ctx, layout) {
+        if (!layout || layout.length === 0) return;
+
+        const width = layout[0].length;
+        const height = layout.length;
+        const time = Date.now() / 1000;
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                // If this is a space tile (0), check if it borders ship interior tiles (non-0)
+                if (layout[y][x] === 0) {
+                    const N = (y > 0 && layout[y - 1][x] !== 0);
+                    const S = (y < height - 1 && layout[y + 1][x] !== 0);
+                    const W = (x > 0 && layout[y][x - 1] !== 0);
+                    const E = (x < width - 1 && layout[y][x + 1] !== 0);
+
+                    const NW = (y > 0 && x > 0 && layout[y - 1][x - 1] !== 0);
+                    const NE = (y > 0 && x < width - 1 && layout[y - 1][x + 1] !== 0);
+                    const SW = (y < height - 1 && x > 0 && layout[y + 1][x - 1] !== 0);
+                    const SE = (y < height - 1 && x < width - 1 && layout[y + 1][x + 1] !== 0);
+
+                    // If at least one adjacent tile is ship interior, draw outer hull tile!
+                    if (N || S || W || E || NW || NE || SW || SE) {
+                        const posX = x * this.tileSize;
+                        const posY = y * this.tileSize;
+                        this.drawHullTile(ctx, posX, posY, { N, S, W, E, NW, NE, SW, SE }, time, x, y, width, height);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Draw individual modular hull armor tile
+     */
+    drawHullTile(ctx, posX, posY, n, time, gridX, gridY, width, height) {
+        ctx.save();
+
+        // 1. Dark Armor Metal Base
+        const grad = ctx.createLinearGradient(posX, posY, posX + 32, posY + 32);
+        grad.addColorStop(0, '#1e293b');
+        grad.addColorStop(0.5, '#0f172a');
+        grad.addColorStop(1, '#020617');
+        ctx.fillStyle = grad;
+
+        if (n.S && !n.N) { // Top border (Proa / Nose)
+            ctx.beginPath();
+            ctx.moveTo(posX, posY + 32);
+            ctx.lineTo(posX + 16, posY + 8);
+            ctx.lineTo(posX + 32, posY + 32);
+            ctx.closePath();
+            ctx.fill();
+
+            // Metallic Bevel Edge
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Panel seams
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.beginPath();
+            ctx.moveTo(posX + 16, posY + 8);
+            ctx.lineTo(posX + 16, posY + 32);
+            ctx.stroke();
+        } else if (n.N && !n.S) { // Bottom border (Popa / Engine Vents)
+            ctx.beginPath();
+            ctx.moveTo(posX, posY);
+            ctx.lineTo(posX + 32, posY);
+            ctx.lineTo(posX + 24, posY + 24);
+            ctx.lineTo(posX + 8, posY + 24);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(255, 170, 0, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Small Engine Vent Glow
+            ctx.fillStyle = 'rgba(255, 170, 0, 0.2)';
+            ctx.fillRect(posX + 10, posY + 16, 12, 6);
+        } else if (n.E && !n.W) { // Left border (Babor / Port Wing)
+            ctx.beginPath();
+            ctx.moveTo(posX + 32, posY);
+            ctx.lineTo(posX + 8, posY + 16);
+            ctx.lineTo(posX + 32, posY + 32);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Port Navigation Light (Red LED)
+            const pulse = 0.5 + Math.sin(time * 6 + gridY) * 0.5;
+            ctx.fillStyle = `rgba(255, 0, 85, ${0.4 + pulse * 0.6})`;
+            ctx.shadowColor = '#ff0055';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(posX + 10, posY + 16, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        } else if (n.W && !n.E) { // Right border (Estribor / Starboard Wing)
+            ctx.beginPath();
+            ctx.moveTo(posX, posY);
+            ctx.lineTo(posX + 24, posY + 16);
+            ctx.lineTo(posX, posY + 32);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Starboard Navigation Light (Green LED)
+            const pulse = 0.5 + Math.sin(time * 6 + gridY) * 0.5;
+            ctx.fillStyle = `rgba(0, 255, 85, ${0.4 + pulse * 0.6})`;
+            ctx.shadowColor = '#00ff55';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(posX + 22, posY + 16, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        } else { // Corner or diagonal hull plates
+            ctx.fillRect(posX + 4, posY + 4, 24, 24);
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(posX + 4, posY + 4, 24, 24);
+        }
+
+        ctx.restore();
     }
 
     /**
