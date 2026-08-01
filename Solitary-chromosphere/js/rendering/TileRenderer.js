@@ -46,7 +46,7 @@ class TileRenderer {
                 // Tile types
                 if (tile === 1) {
                     // Wall
-                    this.drawWall(ctx, posX, posY);
+                    this.drawWall(ctx, posX, posY, x, y);
                 } else if (tile === 3) {
                     // System slot
                     this.drawSystemSlot(ctx, posX, posY);
@@ -64,15 +64,125 @@ class TileRenderer {
         }
     }
 
-    drawWall(ctx, posX, posY) {
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(posX + 2, posY + 2, this.tileSize - 4, this.tileSize - 4);
-        ctx.shadowColor = '#00f0ff';
-        ctx.shadowBlur = 10;
-        ctx.strokeStyle = '#00f0ff';
+    /**
+     * Draw high-definition sci-fi wall panel with 6 procedural metallic variants
+     */
+    drawWall(ctx, posX, posY, gridX = 0, gridY = 0) {
+        ctx.save();
+
+        const p = this.tileSize; // 32
+        const variant = Math.abs(gridX * 17 + gridY * 31) % 6;
+        const time = Date.now() / 1000;
+
+        // Base Metallic Wall Plate
+        const wallGrad = ctx.createLinearGradient(posX, posY, posX, posY + p);
+        wallGrad.addColorStop(0, '#2d3748');
+        wallGrad.addColorStop(0.5, '#1a202c');
+        wallGrad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = wallGrad;
+        ctx.fillRect(posX, posY, p, p);
+
+        // Bevel Frame & Seams
+        ctx.strokeStyle = '#4a5568';
         ctx.lineWidth = 1.5;
-        ctx.strokeRect(posX + 4, posY + 4, this.tileSize - 8, this.tileSize - 8);
-        ctx.shadowBlur = 0;
+        ctx.strokeRect(posX + 1, posY + 1, p - 2, p - 2);
+
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(posX + 3, posY + 3, p - 6, p - 6);
+
+        // Corner Rivets
+        ctx.fillStyle = '#a0aec0';
+        ctx.fillRect(posX + 4, posY + 4, 2, 2);
+        ctx.fillRect(posX + p - 6, posY + 4, 2, 2);
+        ctx.fillRect(posX + 4, posY + p - 6, 2, 2);
+        ctx.fillRect(posX + p - 6, posY + p - 6, 2, 2);
+
+        // VARIANT SPECIFIC WALL FEATURES
+        if (variant === 0) { // Armored Cross-Braced Panel
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(posX + 6, posY + 6); ctx.lineTo(posX + p - 6, posY + p - 6);
+            ctx.moveTo(posX + p - 6, posY + 6); ctx.lineTo(posX + 6, posY + p - 6);
+            ctx.stroke();
+        } else if (variant === 1) { // Status LED Light Bar Panel
+            const pulse = Math.sin(time * 5 + gridX + gridY) * 0.5 + 0.5;
+
+            // Cyan Light Strip
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 6;
+            ctx.fillRect(posX + 6, posY + 7, p - 12, 2);
+
+            // Status LEDs (Red, Green, Cyan)
+            ctx.fillStyle = '#ef4444'; ctx.shadowColor = '#ef4444';
+            ctx.beginPath(); ctx.arc(posX + 8, posY + 16, 2, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = `rgba(16, 185, 129, ${0.4 + pulse * 0.6})`; ctx.shadowColor = '#10b981';
+            ctx.beginPath(); ctx.arc(posX + 16, posY + 16, 2, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#38bdf8'; ctx.shadowColor = '#38bdf8';
+            ctx.beginPath(); ctx.arc(posX + 24, posY + 16, 2, 0, Math.PI * 2); ctx.fill();
+
+            ctx.shadowBlur = 0;
+        } else if (variant === 2) { // Telemetry Monitor Screen Panel
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(posX + 7, posY + 7, p - 14, p - 14);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.strokeRect(posX + 7, posY + 7, p - 14, p - 14);
+
+            // Telemetry Waveform Line
+            ctx.strokeStyle = '#00f0ff';
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 4;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            const offset = (time * 15) % 8;
+            ctx.moveTo(posX + 9, posY + 16);
+            ctx.lineTo(posX + 13, posY + 12 - (offset > 4 ? 2 : 0));
+            ctx.lineTo(posX + 18, posY + 20);
+            ctx.lineTo(posX + 23, posY + 16);
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        } else if (variant === 3) { // Power Conduit Pipes
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(posX + 10, posY + 4, 4, p - 8);
+            ctx.fillRect(posX + 18, posY + 4, 4, p - 8);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(posX + 11, posY + 4, 1, p - 8);
+            ctx.fillRect(posX + 19, posY + 4, 1, p - 8);
+
+            // Glowing Cyan Energy Band Across Pipes
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowColor = '#00f0ff';
+            ctx.shadowBlur = 8;
+            ctx.fillRect(posX + 8, posY + 14, 16, 3);
+            ctx.shadowBlur = 0;
+        } else if (variant === 4) { // Thermal Exhaust Vent Slats
+            ctx.fillStyle = '#0a0f1d';
+            ctx.fillRect(posX + 7, posY + 7, p - 14, p - 14);
+
+            ctx.fillStyle = '#475569';
+            for (let i = 0; i < 4; i++) {
+                ctx.fillRect(posX + 9, posY + 9 + i * 4, p - 18, 2);
+            }
+        } else { // Switchboard Control Buttons Panel
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(posX + 6, posY + 10, p - 12, 14);
+
+            // Buttons matrix
+            ctx.fillStyle = '#f59e0b'; ctx.fillRect(posX + 8, posY + 12, 4, 4);
+            ctx.fillStyle = '#38bdf8'; ctx.fillRect(posX + 14, posY + 12, 4, 4);
+            ctx.fillStyle = '#10b981'; ctx.fillRect(posX + 20, posY + 12, 4, 4);
+
+            ctx.fillStyle = '#ef4444'; ctx.fillRect(posX + 8, posY + 18, 4, 4);
+            ctx.fillStyle = '#00f0ff'; ctx.fillRect(posX + 14, posY + 18, 4, 4);
+            ctx.fillStyle = '#a855f7'; ctx.fillRect(posX + 20, posY + 18, 4, 4);
+        }
+
+        ctx.restore();
     }
 
     drawSystemSlot(ctx, posX, posY) {
