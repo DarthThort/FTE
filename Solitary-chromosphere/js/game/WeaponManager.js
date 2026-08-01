@@ -195,7 +195,8 @@ class WeaponManager {
         if (!weaponPos) return;
 
         // Get ship renderer from scene manager
-        const shipRenderer = this.state.game.sceneManager?.shipRenderer;
+        const game = this.state?.game || window.game;
+        const shipRenderer = game?.sceneManager?.shipRenderer;
         if (!shipRenderer || !shipRenderer.weaponFireEffects) return;
 
         // Calculate screen position
