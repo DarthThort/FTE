@@ -383,9 +383,7 @@ class GameState {
 
         // Unassign Captain from any previous system
         this.ship.systems.forEach(s => {
-            if (s.assignedCaptain) {
-                s.assignedCaptain = false;
-            }
+            s.assignedCaptain = false;
             if (s.assignedCrew && s.assignedCrew.id === 'captain') {
                 s.assignedCrew = null;
             }
@@ -400,10 +398,51 @@ class GameState {
             skills: { piloting: { level: 3 }, engineering: { level: 3 }, combat: { level: 3 } }
         };
 
+        // Position Player character right at the console tile
+        if (window.game && window.game.player) {
+            window.game.player.x = system.x * 32 + 4;
+            window.game.player.y = system.y * 32 + 4;
+        }
+
         this.saveGame();
         this.notify();
 
         return { success: true, message: `👨‍✈️ El Capitán ha tomado el mando de ${system.name} (+25% Bonificación de Eficiencia)` };
+    }
+
+    updateCaptainConsolePresence() {
+        if (!window.game || !window.game.player || !this.ship || !this.ship.systems) return;
+
+        const player = window.game.player;
+        const playerTileX = Math.floor((player.x + 12) / 32);
+        const playerTileY = Math.floor((player.y + 12) / 32);
+
+        let changed = false;
+
+        this.ship.systems.forEach(system => {
+            if (system.assignedCaptain) {
+                // Calculate distance in tiles from Captain to system console
+                const dist = Math.hypot(playerTileX - system.x, playerTileY - system.y);
+
+                // If Captain moves more than 1.5 tiles away from console, remove bonus!
+                if (dist > 1.5) {
+                    console.log(`[Captain] Player walked away from ${system.name}. Removing bonus.`);
+                    system.assignedCaptain = false;
+                    if (system.assignedCrew && system.assignedCrew.id === 'captain') {
+                        system.assignedCrew = null;
+                    }
+                    changed = true;
+                    if (window.game.ui && window.game.ui.hud) {
+                        window.game.ui.hud.showNotification(`Capitán se alejó de ${system.name}. Bonificación desactivada.`, 'info');
+                    }
+                }
+            }
+        });
+
+        if (changed) {
+            this.saveGame();
+            this.notify();
+        }
     }
 
     unassignCaptainFromSystem(systemId) {

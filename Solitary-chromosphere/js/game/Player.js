@@ -51,8 +51,11 @@ class Player {
             this.isMoving = false;
         }
 
-        // Interaction Check
+        // Interaction Check & Captain Console Proximity Check
         this.checkInteraction();
+        if (this.game.state && this.game.state.updateCaptainConsolePresence) {
+            this.game.state.updateCaptainConsolePresence();
+        }
     }
 
     checkInteraction() {
