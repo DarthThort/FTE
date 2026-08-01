@@ -21,35 +21,41 @@ class HazardUI {
     update(dt, player) {
         if (!player || !this.state.hazardManager) return;
 
+        // Safely resolve input handler
+        const input = (player.game && player.game.input) ? player.game.input : 
+                      (this.state.game && this.state.game.input) ? this.state.game.input : 
+                      (window.game ? window.game.input : null);
+
         const playerTile = {
             x: Math.floor(player.x / 32),
             y: Math.floor(player.y / 32)
         };
 
-        // Check nearest breach
+        // Check nearest breach & fire
         this.nearestBreach = this.findNearestBreach(playerTile);
-        // Check nearest fire
         this.nearestFire = this.findNearestFire(playerTile);
 
+        const isPressingE = input ? input.isDown('KeyE') : false;
+
         // Handle repair action (Hold E near breach)
-        if (this.nearestBreach && this.nearestBreach.distance <= 1.8) {
-            if (player.input && player.input.isDown('KeyE')) {
+        if (this.nearestBreach && this.nearestBreach.distance <= 2.5) {
+            if (isPressingE) {
                 this.startPlayerRepair(this.nearestBreach.index, player, dt);
-            } else {
+            } else if (!isPressingE && this.playerRepairing) {
                 this.stopPlayerRepair();
             }
-        } else {
+        } else if (!isPressingE) {
             this.stopPlayerRepair();
         }
 
         // Handle fire fighting action (Hold E near fire)
-        if (this.nearestFire && this.nearestFire.distance <= 1.8 && !this.playerRepairing) {
-            if (player.input && player.input.isDown('KeyE')) {
+        if (this.nearestFire && this.nearestFire.distance <= 2.5 && !this.playerRepairing) {
+            if (isPressingE) {
                 this.startPlayerFireFighting(this.nearestFire, player, dt);
-            } else {
+            } else if (!isPressingE && this.playerFightingFire) {
                 this.stopPlayerFireFighting();
             }
-        } else {
+        } else if (!isPressingE) {
             this.stopPlayerFireFighting();
         }
     }
@@ -119,9 +125,9 @@ class HazardUI {
         this.currentRepairBreach = breachIndex;
 
         const playerSkill = player.engineeringSkill || 0;
-        const repairSpeed = (1.0 + playerSkill * 0.2) * dt;
+        const repairSpeed = (1.5 + playerSkill * 0.3) * dt;
 
-        this.repairProgress += repairSpeed / 4.0;
+        this.repairProgress += repairSpeed / 2.5;
 
         if (this.repairProgress >= 1.0) {
             this.state.hazardManager.repairBreach(breachIndex, 1);
@@ -129,7 +135,7 @@ class HazardUI {
             this.playerRepairing = false;
 
             if (this.state.hud) {
-                this.state.hud.showNotification('Brecha reparada por el jugador', 'success');
+                this.state.hud.showNotification('Brecha de casco reparada con éxito', 'success');
             }
         }
     }
@@ -139,7 +145,7 @@ class HazardUI {
         this.currentFire = fire;
 
         const playerSkill = player.engineeringSkill || 0;
-        const fightSpeed = (1.0 + playerSkill * 0.2) * dt * 25;
+        const fightSpeed = (1.5 + playerSkill * 0.3) * dt * 45;
 
         this.fireFightProgress += dt;
 
@@ -152,7 +158,7 @@ class HazardUI {
             this.currentFire = null;
 
             if (this.state.hud) {
-                this.state.hud.showNotification('Incendio extinguido por el jugador', 'success');
+                this.state.hud.showNotification('Incendio extinguido con éxito', 'success');
             }
         }
     }
@@ -178,12 +184,12 @@ class HazardUI {
         }
 
         // Render "Press E to Repair" prompt if near breach
-        if (this.nearestBreach && !this.playerRepairing && !this.playerFightingFire) {
+        if (this.nearestBreach && this.nearestBreach.distance <= 2.5 && !this.playerRepairing && !this.playerFightingFire) {
             this.renderRepairPrompt(ctx, this.nearestBreach.breach, shipRenderer);
         }
 
         // Render "Press E to Fight Fire" prompt if near fire
-        if (this.nearestFire && !this.playerFightingFire && !this.playerRepairing) {
+        if (this.nearestFire && this.nearestFire.distance <= 2.5 && !this.playerFightingFire && !this.playerRepairing) {
             this.renderFirePrompt(ctx, this.nearestFire, shipRenderer);
         }
 
@@ -271,7 +277,7 @@ class HazardUI {
         ctx.fillRect(x, y, barWidth, barHeight);
 
         ctx.fillStyle = '#10b981';
-        ctx.fillRect(x, y, barWidth * progress, barHeight);
+        ctx.fillRect(x, y, barWidth * Math.min(1.0, progress), barHeight);
 
         ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 1.5;
@@ -280,7 +286,7 @@ class HazardUI {
         ctx.font = 'bold 11px "Rajdhani", sans-serif';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(`REPARANDO CASCO... ${Math.floor(progress * 100)}%`, screenPos.x, y - 5);
+        ctx.fillText(`REPARANDO CASCO... ${Math.floor(Math.min(1.0, progress) * 100)}%`, screenPos.x, y - 5);
         ctx.restore();
     }
 
