@@ -134,6 +134,18 @@ class UIManager {
         }
     }
 
+    showInteractionPrompt(text) {
+        if (this.hud && this.hud.showInteractionPrompt) {
+            this.hud.showInteractionPrompt(text);
+        }
+    }
+
+    hideInteractionPrompt() {
+        if (this.hud && this.hud.hideInteractionPrompt) {
+            this.hud.hideInteractionPrompt();
+        }
+    }
+
     showCrewDetail(crewId) {
         this.shipSystemUI.showCrewDetail(crewId);
     }

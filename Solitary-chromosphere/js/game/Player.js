@@ -107,31 +107,30 @@ class Player {
         }
 
         if (target) {
-            if (target.type === 'system') {
-                this.game.ui.showInteractionPrompt(`Presiona E para acceder a ${target.data.name}`);
-                if (this.game.input.isDown('KeyE')) {
-                    if (!this.game.ui.isConsoleOpen) {
-                        this.game.ui.renderSystemConsole(target.data);
-                        this.game.input.keys['KeyE'] = false;
-                    }
-                }
-            } else if (target.type === 'slot') {
-                this.game.ui.showInteractionPrompt(`Presiona E para instalar módulo`);
-                if (this.game.input.isDown('KeyE')) {
-                    if (!this.game.ui.isConsoleOpen) {
-                        this.game.ui.renderInstallMenu(target.x, target.y);
-                        this.game.input.keys['KeyE'] = false;
-                    }
-                }
-            } else if (target.type === 'door') {
-                this.game.ui.showInteractionPrompt(`Presiona E para ${target.state === 4 ? 'Abrir' : 'Cerrar'} puerta`);
-                if (this.game.input.isDown('KeyE')) {
+            const promptText = target.type === 'system' ? `Presiona E para acceder a ${target.data.name}` :
+                               target.type === 'slot' ? `Presiona E para instalar módulo` :
+                               target.type === 'door' ? `Presiona E para ${target.state === 4 ? 'Abrir' : 'Cerrar'} puerta` : null;
+
+            if (promptText && this.game.ui && this.game.ui.showInteractionPrompt) {
+                this.game.ui.showInteractionPrompt(promptText);
+            }
+
+            if (this.game.input.isDown('KeyE')) {
+                if (target.type === 'system' && !this.game.ui.isConsoleOpen) {
+                    this.game.ui.renderSystemConsole(target.data);
+                    this.game.input.keys['KeyE'] = false;
+                } else if (target.type === 'slot' && !this.game.ui.isConsoleOpen) {
+                    this.game.ui.renderInstallMenu(target.x, target.y);
+                    this.game.input.keys['KeyE'] = false;
+                } else if (target.type === 'door') {
                     this.game.state.toggleDoor(target.x, target.y);
                     this.game.input.keys['KeyE'] = false;
                 }
             }
         } else {
-            this.game.ui.hideInteractionPrompt();
+            if (this.game.ui && this.game.ui.hideInteractionPrompt) {
+                this.game.ui.hideInteractionPrompt();
+            }
         }
     }
 
