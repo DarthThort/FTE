@@ -7,7 +7,7 @@
 class SaveManager {
     constructor(gameState) {
         this.state = gameState;
-        this.SAVE_KEY = 'spaceSimSave';  // Match GameState's current key
+        this.SAVE_KEY = 'spaceSimSave';
     }
 
     /**
@@ -117,7 +117,7 @@ class SaveManager {
                 this.state.ship.crew = this.migrateCrew(data.ship.crew);
             }
 
-            // Move crew to assigned systems
+            // Move crew to assigned systems & validate walkable positions
             this.repositionAssignedCrew();
 
             console.log('[SaveManager] Game loaded successfully');
@@ -151,11 +151,11 @@ class SaveManager {
             let newX = c.x;
             let newY = c.y;
 
-            // Migrate from 20x18 to 25x25 grid
-            if (c.x < 400) {
-                newX = c.x + 160;  // +5 tiles * 32px
-                newY = c.y + 96;   // +3 tiles * 32px
-                console.log(`[SaveManager] Migrated ${c.name} from (${c.x}, ${c.y}) to (${newX}, ${newY})`);
+            // Migrate from old 20x18 coordinates if out of bounds
+            if (c.x < 200 || c.y < 150) {
+                newX = c.x + 160;
+                newY = c.y + 96;
+                console.log(`[SaveManager] Migrated ${c.name} coordinates`);
             }
 
             return {
@@ -173,7 +173,7 @@ class SaveManager {
     }
 
     /**
-     * Move crew to their assigned systems after load
+     * Move crew to their assigned systems or valid walkable tiles after load
      */
     repositionAssignedCrew() {
         this.state.ship.systems.forEach(system => {
@@ -189,6 +189,25 @@ class SaveManager {
                 }
             }
         });
+
+        // Ensure all crew members (including unassigned) are inside walkable tiles
+        if (this.state.shipCoords && this.state.ship && this.state.ship.layout) {
+            this.state.ship.crew.forEach(crew => {
+                const tileX = Math.floor(crew.x / 32);
+                const tileY = Math.floor(crew.y / 32);
+                if (!this.state.shipCoords.isWalkable(this.state.ship.layout, tileX, tileY)) {
+                    console.warn(`[SaveManager] Repositioning ${crew.name} to a valid walkable tile`);
+                    const validTile = this.state.shipCoords.getRandomWalkableTile(this.state.ship.layout);
+                    const validPos = this.state.shipCoords.tileToPixel(validTile.x, validTile.y);
+                    crew.x = validPos.x;
+                    crew.y = validPos.y;
+                    crew.targetX = null;
+                    crew.targetY = null;
+                    crew.path = [];
+                    crew.state = 'idle';
+                }
+            });
+        }
     }
 
     /**

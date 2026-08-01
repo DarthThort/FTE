@@ -35,7 +35,7 @@ class CrewManager {
             state: 'idle',
             wanderTimer: 0,
             doorWaitTimer: 0,
-            engineeringSkill: crew.role === 'Engineer' ? 3 : 0  // Engineers are better at repairs
+            engineeringSkill: crew.role === 'Engineer' ? 3 : 0
         });
         this.state.port.crew = this.state.port.crew.filter(c => c.id !== crewId);
         this.state.saveGame();
@@ -65,7 +65,6 @@ class CrewManager {
         this.state.saveGame();
         this.state.notify();
 
-        // Refresh weapon panel to update AUTO/MANUAL status
         if (window.game && window.game.ui && window.game.ui.weaponUI) {
             window.game.ui.weaponUI.refreshWeaponsPanel();
         }
@@ -92,7 +91,6 @@ class CrewManager {
         this.state.saveGame();
         this.state.notify();
 
-        // Refresh weapon panel to update AUTO/MANUAL status
         if (window.game && window.game.ui && window.game.ui.weaponUI) {
             window.game.ui.weaponUI.refreshWeaponsPanel();
         }
@@ -111,18 +109,30 @@ class CrewManager {
     }
 
     updateCrewAI() {
-        // Don't move crew if combat is paused
         if (this.state.combatManager && this.state.combatManager.paused) {
             return;
         }
 
-        // DEBUG: Log when updateCrewAI runs
-        const fireCount = this.state.hazardManager?.fires?.length || 0;
-        if (fireCount > 0 && Math.random() < 0.1) { // Log 10% of the time when there are fires
-            console.log(`[CrewAI] Running with ${this.state.ship.crew.length} crew, ${fireCount} fires`);
-        }
-
         for (const crew of this.state.ship.crew) {
+            // Auto-recovery: If crew is standing outside walkable ship tiles, teleport them inside
+            const tileX = Math.floor(crew.x / 32);
+            const tileY = Math.floor(crew.y / 32);
+            if (this.state.shipCoords && this.state.ship && this.state.ship.layout) {
+                if (!this.state.shipCoords.isWalkable(this.state.ship.layout, tileX, tileY)) {
+                    console.warn(`[CrewAI] ${crew.name} was stuck outside walkable ship area at (${tileX}, ${tileY}). Teleporting inside!`);
+                    const validTile = this.state.shipCoords.getRandomWalkableTile(this.state.ship.layout);
+                    const validPos = this.state.shipCoords.tileToPixel(validTile.x, validTile.y);
+                    crew.x = validPos.x;
+                    crew.y = validPos.y;
+                    crew.tileX = validTile.x;
+                    crew.tileY = validTile.y;
+                    crew.targetX = null;
+                    crew.targetY = null;
+                    crew.path = [];
+                    crew.state = 'idle';
+                }
+            }
+
             // PRIORITY 1: Fire fighting - ALL crew should fight fires (except if already doing so)
             if (crew.state !== 'fighting_fire' && crew.state !== 'repairing') {
                 const nearbyFire = this.findNearbyFire(crew);
@@ -133,8 +143,7 @@ class CrewManager {
                     crew.targetX = nearbyFire.x * 32 + 16;
                     crew.targetY = nearbyFire.y * 32 + 16;
                     crew.path = [];
-                    console.log(`[CrewManager] 🔥 ${crew.name} detected fire at (${nearbyFire.x}, ${nearbyFire.y}) and going to fight it`);
-                    continue; // Skip everything else - fire is priority!
+                    continue;
                 }
             }
 
@@ -148,7 +157,7 @@ class CrewManager {
                 crew.targetX = null;
                 crew.targetY = null;
                 crew.state = 'working';
-                continue; // Skip normal AI for assigned crew
+                continue;
             }
 
             if (crew.state === 'idle' && (!crew.targetX || !crew.targetY)) {
@@ -177,244 +186,135 @@ class CrewManager {
                     // Close enough to fight fire (1.5 tiles range)
                     if (dist <= 1.5) {
                         const fire = this.state.hazardManager.getFireAt(crew.targetFire.x, crew.targetFire.y);
+                        if (fire) {
+                            crew.fireFightProgress += 1 / 60;
+                            fire.intensity -= (1.0 + (crew.engineeringSkill || 0) * 0.2) * (1 / 60) * 25;
 
-                        if (!fire) {
-                            // Fire extinguished, return to idle
-                            crew.state = 'idle';
-                            crew.targetFire = null;
-                            crew.fireFightProgress = 0;
-                            crew.targetX = null;
-                            crew.targetY = null;
-                            console.log(`[CrewManager] ${crew.name} finished fighting fire (already out)`);
+                            if (fire.intensity <= 0) {
+                                this.state.hazardManager.extinguishFire(crew.targetFire.x, crew.targetFire.y);
+                                crew.state = 'idle';
+                                crew.targetFire = null;
+                                crew.targetX = null;
+                                crew.targetY = null;
+
+                                if (this.state.hud) {
+                                    this.state.hud.showNotification(`${crew.name} extinguió un incendio`, 'success');
+                                }
+                            }
                             continue;
-                        }
-
-                        // Fight the fire!
-                        crew.fireFightProgress += 1 / 60; // Assuming 60fps
-                        const fightTime = Math.max(2, 5 - (crew.engineeringSkill || 0));
-
-                        // Reduce fire intensity
-                        fire.intensity = Math.max(0, fire.intensity - (15 / 60)); // 15% per second
-
-                        if (fire.intensity <= 0 || crew.fireFightProgress >= fightTime) {
-                            // Fire out!
-                            this.state.hazardManager.extinguishFireAt(fire.x, fire.y);
-                            crew.state = 'idle';
-                            crew.targetFire = null;
-                            crew.fireFightProgress = 0;
-                            crew.targetX = null;
-                            crew.targetY = null;
-                            console.log(`[CrewManager] ${crew.name} extinguished fire!`);
-                        }
-                        continue; // Don't move, just fight fire
-                    }
-                }
-
-                // Normal pathfinding and movement
-                // DEBUG: Log if crew has targetBreach
-                if (crew.targetBreach !== undefined) {
-                    console.log(`[CrewManager] ${crew.name} moving to breach - state='${crew.state}' targetBreach=${crew.targetBreach} path.length=${crew.path?.length || 0}`);
-                }
-
-                if (!crew.path || crew.path.length === 0) {
-                    const startX = Math.floor(crew.x / 32);
-                    const startY = Math.floor(crew.y / 32);
-                    const targetX = Math.floor(crew.targetX / 32);
-                    const targetY = Math.floor(crew.targetY / 32);
-
-                    let path = this.pathfinding.findPath(startX, startY, targetX, targetY);
-                    path = this.pathfinding.smoothPath(path);
-
-                    crew.path = path.map(node => ({
-                        x: node.x,
-                        y: node.y,
-                        offsetX: (Math.random() - 0.5) * 4,
-                        offsetY: (Math.random() - 0.5) * 4
-                    }));
-                }
-
-                if (crew.path && crew.path.length > 0) {
-                    const nextNode = crew.path[0];
-                    const nextX = nextNode.x * 32 + 16 + (nextNode.offsetX || 0);
-                    const nextY = nextNode.y * 32 + 16 + (nextNode.offsetY || 0);
-
-                    const dx = nextX - crew.x;
-                    const dy = nextY - crew.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    // Check if next tile is a closed door
-                    const nextTile = this.state.ship.layout[nextNode.y]?.[nextNode.x];
-
-                    if (nextTile === 4 && distance < 40) {
-                        // Initialize timer if not present
-                        if (crew.doorWaitTimer === undefined) {
-                            crew.doorWaitTimer = 0;
-                        }
-
-                        // If timer not started, start it
-                        if (crew.doorWaitTimer <= 0) {
-                            crew.doorWaitTimer = 0.5; // 0.5 seconds wait
-                        }
-
-                        // Decrement timer
-                        crew.doorWaitTimer -= 1 / 60;
-
-                        // If timer finished, open door and proceed
-                        if (crew.doorWaitTimer <= 0) {
-                            this.state.ship.layout[nextNode.y][nextNode.x] = 5;
-                            crew.doorWaitTimer = 0;
-                            this.state.notify();
                         } else {
-                            // Still waiting, skip movement
+                            crew.state = 'idle';
+                            crew.targetFire = null;
+                            crew.targetX = null;
+                            crew.targetY = null;
+                        }
+                    }
+                }
+
+                // If path is empty, compute path using A*
+                if (crew.path.length === 0) {
+                    const currentTileX = Math.floor(crew.x / 32);
+                    const currentTileY = Math.floor(crew.y / 32);
+                    const targetTileX = Math.floor(crew.targetX / 32);
+                    const targetTileY = Math.floor(crew.targetY / 32);
+
+                    const path = this.pathfinding.findPath(currentTileX, currentTileY, targetTileX, targetTileY);
+                    if (path && path.length > 0) {
+                        crew.path = path;
+                    } else {
+                        crew.targetX = null;
+                        crew.targetY = null;
+                        crew.state = 'idle';
+                        continue;
+                    }
+                }
+
+                // Follow path waypoint by waypoint
+                if (crew.path.length > 0) {
+                    const nextTile = crew.path[0];
+
+                    if (this.state.ship.doors) {
+                        const isDoorBlocked = this.state.ship.doors.some(door => {
+                            const isDoorLocation = (
+                                (door.x1 === nextTile.x && door.y1 === nextTile.y) ||
+                                (door.x2 === nextTile.x && door.y2 === nextTile.y)
+                            );
+                            return isDoorLocation && !door.isOpen;
+                        });
+
+                        if (isDoorBlocked) {
+                            if (!crew.doorWaitTimer) crew.doorWaitTimer = 0;
+                            crew.doorWaitTimer += 1 / 60;
+
+                            if (crew.doorWaitTimer > 2.0) {
+                                crew.path = [];
+                                crew.targetX = null;
+                                crew.targetY = null;
+                                crew.state = 'idle';
+                                crew.doorWaitTimer = 0;
+                            }
                             continue;
                         }
                     }
 
-                    if (distance < 3) {
+                    crew.doorWaitTimer = 0;
+
+                    const targetPixelX = nextTile.x * 32 + 16;
+                    const targetPixelY = nextTile.y * 32 + 16;
+
+                    const dx = targetPixelX - crew.x;
+                    const dy = targetPixelY - crew.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    const moveSpeed = crew.speed * 32 * (1 / 60);
+
+                    if (dist <= moveSpeed) {
+                        crew.x = targetPixelX;
+                        crew.y = targetPixelY;
                         crew.path.shift();
 
                         if (crew.path.length === 0) {
-                            crew.x = crew.targetX;
-                            crew.y = crew.targetY;
-
-                            // IMPORTANT: Check if this is a breach repair task BEFORE changing state
-                            if (crew.state === 'moving' && crew.targetBreach !== undefined) {
-                                const breach = this.state.hazardManager.breaches[crew.targetBreach];
-
-                                if (breach) {
-                                    const dx = crew.x - (breach.x * 32 + 16);
-                                    const dy = crew.y - (breach.y * 32 + 16);
-                                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                                    // If at breach location, start repairing immediately
-                                    if (dist < 48) {
-                                        console.log(`[CrewManager] ✅ ${crew.name} ARRIVED at breach - Setting state='repairing'`);
-                                        crew.state = 'repairing';
-                                        crew.repairProgress = 0;
-                                        continue; // Skip normal state change below
-                                    }
-                                }
-                            }
-
-                            // Normal state changes (only if not repairing)
-                            if (crew.state === 'moving') {
-                                crew.state = 'working';
-                                crew.targetX = null;
-                                crew.targetY = null;
-                            } else if (crew.state === 'wandering') {
+                            if (crew.state === 'wandering' || crew.state === 'moving') {
                                 crew.state = 'idle';
                                 crew.targetX = null;
                                 crew.targetY = null;
-                                crew.wanderTimer = 2 + Math.random() * 3;
                             }
                         }
                     } else {
-                        const moveX = (dx / distance) * crew.speed;
-                        const moveY = (dy / distance) * crew.speed;
-                        crew.x += moveX;
-                        crew.y += moveY;
+                        crew.x += (dx / dist) * moveSpeed;
+                        crew.y += (dy / dist) * moveSpeed;
                     }
                 }
             }
-
-
-            // NEW: Handle repairing state
-            if (crew.state === 'repairing' && crew.targetBreach !== undefined) {
-                const breach = this.state.hazardManager.breaches[crew.targetBreach];
-
-                if (!breach) {
-                    // Breach completed, return to idle
-                    crew.state = 'idle';
-                    crew.targetBreach = undefined;
-                    crew.repairProgress = 0;
-                    crew.targetX = null;
-                    crew.targetY = null;
-                    continue;
-                }
-
-                // Check if still in range
-                const dx = crew.x - (breach.x * 32 + 16);
-                const dy = crew.y - (breach.y * 32 + 16);
-                const dist = Math.sqrt(dx * dx + dy * dy);
-
-                if (dist > 48) {
-                    // Moved away, go back to moving
-                    crew.state = 'moving';
-                    crew.targetX = breach.x * 32 + 16;
-                    crew.targetY = breach.y * 32 + 16;
-                    crew.path = [];
-                    crew.repairProgress = 0;
-                    continue;
-                }
-
-                // Progress repair (60 FPS assumed)
-                const engineeringSkill = crew.engineeringSkill || 0;
-                const repairTime = Math.max(2, 10 - engineeringSkill); // Same as player
-                const progressPerFrame = (1 / 60) / repairTime;
-
-                crew.repairProgress = (crew.repairProgress || 0) + progressPerFrame;
-                console.log(`[CrewManager] ${crew.name} repairing - progress: ${(crew.repairProgress * 100).toFixed(1)}%`);
-
-                // Complete repair
-                if (crew.repairProgress >= 1.0) {
-                    this.state.hazardManager.completeBreach(crew.targetBreach);
-                    crew.state = 'idle';
-                    crew.targetBreach = undefined;
-                    crew.repairProgress = 0;
-                    crew.targetX = null;
-                    crew.targetY = null;
-                }
-            }
         }
     }
 
-    getRandomWalkablePosition() {
-        const layout = this.state.ship.layout;
-        const maxAttempts = 50;
-
-        for (let i = 0; i < maxAttempts; i++) {
-            const x = Math.floor(Math.random() * layout[0].length);
-            const y = Math.floor(Math.random() * layout.length);
-
-            if (layout[y][x] === 2 || layout[y][x] === 3 || layout[y][x] === 5) {
-                return { x, y };
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Find a nearby fire to fight
-     * @param {Object} crew - Crew member
-     * @returns {Object|null} - Fire object or null
-     */
     findNearbyFire(crew) {
-        const fires = this.state.hazardManager.fires;
-        if (!fires || fires.length === 0) return null;
+        if (!this.state.hazardManager || !this.state.hazardManager.fires) return null;
+        if (this.state.hazardManager.fires.length === 0) return null;
 
         const crewTileX = Math.floor(crew.x / 32);
         const crewTileY = Math.floor(crew.y / 32);
-        const detectionRange = 8; // tiles
 
         let nearestFire = null;
-        let minDist = Infinity;
+        let minDistance = Infinity;
 
-        for (const fire of fires) {
-            const dx = fire.x - crewTileX;
-            const dy = fire.y - crewTileY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+        for (const fire of this.state.hazardManager.fires) {
+            const dist = Math.sqrt(
+                Math.pow(crewTileX - fire.x, 2) +
+                Math.pow(crewTileY - fire.y, 2)
+            );
 
-            if (dist < minDist && dist <= detectionRange) {
-                minDist = dist;
+            if (dist < minDistance) {
+                minDistance = dist;
                 nearestFire = fire;
             }
         }
 
-        // Debug logging when fire detection runs
-        if (fires.length > 0) {
-            console.log(`[FireDetection] ${crew.name} state='${crew.state}' at (${crewTileX},${crewTileY}) - ${fires.length} fires, nearest=${nearestFire ? `(${nearestFire.x},${nearestFire.y}) dist=${minDist.toFixed(1)}` : 'none in range'}`);
-        }
-
         return nearestFire;
+    }
+
+    getRandomWalkablePosition() {
+        return this.state.getRandomWalkablePosition();
     }
 }
