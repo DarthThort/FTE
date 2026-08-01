@@ -1,11 +1,13 @@
 /**
  * CrewCommandController.js
  * Tactical RTS style click & drag order system for commanding crew members to move or occupy consoles.
+ * Single click opens crew dossier; Click & drag issues movement/assignment command.
  */
 class CrewCommandController {
     constructor(gameEngine) {
         this.game = gameEngine;
         this.selectedCrew = null;
+        this.clickedCrew = null;
         this.isDragging = false;
         this.dragStartX = 0;
         this.dragStartY = 0;
@@ -25,9 +27,10 @@ class CrewCommandController {
 
         // Right-click or Escape deselects
         canvas.addEventListener('contextmenu', (e) => {
-            if (this.selectedCrew) {
+            if (this.selectedCrew || this.clickedCrew) {
                 e.preventDefault();
                 this.selectedCrew = null;
+                this.clickedCrew = null;
                 this.isDragging = false;
             }
         });
@@ -35,6 +38,7 @@ class CrewCommandController {
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Escape') {
                 this.selectedCrew = null;
+                this.clickedCrew = null;
                 this.isDragging = false;
             }
         });
@@ -68,21 +72,19 @@ class CrewCommandController {
         if (!ship || !ship.crew) return;
 
         // Check if clicking directly on a crew member (within 24px threshold)
-        const clickedCrew = ship.crew.find(c => {
+        const foundCrew = ship.crew.find(c => {
             const dx = coords.worldX - c.x;
             const dy = coords.worldY - c.y;
             return Math.hypot(dx, dy) <= 24;
         });
 
-        if (clickedCrew) {
-            this.selectedCrew = clickedCrew;
-            this.isDragging = true;
+        if (foundCrew) {
+            this.clickedCrew = foundCrew;
+            this.isDragging = false;
             this.dragStartX = coords.mouseX;
             this.dragStartY = coords.mouseY;
-            console.log(`[CrewCommand] Selected crew ${clickedCrew.name} for tactical assignment`);
-        } else if (this.selectedCrew) {
-            // Clicking elsewhere with selected crew issues order to target tile!
-            this.issueCommand(coords.gridX, coords.gridY);
+        } else {
+            this.clickedCrew = null;
             this.selectedCrew = null;
             this.isDragging = false;
         }
@@ -93,33 +95,43 @@ class CrewCommandController {
         if (coords) {
             this.currentMouseX = coords.mouseX;
             this.currentMouseY = coords.mouseY;
+
+            if (this.clickedCrew) {
+                const dragDist = Math.hypot(coords.mouseX - this.dragStartX, coords.mouseY - this.dragStartY);
+                if (dragDist > 10) {
+                    this.isDragging = true;
+                    this.selectedCrew = this.clickedCrew;
+                }
+            }
         }
     }
 
     onMouseUp(e) {
         if (e.button !== 0) return;
 
-        if (this.isDragging && this.selectedCrew) {
-            const coords = this.getShipGridCoords(e.clientX, e.clientY);
-            if (coords) {
-                // Check if mouse moved significantly (dragged) or clicked
-                const dragDist = Math.hypot(coords.mouseX - this.dragStartX, coords.mouseY - this.dragStartY);
-                if (dragDist > 10) {
-                    // Drag release -> issue command immediately to target!
-                    this.issueCommand(coords.gridX, coords.gridY);
-                    this.selectedCrew = null;
-                }
+        const coords = this.getShipGridCoords(e.clientX, e.clientY);
+
+        if (this.isDragging && this.selectedCrew && coords) {
+            // Drag & drop order completed -> issue movement/assignment command!
+            this.issueCommand(this.selectedCrew, coords.gridX, coords.gridY);
+        } else if (this.clickedCrew && !this.isDragging) {
+            // Pure single click on crew member -> open dossier modal!
+            console.log(`[CrewCommand] Single click on ${this.clickedCrew.name}. Opening dossier modal.`);
+            if (this.game.ui && this.game.ui.showCrewDetail) {
+                this.game.ui.showCrewDetail(this.clickedCrew.id);
             }
-            this.isDragging = false;
         }
+
+        this.clickedCrew = null;
+        this.selectedCrew = null;
+        this.isDragging = false;
     }
 
-    issueCommand(gridX, gridY) {
-        if (!this.selectedCrew) return;
+    issueCommand(crew, gridX, gridY) {
+        if (!crew) return;
 
         const state = this.game.state;
         const ship = state.ship;
-        const crew = this.selectedCrew;
 
         // Check if target tile is a system console
         const system = ship.systems.find(s => s.x === gridX && s.y === gridY);
@@ -156,7 +168,7 @@ class CrewCommandController {
     }
 
     renderTacticalOverlay(ctx) {
-        if (!this.selectedCrew) return;
+        if (!this.selectedCrew || !this.isDragging) return;
 
         const renderer = this.game.sceneManager?.shipRenderer;
         if (!renderer) return;
