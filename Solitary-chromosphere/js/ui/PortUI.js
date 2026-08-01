@@ -334,21 +334,112 @@ class PortUI {
     }
 
     renderShipyard() {
-        const modules = this.game.state.port.modules || [];
+        const state = this.game.state;
+        const ship = state.ship;
+        const health = ship.health || 0;
+        const maxHealth = ship.maxHealth || 100;
+        const missingHealth = maxHealth - health;
+        const costPerHp = 3; // 3 credits per 1 HP repair
+        const repair10Cost = Math.min(missingHealth, 10) * costPerHp;
+        const repairFullCost = missingHealth * costPerHp;
+
+        const healthPercent = Math.max(0, Math.min(100, Math.round((health / maxHealth) * 100)));
+        const healthColor = healthPercent > 60 ? '#10b981' : healthPercent > 30 ? '#f59e0b' : '#ef4444';
+
+        const modules = state.port.modules || [];
 
         const content = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; width: 100%;">
-                ${modules.map(m => `
-                    <div class="module-card" style="padding: 15px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px;">
-                        <h4 style="color: var(--secondary); margin-bottom: 5px;">${m.name}</h4>
-                        <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 10px;">${m.description}</p>
-                        <p class="price">${m.cost} CR</p>
-                        <button style="margin-top: 10px; width: 100%; font-size: 0.8rem;" onclick="alert('Module Purchased!')">COMPRAR</button>
+            <div style="font-family: 'Rajdhani', sans-serif; display: flex; flex-direction: column; gap: 20px; width: 100%; max-height: 75vh; overflow-y: auto; padding-right: 5px;">
+                
+                <!-- HULL REPAIR BAY SECTION -->
+                <div style="background: rgba(15, 23, 42, 0.9); border: 2px solid #00f0ff; border-radius: 10px; padding: 20px; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="font-family: 'Orbitron', sans-serif; color: #00f0ff; margin: 0; font-size: 1.1rem; letter-spacing: 1px;">
+                            🛠️ SERVICIO DE REPARACIÓN DE CASCO
+                        </h3>
+                        <span style="color: #38bdf8; font-weight: bold; font-size: 0.9rem;">
+                            CRÉDITOS: <span style="color: #f59e0b;">${state.credits} CR</span>
+                        </span>
                     </div>
-                `).join('')}
+
+                    <!-- Health Progress Bar -->
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 0.9rem; margin-bottom: 6px;">
+                            <span>Integridad del Casco:</span>
+                            <span style="color: ${healthColor};">${health} / ${maxHealth} HP (${healthPercent}%)</span>
+                        </div>
+                        <div style="width: 100%; height: 16px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; overflow: hidden; position: relative;">
+                            <div style="width: ${healthPercent}%; height: 100%; background: ${healthColor}; transition: width 0.3s ease; box-shadow: 0 0 10px ${healthColor};"></div>
+                        </div>
+                    </div>
+
+                    <!-- Repair Buttons Grid -->
+                    ${missingHealth === 0 ? `
+                        <div style="padding: 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; border-radius: 6px; text-align: center; color: #10b981; font-weight: bold; font-size: 0.95rem;">
+                            ✅ EL CASCO ESTÁ AL 100% DE SU CAPACIDAD. NO REQUIERE REPARACIONES.
+                        </div>
+                    ` : `
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <button id="btn-repair-10" style="padding: 12px; background: rgba(0, 240, 255, 0.15); border: 1.5px solid #00f0ff; color: #fff; font-family: 'Rajdhani', sans-serif; font-weight: bold; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onclick="window.game.ui.portUI.repairShip(10, ${repair10Cost})">
+                                REPARAR 10 HP
+                                <div style="color: #f59e0b; font-size: 0.8rem; margin-top: 2px;">Coste: ${repair10Cost} CR</div>
+                            </button>
+
+                            <button id="btn-repair-full" style="padding: 12px; background: rgba(16, 185, 129, 0.2); border: 1.5px solid #10b981; color: #fff; font-family: 'Rajdhani', sans-serif; font-weight: bold; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onclick="window.game.ui.portUI.repairShip(${missingHealth}, ${repairFullCost})">
+                                REPARACIÓN COMPLETA
+                                <div style="color: #f59e0b; font-size: 0.8rem; margin-top: 2px;">Coste: ${repairFullCost} CR</div>
+                            </button>
+                        </div>
+                    `}
+                </div>
+
+                <!-- MODULES / COMPONENTS SECTION -->
+                <div>
+                    <h3 style="font-family: 'Orbitron', sans-serif; color: #00f0ff; margin-bottom: 12px; font-size: 1rem; letter-spacing: 1px;">
+                        📦 COMPONENTES Y MEJORAS DE ASTILLERO
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px;">
+                        ${modules.length === 0 ? '<p style="color: #888;">No hay componentes en catálogo.</p>' : modules.map(m => `
+                            <div class="module-card" style="padding: 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 8px; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <h4 style="color: #38bdf8; margin: 0 0 4px 0; font-size: 0.95rem;">${m.name}</h4>
+                                    <p style="color: #94a3b8; font-size: 0.8rem; margin: 0 0 10px 0;">${m.description}</p>
+                                </div>
+                                <div>
+                                    <p style="color: #f59e0b; font-weight: bold; margin: 0 0 8px 0; font-size: 0.9rem;">${m.cost} CR</p>
+                                    <button style="width: 100%; padding: 6px; background: var(--primary); color: #000; border: none; font-weight: bold; border-radius: 4px; cursor: pointer;" onclick="alert('Componente adquirido')">COMPRAR</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
             </div>
         `;
-        this.uiManager.createModal('ASTILLERO', content);
+        this.uiManager.createModal('ASTILLERO Y TALLER DE CASCO', content);
+    }
+
+    repairShip(amount, cost) {
+        const state = this.game.state;
+        const ship = state.ship;
+
+        if (ship.health >= ship.maxHealth) {
+            this.uiManager.hud.showNotification('¡El casco ya está al 100% de su capacidad!', 'info');
+            return;
+        }
+
+        if (state.credits < cost) {
+            this.uiManager.hud.showNotification(`¡Créditos insuficientes! Se requieren ${cost} CR.`, 'error');
+            return;
+        }
+
+        // Apply repair & deduct credits
+        state.credits -= cost;
+        ship.health = Math.min(ship.maxHealth, ship.health + amount);
+        state.saveGame();
+        state.notify();
+
+        this.uiManager.hud.showNotification(`🔧 Casco reparado en +${amount} HP por ${cost} CR.`, 'success');
+        this.renderShipyard(); // Refresh modal UI
     }
 
     renderTavern() {
