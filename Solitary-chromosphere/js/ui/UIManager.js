@@ -348,7 +348,15 @@ class UIManager {
     }
 
     renderSystemMap() {
-        this.mapUI.renderSystemMap();
+        if (this.mapUI && this.mapUI.renderSystemMap) {
+            this.mapUI.renderSystemMap();
+        }
+    }
+
+    renderGalaxyMap() {
+        if (this.mapUI && this.mapUI.renderGalaxyMap) {
+            this.mapUI.renderGalaxyMap();
+        }
     }
 
     showTravelAnimation(type, callback) {
