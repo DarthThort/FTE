@@ -519,11 +519,22 @@ class GameState {
     }
 
     toggleDoor(x, y) {
+        if (!this.manualDoors) this.manualDoors = new Set();
+        const key = `${x},${y}`;
         const tile = this.ship.layout[y][x];
+
         if (tile === 4) {
             this.ship.layout[y][x] = 5;
+            this.manualDoors.add(key);
+            if (this.game && this.game.ui && this.game.ui.hud) {
+                this.game.ui.hud.showNotification('🚪 Puerta abierta (Mando E)', 'info');
+            }
         } else if (tile === 5) {
             this.ship.layout[y][x] = 4;
+            this.manualDoors.add(key);
+            if (this.game && this.game.ui && this.game.ui.hud) {
+                this.game.ui.hud.showNotification('🔒 Puerta bloqueada/cerrada (Mando E)', 'info');
+            }
         }
         this.saveGame();
         this.notify();

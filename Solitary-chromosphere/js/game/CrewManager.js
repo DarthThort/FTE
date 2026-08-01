@@ -139,6 +139,11 @@ class CrewManager {
                 const tile = layout[y][x];
                 // Check if tile is a door (4 = closed door, 5 = open door)
                 if (tile === 4 || tile === 5) {
+                    // Skip doors manually toggled/locked by player (key E or door panel)
+                    if (this.state.manualDoors && this.state.manualDoors.has(`${x},${y}`)) {
+                        continue;
+                    }
+
                     // Check if any entity is near this door tile (within 1.3 tiles)
                     const isNear = entities.some(e => Math.hypot(e.x - (x + 0.5), e.y - (y + 0.5)) <= 1.3);
 
