@@ -19,6 +19,35 @@ class UIManager {
         }
 
         this.init();
+
+        // ES6 Proxy Fallback for Sub-UI Delegation:
+        // Automatically searches sub-UI modules if a method is called on UIManager
+        return new Proxy(this, {
+            get(target, prop, receiver) {
+                if (prop in target) {
+                    return Reflect.get(target, prop, receiver);
+                }
+
+                const subUIs = [
+                    target.shipSystemUI,
+                    target.portUI,
+                    target.hud,
+                    target.mapUI,
+                    target.weaponUI,
+                    target.powerUI,
+                    target.shieldUI,
+                    target.animationUI
+                ];
+
+                for (const subUI of subUIs) {
+                    if (subUI && typeof subUI[prop] === 'function') {
+                        return subUI[prop].bind(subUI);
+                    }
+                }
+
+                return undefined;
+            }
+        });
     }
 
     init() {
@@ -134,6 +163,8 @@ class UIManager {
         }
     }
 
+    // --- INTERACTION PROMPTS ---
+
     showInteractionPrompt(text) {
         if (this.hud && this.hud.showInteractionPrompt) {
             this.hud.showInteractionPrompt(text);
@@ -144,6 +175,20 @@ class UIManager {
         if (this.hud && this.hud.hideInteractionPrompt) {
             this.hud.hideInteractionPrompt();
         }
+    }
+
+    // --- SHIP SYSTEM CONSOLES & MODAL DELEGATES ---
+
+    renderSystemConsole(system) {
+        this.shipSystemUI.renderSystemConsole(system);
+    }
+
+    renderInstallMenu(x, y) {
+        this.shipSystemUI.renderInstallMenu(x, y);
+    }
+
+    installModuleToHardpoint(hardpoint, moduleId) {
+        this.shipSystemUI.installModuleToHardpoint(hardpoint, moduleId);
     }
 
     showCrewDetail(crewId) {
@@ -162,7 +207,7 @@ class UIManager {
         this.animationUI.showTravelAnimation(type, callback);
     }
 
-    // --- PORT INTERFACE ---
+    // --- PORT INTERFACE DELEGATES ---
 
     renderPortUI() {
         this.portUI.renderPortUI();
@@ -178,6 +223,22 @@ class UIManager {
 
     renderContracts() {
         this.portUI.renderContracts();
+    }
+
+    renderMarket() {
+        this.portUI.renderMarket();
+    }
+
+    renderCrewRoster() {
+        this.portUI.renderCrewRoster();
+    }
+
+    buyItem(commodityId, price) {
+        this.portUI.buyItem(commodityId, price);
+    }
+
+    sellItem(commodityId, price) {
+        this.portUI.sellItem(commodityId, price);
     }
 
     showShipDestroyedModal() {
