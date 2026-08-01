@@ -59,20 +59,20 @@ class HUD {
         element.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 15px;">
                 <div>
-                    <h3 style="margin-bottom: 10px; font-size: 1rem;">STATUS</h3>
+                    <h3 style="margin-bottom: 10px; font-size: 1rem;">ESTADO DE LA NAVE</h3>
                     <div class="stat-row">
-                        <span>Credits</span>
+                        <span>Créditos</span>
                         <span class="stat-value">${state.credits} CR</span>
                     </div>
                     <div class="stat-row">
-                        <span>Fuel</span>
+                        <span>Combustible</span>
                         <span class="stat-value">${state.ship.fuel}/${state.ship.maxFuel}</span>
                     </div>
                     
                     <!-- Hull Health Bar -->
                     <div style="margin: 10px 0;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                            <span style="font-size: 0.85rem; color: var(--text-main);">Hull</span>
+                            <span style="font-size: 0.85rem; color: var(--text-main);">Integridad del Casco</span>
                             <span style="font-size: 0.85rem; color: ${state.ship.health / state.ship.maxHealth > 0.5 ? '#00ff55' : state.ship.health / state.ship.maxHealth > 0.25 ? '#ffaa00' : '#ff0055'};">
                                 ${state.ship.health}/${state.ship.maxHealth}
                             </span>
@@ -96,22 +96,21 @@ class HUD {
                     </div>
                     
                     <div class="stat-row">
-                        <span>Location</span>
-                        <span class="stat-value">${state.currentPlanet?.name || 'Unknown'}</span>
+                        <span>Ubicación</span>
+                        <span class="stat-value">${state.currentPlanet?.name || 'Espacio Profundo'}</span>
                     </div>
                 </div>
 
                 <div>
-                    <h3 style="margin-bottom: 10px; font-size: 1rem;">CREW</h3>
-                    ${crewPanelsHTML || '<p style="color: #888; font-size: 0.75rem;">No crew</p>'}
+                    <h3 style="margin-bottom: 10px; font-size: 1rem;">TRIPULACIÓN</h3>
+                    ${crewPanelsHTML || '<p style="color: #888; font-size: 0.75rem;">Sin tripulantes</p>'}
                 </div>
 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button id="btn-nav" style="width: 100%; padding: 8px; font-size: 0.8rem;">🗺️ NAV</button>
-                    <button id="btn-inventory" style="width: 100%; padding: 8px; font-size: 0.8rem;">📦 INVENTORY</button>
-                    <button id="btn-loadout" style="width: 100%; padding: 8px; font-size: 0.8rem; background: rgba(255,165,0,0.2); border-color: #ffaa00; color: #ffaa00;">⚙️ LOADOUT</button>
-                    <button id="btn-dock" style="flex: 1; padding: 8px; font-size: 0.8rem;" ${state.currentPlanet?.hasStation ? '' : 'disabled'}>DOCK</button>
-                    <button id="btn-reset-save" style="width: 100%; padding: 8px; font-size: 0.7rem; background: rgba(255,0,0,0.2); border-color: #ff0000; color: #ff0000;">🔄 RESET SAVE</button>
+                    <button id="btn-nav" style="width: 100%; padding: 8px; font-size: 0.8rem;">🗺️ MAPA SECTOR</button>
+                    <button id="btn-inventory" style="width: 100%; padding: 8px; font-size: 0.8rem;">📦 INVENTARIO</button>
+                    <button id="btn-loadout" style="width: 100%; padding: 8px; font-size: 0.8rem; background: rgba(255,165,0,0.2); border-color: #ffaa00; color: #ffaa00;">⚙️ EQUIPAMIENTO</button>
+                    <button id="btn-dock" style="flex: 1; padding: 8px; font-size: 0.8rem;" ${state.currentPlanet?.hasStation ? '' : 'disabled'}>⚓ ATRACAR</button>
                 </div>
             </div>
         `;

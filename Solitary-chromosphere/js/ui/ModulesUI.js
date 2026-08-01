@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ModulesUI.js
  * 
  * Shop interface for purchasing ship modules
@@ -51,7 +51,7 @@ class ModulesUI {
                         font-size: 2rem;
                         text-transform: uppercase;
                         letter-spacing: 3px;
-                    ">⚙️ MODULES SHOP</h2>
+                    ">⚙️ TIENDA DE MÓDULOS</h2>
                     
                     <div style="color: #ffaa00; font-size: 1.3rem; font-weight: bold;">
                         💰 ${this.game.state.credits} CR
@@ -93,7 +93,7 @@ class ModulesUI {
                         transition: all 0.3s;
                     " onmouseover="this.style.background='rgba(0,240,255,0.2)'"
                        onmouseout="this.style.background='rgba(255,255,255,0.1)'">
-                        CLOSE
+                        CERRAR
                     </button>
                 </div>
             </div>
@@ -134,11 +134,11 @@ class ModulesUI {
      */
     renderTabs() {
         const categories = [
-            { id: MODULE_CATEGORIES.WEAPON, label: '⚔️ WEAPONS', icon: '⚔️' },
-            { id: MODULE_CATEGORIES.SHIELD, label: '🛡️ SHIELDS', icon: '🛡️' },
-            { id: MODULE_CATEGORIES.ENGINE, label: '🚀 ENGINES', icon: '🚀' },
-            { id: MODULE_CATEGORIES.JUMP_DRIVE, label: '✨ JUMP DRIVES', icon: '✨' },
-            { id: MODULE_CATEGORIES.REACTOR, label: '⚡ REACTORS', icon: '⚡' },
+            { id: MODULE_CATEGORIES.WEAPON, label: '⚔️ ARMAS', icon: '⚔️' },
+            { id: MODULE_CATEGORIES.SHIELD, label: '🛡️ ESCUDOS', icon: '🛡️' },
+            { id: MODULE_CATEGORIES.ENGINE, label: '🚀 MOTORES', icon: '🚀' },
+            { id: MODULE_CATEGORIES.JUMP_DRIVE, label: '✨ SALTO FTL', icon: '✨' },
+            { id: MODULE_CATEGORIES.REACTOR, label: '⚡ REACTORES', icon: '⚡' },
             { id: MODULE_CATEGORIES.BRIDGE, label: '🎯 BRIDGE', icon: '🎯' }
         ];
 
@@ -187,7 +187,7 @@ class ModulesUI {
                     color: #888;
                     font-size: 1.2rem;
                 ">
-                    No modules available in this category
+                    No hay módulos disponibles en esta categoría
                 </div>
             `;
         }
@@ -215,8 +215,8 @@ class ModulesUI {
                 onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,240,255,0.3)'"
                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
             >
-                ${equipped ? '<div style="position: absolute; top: 10px; right: 10px; background: #00ff55; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">EQUIPPED</div>' : ''}
-                ${owned && !equipped ? '<div style="position: absolute; top: 10px; right: 10px; background: #ffaa00; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">OWNED</div>' : ''}
+                ${equipped ? '<div style="position: absolute; top: 10px; right: 10px; background: #00ff55; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">EQUIPADO</div>' : ''}
+                ${owned && !equipped ? '<div style="position: absolute; top: 10px; right: 10px; background: #ffaa00; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">COMPRADO</div>' : ''}
                 
                 <h3 style="color: var(--primary); margin: 0 0 10px 0; font-size: 1.2rem;">
                     ${module.name}
@@ -266,7 +266,7 @@ class ModulesUI {
                     </div>
                     
                     ${owned || equipped ?
-                `<div style="color: #888; font-style: italic;">Already owned</div>` :
+                `<div style="color: #888; font-style: italic;">Ya adquirido</div>` :
                 `<button 
                             onclick="game.ui.modulesUI.buyModule('${module.id}')"
                             ${!canAfford ? 'disabled' : ''}
@@ -284,7 +284,7 @@ class ModulesUI {
                             "
                             ${canAfford ? `onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"` : ''}
                         >
-                            ${canAfford ? '🛒 BUY' : 'INSUFFICIENT FUNDS'}
+                            ${canAfford ? '🛒 COMPRAR' : 'FONDOS INSUFICIENTES'}
                         </button>`
             }
                 </div>
@@ -309,10 +309,10 @@ class ModulesUI {
                     gap: 8px;
                     font-size: 0.85rem;
                 ">
-                    <div><span style="color: #888;">Shield DMG:</span> <span style="color: #00ffff;">${stats.shieldDamage}</span></div>
-                    <div><span style="color: #888;">Hull DMG:</span> <span style="color: #ff8800;">${stats.hullDamage}</span></div>
-                    <div><span style="color: #888;">Fire Rate:</span> <span style="color: #fff;">${stats.fireRate.toFixed(1)}/s</span></div>
-                    <div><span style="color: #888;">Energy:</span> <span style="color: #ffff00;">${stats.energyCost}</span></div>
+                    <div><span style="color: #888;">Daño Escudo:</span> <span style="color: #00ffff;">${stats.shieldDamage}</span></div>
+                    <div><span style="color: #888;">Daño Casco:</span> <span style="color: #ff8800;">${stats.hullDamage}</span></div>
+                    <div><span style="color: #888;">Cadencia:</span> <span style="color: #fff;">${stats.fireRate.toFixed(1)}/s</span></div>
+                    <div><span style="color: #888;">Energía:</span> <span style="color: #ffff00;">${stats.energyCost}</span></div>
                 </div>
             `;
         } else if (module.category === MODULE_CATEGORIES.SHIELD) {
@@ -326,10 +326,10 @@ class ModulesUI {
                     gap: 8px;
                     font-size: 0.85rem;
                 ">
-                    <div><span style="color: #888;">Layers:</span> <span style="color: #00ff55;">${stats.layers}</span></div>
-                    <div><span style="color: #888;">Recharge:</span> <span style="color: #00ffff;">${stats.rechargeRate}/s</span></div>
-                    <div><span style="color: #888;">Delay:</span> <span style="color: #ffaa00;">${stats.rechargeDelay}s</span></div>
-                    <div><span style="color: #888;">Power:</span> <span style="color: #ffff00;">${stats.powerCost}</span></div>
+                    <div><span style="color: #888;">Capas Escudo:</span> <span style="color: #00ff55;">${stats.layers}</span></div>
+                    <div><span style="color: #888;">Recarga:</span> <span style="color: #00ffff;">${stats.rechargeRate}/s</span></div>
+                    <div><span style="color: #888;">Demora:</span> <span style="color: #ffaa00;">${stats.rechargeDelay}s</span></div>
+                    <div><span style="color: #888;">Potencia:</span> <span style="color: #ffff00;">${stats.powerCost}</span></div>
                 </div>
             `;
         } else if (module.category === MODULE_CATEGORIES.ENGINE) {
@@ -340,9 +340,9 @@ class ModulesUI {
                     border-radius: 6px;
                     font-size: 0.85rem;
                 ">
-                    <div><span style="color: #888;">Flee Bonus:</span> <span style="color: #00ff55;">+${(stats.fleeBonus * 100).toFixed(0)}%</span></div>
-                    <div style="margin-top: 5px;"><span style="color: #888;">Evasion:</span> <span style="color: #00ffff;">+${(stats.evasionBonus * 100).toFixed(0)}%</span></div>
-                    <div style="margin-top: 5px;"><span style="color: #888;">Power:</span> <span style="color: #ffff00;">${stats.powerCost}</span></div>
+                    <div><span style="color: #888;">Bono Escape:</span> <span style="color: #00ff55;">+${(stats.fleeBonus * 100).toFixed(0)}%</span></div>
+                    <div style="margin-top: 5px;"><span style="color: #888;">Evasión:</span> <span style="color: #00ffff;">+${(stats.evasionBonus * 100).toFixed(0)}%</span></div>
+                    <div style="margin-top: 5px;"><span style="color: #888;">Potencia:</span> <span style="color: #ffff00;">${stats.powerCost}</span></div>
                 </div>
             `;
         } else if (module.category === MODULE_CATEGORIES.JUMP_DRIVE) {
@@ -353,7 +353,7 @@ class ModulesUI {
                     border-radius: 6px;
                     font-size: 0.85rem;
                 ">
-                    <div><span style="color: #888;">Jump Range:</span> <span style="color: #00ffff;">${stats.jumpRange} LY</span></div>
+                    <div><span style="color: #888;">Alcance FTL:</span> <span style="color: #00ffff;">${stats.jumpRange} LY</span></div>
                     <div style="margin-top: 5px;"><span style="color: #888;">Fuel Cost:</span> <span style="color: #ffaa00;">${stats.fuelCost}</span></div>
                 </div>
             `;
@@ -365,7 +365,7 @@ class ModulesUI {
                     border-radius: 6px;
                     font-size: 0.85rem;
                 ">
-                    <div><span style="color: #888;">Max Power:</span> <span style="color: #ffff00;">${stats.maxPower} units</span></div>
+                    <div><span style="color: #888;">Max Potencia:</span> <span style="color: #ffff00;">${stats.maxPower} units</span></div>
                 </div>
             `;
         } else if (module.category === MODULE_CATEGORIES.BRIDGE) {

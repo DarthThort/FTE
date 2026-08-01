@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PortGenerator.js
  * Generates port data: crew, modules, contracts
  * Extracted from GameState.js
@@ -28,12 +28,12 @@ class PortGenerator {
     generateCrew() {
         const firstNames = ['Alex', 'Jordan', 'Sam', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Quinn', 'Avery', 'Drew'];
         const lastNames = ['Chen', 'Patel', 'Kim', 'Rodriguez', 'O\'Brien', 'Yamamoto', 'Singh', 'Mueller', 'Santos', 'Kowalski'];
-        const species = ['Human', 'Vulcan', 'Andorian', 'Tellarite'];
-        const genders = ['Male', 'Female', 'Non-binary'];
+        const species = ['Humano', 'Vulcano', 'Andoriano', 'Tellarita'];
+        const genders = ['Hombre', 'Mujer', 'No binario'];
         const availableCrew = [];
 
         for (let i = 0; i < 5; i++) {
-            const roles = ['Pilot', 'Engineer', 'Weapon Specialist', 'Medic', 'General Staff'];
+            const roles = ['Piloto', 'Ingeniero', 'Artillero', 'Médico', 'Personal General'];
             const role = roles[Math.floor(Math.random() * roles.length)];
             const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
             const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
@@ -73,18 +73,18 @@ class PortGenerator {
         };
 
         switch (role) {
-            case 'Pilot':
+            case 'Piloto':
                 baseSkills.piloting = { level: 3 + Math.floor(Math.random() * 2), xp: 0 };
                 baseSkills.combat = { level: 2, xp: 0 };
                 break;
-            case 'Engineer':
+            case 'Ingeniero':
                 baseSkills.engineering = { level: 3 + Math.floor(Math.random() * 2), xp: 0 };
                 break;
-            case 'Weapon Specialist':
+            case 'Artillero':
                 baseSkills.weapons = { level: 3 + Math.floor(Math.random() * 2), xp: 0 };
                 baseSkills.combat = { level: 2, xp: 0 };
                 break;
-            case 'Medic':
+            case 'Médico':
                 baseSkills.medical = { level: 3 + Math.floor(Math.random() * 2), xp: 0 };
                 break;
             default:

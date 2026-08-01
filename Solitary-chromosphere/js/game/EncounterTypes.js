@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Encounter Types - Templates for different encounter scenarios
  * Used by EncounterManager to generate varied encounters based on system threat level
  */
@@ -13,7 +13,7 @@ const ENCOUNTER_TYPES = {
         enemyType: 'pirate_raider',
         canNegotiate: false,
         skipDialogue: true,
-        message: "⚔️ Pirate vessel locks weapons! No time to talk!",
+        message: "⚔️ ¡Nave pirata fijó sus armas en nosotros! ¡Sin tiempo para hablar!",
         threatWeight: 0.8  // More common in high threat
     },
 
@@ -24,7 +24,7 @@ const ENCOUNTER_TYPES = {
         enemyType: 'pirate_scout',
         canNegotiate: true,
         demandCredits: 50,
-        message: "💰 Pirates hail you: 'Pay up or prepare to fight!'",
+        message: "💰 Los piratas comunican: '¡Paga el peaje de 50 créditos o prepárate para luchar!'",
         threatWeight: 0.5
     },
 
@@ -36,7 +36,7 @@ const ENCOUNTER_TYPES = {
         canNegotiate: false,
         skipDialogue: true,
         firstStrike: true,  // Pirates attack first
-        message: "🚨 Ambush! Pirates were lying in wait!",
+        message: "🚨 ¡Emboscada! ¡Naves piratas nos estaban esperando en la sombra!",
         threatWeight: 0.3
     },
 
@@ -55,7 +55,7 @@ const ENCOUNTER_TYPES = {
             scrap: 10,
             fuel: 5
         },
-        message: "🆘 Distress signal detected: 'Engine failure! Need assistance!'",
+        message: "🆘 Señals de socorro detectada: '¡Avaría en los motores! ¡Necesitamos asistencia urgente!'",
         threatWeight: 0.4
     },
 
@@ -65,7 +65,7 @@ const ENCOUNTER_TYPES = {
         category: 'neutral',
         hasSpecialGoods: true,
         discount: 0.1,  // 10% off market prices
-        message: "🛒 Independent trader hails: 'Looking to buy or sell?'",
+        message: "🛒 Comerciante independiente comunica: '¿Buscando comprar o vender suministros?'",
         threatWeight: 0.6
     },
 
@@ -75,7 +75,7 @@ const ENCOUNTER_TYPES = {
         category: 'neutral',
         passengerCount: { min: 1, max: 3 },
         rewardPerPassenger: 30,
-        message: "👨‍👩‍👧 Refugee ship requests passage to nearest station.",
+        message: "👨‍👩‍👧 Una nave de refugiados solicita transporte seguro hacia la estación más cercana.",
         threatWeight: 0.3
     },
 

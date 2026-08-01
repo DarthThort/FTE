@@ -1,4 +1,4 @@
-/**
+﻿/**
  * InventoryUI - Display and manage ship inventory, resources, and cargo
  */
 class InventoryUI {
@@ -63,7 +63,7 @@ class InventoryUI {
                     border-bottom: 2px solid #00f0ff;
                     padding-bottom: 15px;
                 ">
-                    <h2 style="margin: 0; color: #00f0ff; font-size: 1.8rem;">📦 INVENTORY</h2>
+                    <h2 style="margin: 0; color: #00f0ff; font-size: 1.8rem;">📦 INVENTARIO DE NAVE</h2>
                     <button onclick="game.ui.inventoryUI.close()" style="
                         background: none;
                         border: 2px solid #ff0055;
@@ -111,15 +111,15 @@ class InventoryUI {
         const state = this.game.state;
         const credits = state.credits || 0;
         const fuel = state.fuel || 0;
-        const maxFuel = state.ship?.maxFuel || 100;
+        const maxCombustible = state.ship?.maxCombustible || 100;
         const scrap = state.scrap || 0;
 
-        const fuelPercent = (fuel / maxFuel) * 100;
+        const fuelPercent = (fuel / maxCombustible) * 100;
         const fuelColor = fuelPercent > 50 ? '#00ff55' : fuelPercent > 25 ? '#ffaa00' : '#ff0055';
 
         return `
             <div style="margin-bottom: 25px;">
-                <h3 style="color: #00f0ff; margin-bottom: 15px; font-size: 1.2rem;">💰 RESOURCES</h3>
+                <h3 style="color: #00f0ff; margin-bottom: 15px; font-size: 1.2rem;">💰 RECURSOS</h3>
                 <div style="
                     display: flex;
                     flex-direction: column;
@@ -129,17 +129,17 @@ class InventoryUI {
                     border-radius: 8px;
                     border: 1px solid rgba(0,240,255,0.3);
                 ">
-                    <!-- Credits -->
+                    <!-- Créditos -->
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #ffaa00; font-weight: bold;">💳 Credits</span>
+                        <span style="color: #ffaa00; font-weight: bold;">💳 Créditos</span>
                         <span style="color: #fff; font-size: 1.1rem;">${credits.toLocaleString()} cr</span>
                     </div>
 
-                    <!-- Fuel -->
+                    <!-- Combustible -->
                     <div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <span style="color: ${fuelColor}; font-weight: bold;">⛽ Fuel</span>
-                            <span style="color: #fff;">${fuel} / ${maxFuel}</span>
+                            <span style="color: ${fuelColor}; font-weight: bold;">⛽ Combustible</span>
+                            <span style="color: #fff;">${fuel} / ${maxCombustible}</span>
                         </div>
                         <div style="
                             width: 100%;
@@ -157,9 +157,9 @@ class InventoryUI {
                         </div>
                     </div>
 
-                    <!-- Scrap -->
+                    <!-- Chatarra -->
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #aaaaaa; font-weight: bold;">🔩 Scrap</span>
+                        <span style="color: #aaaaaa; font-weight: bold;">🔩 Chatarra</span>
                         <span style="color: #fff; font-size: 1.1rem;">${scrap}</span>
                     </div>
                 </div>
@@ -180,7 +180,7 @@ class InventoryUI {
             return `
                 <div style="margin-bottom: 25px;">
                     <h3 style="color: #00f0ff; margin-bottom: 15px; font-size: 1.2rem;">
-                        📦 CARGO (0/${maxCargo} slots)
+                        📦 BODEGA DE CARGA (0/${maxCargo} slots)
                     </h3>
                     <div style="
                         padding: 20px;
@@ -191,7 +191,7 @@ class InventoryUI {
                         color: #888;
                         font-style: italic;
                     ">
-                        No cargo loaded
+                        No hay mercancías en la bodega
                     </div>
                 </div>
             `;
@@ -227,7 +227,7 @@ class InventoryUI {
                     font-family: var(--font-tech);
                     transition: all 0.2s;
                 " onmouseover="this.style.background='rgba(255,0,85,0.4)'" onmouseout="this.style.background='rgba(255,0,85,0.2)'">
-                    🗑️ DISCARD
+                    🗑️ DESECHAR
                 </button>
             </div>
         `;
@@ -236,7 +236,7 @@ class InventoryUI {
         return `
             <div style="margin-bottom: 25px;">
                 <h3 style="color: #00f0ff; margin-bottom: 15px; font-size: 1.2rem;">
-                    📦 CARGO (${usedSlots}/${maxCargo} slots)
+                    📦 BODEGA DE CARGA (${usedSlots}/${maxCargo} slots)
                 </h3>
                 <div style="
                     background: rgba(0,0,0,0.3);
@@ -266,7 +266,7 @@ class InventoryUI {
 
         return `
             <div style="margin-bottom: 15px;">
-                <h3 style="color: #00f0ff; margin-bottom: 15px; font-size: 1.2rem;">👥 PASSENGERS</h3>
+                <h3 style="color: #00f0ff; margin-bottom: 15px; font-size: 1.2rem;">👥 PASAJEROS Y REFUGIADOS</h3>
                 <div style="
                     background: rgba(0,255,85,0.1);
                     padding: 15px;
@@ -274,14 +274,14 @@ class InventoryUI {
                     border: 1px solid rgba(0,255,85,0.3);
                 ">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="color: #fff; font-weight: bold;">Refugees aboard</span>
+                        <span style="color: #fff; font-weight: bold;">Refugiados a bordo</span>
                         <span style="color: #00ff55; font-size: 1.3rem;">${passengers}</span>
                     </div>
                     <div style="color: #aaa; font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
-                        💰 Payment on arrival: <span style="color: #ffaa00; font-weight: bold;">${totalReward} credits</span>
+                        💰 Recompensa al atracar: <span style="color: #ffaa00; font-weight: bold;">${totalReward} credits</span>
                     </div>
                     <div style="color: #888; font-size: 0.85rem; margin-top: 8px; font-style: italic;">
-                        ℹ️ Drop off at any station to receive payment
+                        ℹ️ Entrega a los refugiados en cualquier estación para recibir tu pago
                     </div>
                 </div>
             </div>

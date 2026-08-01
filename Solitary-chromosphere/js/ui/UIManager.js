@@ -1,4 +1,4 @@
-class UIManager {
+﻿class UIManager {
     constructor(rootElement, gameEngine) {
         this.root = rootElement;
         this.game = gameEngine;
@@ -35,7 +35,7 @@ class UIManager {
         // Create OPTIONS button in top-right corner
         const optionsBtn = document.createElement('button');
         optionsBtn.id = 'btn-options';
-        optionsBtn.innerHTML = '?? OPTIONS';
+        optionsBtn.innerHTML = '⚙️ OPCIONES';
         Object.assign(optionsBtn.style, {
             position: 'fixed',
             top: '20px',
@@ -226,7 +226,7 @@ class UIManager {
             <div class="modal-window">
                 <div class="modal-header">
                     <h2>${title}</h2>
-                    <button class="modal-close">�</button>
+                    <button class="modal-close">&times;</button>
                 </div>
                 <div class="modal-content">
                     ${contentHTML}

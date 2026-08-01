@@ -1,4 +1,4 @@
-/**
+﻿/**
  * DialogueUI - Interactive dialogue system for encounters
  * Shows encounter messages and player choice options
  */
@@ -316,14 +316,14 @@ class DialogueUI {
         if (this.game.state.credits >= cost) {
             this.game.state.credits -= cost;
             this.showResult(
-                '💰 Payment Accepted',
-                `You paid ${cost} credits. They let you pass.`,
+                '💰 Pago Aceptado',
+                `You paid ${cost} credits. Te permiten continuar el viaje.`,
                 '#00ff55'
             );
             setTimeout(() => this.close(), 2000);
         } else {
             this.showResult(
-                '❌ Insufficient Funds',
+                '❌ Fondos Insuficientes',
                 `You don't have ${cost} credits! They attack!`,
                 '#ff0055'
             );
@@ -349,7 +349,7 @@ class DialogueUI {
             // Success
             this.game.state.fuel = Math.max(0, this.game.state.fuel - 10);
             this.showResult(
-                '🚀 Escaped!',
+                '🚀 ¡Escape Exitoso!',
                 'You managed to escape. Lost 10 fuel in the process.',
                 '#00ff55'
             );
@@ -357,8 +357,8 @@ class DialogueUI {
         } else {
             // Failed
             this.showResult(
-                '❌ Failed to Escape',
-                'They blocked your exit! Combat starts.',
+                '❌ Fallo al Intentar Escapar',
+                '¡Bloquearon nuestra ruta! El combate comienza.',
                 '#ff0055'
             );
             setTimeout(() => this.startCombat(encounter), 1500);
@@ -391,13 +391,13 @@ class DialogueUI {
             this.game.state.credits += credits;
 
             this.showResult(
-                '✨ Grateful Survivors',
+                '✨ Supervivientes Agradecidos',
                 `They thank you and give ${credits} credits!`,
                 '#00ff55'
             );
         } else {
             this.showResult(
-                '😔 No Reward',
+                '😔 Sin Recompensa',
                 'They thank you but have nothing to offer. You did the right thing.',
                 '#ffaa00'
             );
@@ -428,7 +428,7 @@ class DialogueUI {
         const reward = count * encounter.rewardPerPassenger;
 
         this.showResult(
-            '👥 Passengers Aboard',
+            '👥 Pasajeros a Bordo',
             `${count} refugees board your ship. Drop them at next station for ${reward} credits.`,
             '#00ff55'
         );
@@ -478,7 +478,7 @@ class DialogueUI {
                 break;
         }
 
-        this.showResult('🔍 Anomaly Result', message, color);
+        this.showResult('🔍 Resultado del Análisis', message, color);
         setTimeout(() => this.close(), 2500);
     }
 

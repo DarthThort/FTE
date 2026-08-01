@@ -1,4 +1,4 @@
-class GameState {
+﻿class GameState {
     constructor() {
         this.credits = 10000; // Testing: Start with more credits
         this.scrap = 0; // Phase 11: Scrap resource for upgrades
@@ -51,13 +51,13 @@ class GameState {
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             ],
             systems: [
-                { x: 13, y: 4, id: 'bridge', name: 'Bridge Console', type: 'bridge', color: '#00f0ff', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 },
-                { x: 13, y: 19, id: 'engines', name: 'Engine Control', type: 'engine', color: '#ff5500', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
-                { x: 9, y: 8, id: 'weapons1', name: 'Weapons Array 1', type: 'weapon', color: '#ff0055', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
-                { x: 17, y: 8, id: 'weapons2', name: 'Weapons Array 2', type: 'weapon', color: '#ff0055', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
-                { x: 14, y: 6, id: 'shields', name: 'Shield Generator', type: 'shield', color: '#00ff55', level: 2, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
-                { x: 14, y: 11, id: 'jump', name: 'Jump Drive', type: 'jumpdrive', color: '#ff00ff', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 },
-                { x: 12, y: 11, id: 'reactor', name: 'Reactor Core', type: 'reactor', color: '#ffaa00', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 }
+                { x: 13, y: 4, id: 'bridge', name: 'Consola de Puente', type: 'bridge', color: '#00f0ff', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 },
+                { x: 13, y: 19, id: 'engines', name: 'Control de Motores', type: 'engine', color: '#ff5500', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
+                { x: 9, y: 8, id: 'weapons1', name: 'Matriz de Armas 1', type: 'weapon', color: '#ff0055', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
+                { x: 17, y: 8, id: 'weapons2', name: 'Matriz de Armas 2', type: 'weapon', color: '#ff0055', level: 1, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
+                { x: 14, y: 6, id: 'shields', name: 'Generador de Escudos', type: 'shield', color: '#00ff55', level: 2, maxPower: 2, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 0.75 },
+                { x: 14, y: 11, id: 'jump', name: 'Motor FTL', type: 'jumpdrive', color: '#ff00ff', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 },
+                { x: 12, y: 11, id: 'reactor', name: 'Núcleo del Reactor', type: 'reactor', color: '#ffaa00', level: 1, maxPower: 1, currentPower: 1, health: 100, maxHealth: 100, damaged: false, ionized: 0, effectiveness: 1.0 }
             ],
             reactor: {
                 level: 1,

@@ -8,6 +8,12 @@ class Player {
         this.size = 16;
         this.color = '#00f0ff';
         this.engineeringSkill = 0; // For breach repairs (upgradeable)
+        this.facingAngle = Math.PI / 2; // Default facing down
+        this.isMoving = false;
+        this.id = 99999;
+        this.name = 'Capitán';
+        this.role = 'Captain';
+        this.species = 'Humano';
     }
 
     update(dt) {
@@ -25,11 +31,14 @@ class Player {
         if (input.isDown('ArrowLeft') || input.isDown('KeyA')) dx -= 1;
         if (input.isDown('ArrowRight') || input.isDown('KeyD')) dx += 1;
 
-        // Normalize vector
+        // Normalize vector & update movement facing angle
         if (dx !== 0 || dy !== 0) {
             const length = Math.sqrt(dx * dx + dy * dy);
             dx /= length;
             dy /= length;
+
+            this.facingAngle = Math.atan2(dy, dx);
+            this.isMoving = true;
 
             // Move
             const nextX = this.x + dx * this.speed * dt;
@@ -38,6 +47,8 @@ class Player {
             // Collision Check (Check X and Y separately for sliding)
             if (this.checkCollision(nextX, this.y)) this.x = nextX;
             if (this.checkCollision(this.x, nextY)) this.y = nextY;
+        } else {
+            this.isMoving = false;
         }
 
         // Interaction Check
@@ -97,7 +108,7 @@ class Player {
 
         if (target) {
             if (target.type === 'system') {
-                this.game.ui.showInteractionPrompt(`Press E to access ${target.data.name}`);
+                this.game.ui.showInteractionPrompt(`Presiona E para acceder a ${target.data.name}`);
                 if (this.game.input.isDown('KeyE')) {
                     if (!this.game.ui.isConsoleOpen) {
                         this.game.ui.renderSystemConsole(target.data);
@@ -105,7 +116,7 @@ class Player {
                     }
                 }
             } else if (target.type === 'slot') {
-                this.game.ui.showInteractionPrompt(`Press E to Install Module`);
+                this.game.ui.showInteractionPrompt(`Presiona E para instalar módulo`);
                 if (this.game.input.isDown('KeyE')) {
                     if (!this.game.ui.isConsoleOpen) {
                         this.game.ui.renderInstallMenu(target.x, target.y);
@@ -113,7 +124,7 @@ class Player {
                     }
                 }
             } else if (target.type === 'door') {
-                this.game.ui.showInteractionPrompt(`Press E to ${target.state === 4 ? 'Open' : 'Close'} Door`);
+                this.game.ui.showInteractionPrompt(`Presiona E para ${target.state === 4 ? 'Abrir' : 'Cerrar'} puerta`);
                 if (this.game.input.isDown('KeyE')) {
                     this.game.state.toggleDoor(target.x, target.y);
                     this.game.input.keys['KeyE'] = false;
@@ -128,27 +139,25 @@ class Player {
         const renderer = this.game.sceneManager.shipRenderer;
         if (!renderer) return true;
 
-        // Define bounding box corners (with a small margin to avoid getting stuck)
+        // Define bounding box corners
         const margin = 2;
         const points = [
-            { x: x + margin, y: y + margin }, // Top-Left
-            { x: x + this.size - margin, y: y + margin }, // Top-Right
-            { x: x + margin, y: y + this.size - margin }, // Bottom-Left
-            { x: x + this.size - margin, y: y + this.size - margin } // Bottom-Right
+            { x: x + margin, y: y + margin },
+            { x: x + this.size - margin, y: y + margin },
+            { x: x + margin, y: y + this.size - margin },
+            { x: x + this.size - margin, y: y + this.size - margin }
         ];
 
         for (let p of points) {
             const gridX = Math.floor(p.x / renderer.tileSize);
             const gridY = Math.floor(p.y / renderer.tileSize);
 
-            // Check bounds
             const layout = this.game.state.ship.layout;
             if (gridY < 0 || gridY >= layout.length || gridX < 0 || gridX >= layout[0].length) {
                 return false;
             }
 
             const tile = layout[gridY][gridX];
-            // 0 = Void, 1 = Wall, 4 = Closed Door. Collision if tile is 0, 1 or 4.
             if (tile === 1 || tile === 0 || tile === 4) return false;
         }
         return true;
@@ -156,19 +165,37 @@ class Player {
 
     render(ctx) {
         const renderer = this.game.sceneManager.shipRenderer;
-        const drawX = this.x + renderer.offsetX;
-        const drawY = this.y + renderer.offsetY;
+        if (!renderer) return;
 
-        // Draw Player
-        ctx.fillStyle = this.color;
+        const drawX = this.x + renderer.offsetX + this.size / 2;
+        const drawY = this.y + renderer.offsetY + this.size / 2;
+        const time = Date.now() / 1000;
+
+        ctx.save();
+        ctx.translate(drawX, drawY);
+        ctx.rotate(this.facingAngle || 0);
+
+        // Render Captain using CrewUIRenderer high-detail character engine
+        if (renderer.crewUIRenderer) {
+            renderer.crewUIRenderer.renderCharacter(ctx, this, time, true);
+        }
+
+        ctx.restore();
+
+        // Captain Badge Overlay in screen space
+        ctx.save();
+        ctx.font = '700 9px "Rajdhani", var(--font-tech, monospace)';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(3, 7, 18, 0.85)';
+        ctx.strokeStyle = '#00f0ff';
+        ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.arc(drawX + this.size / 2, drawY + this.size / 2, this.size / 2, 0, Math.PI * 2);
+        ctx.rect(drawX - 22, drawY - 22, 44, 12);
         ctx.fill();
-
-        // Glow
-        ctx.shadowColor = this.color;
-        ctx.shadowBlur = 10;
         ctx.stroke();
-        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#00f0ff';
+        ctx.fillText('CAPITÁN', drawX, drawY - 13);
+        ctx.restore();
     }
 }

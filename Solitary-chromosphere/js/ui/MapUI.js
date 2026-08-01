@@ -1,4 +1,4 @@
-class MapUI {
+﻿class MapUI {
     constructor(game, root, uiManager) {
         this.game = game;
         this.root = root;
@@ -13,10 +13,10 @@ class MapUI {
             <div style="position: relative; width: 100%; height: 500px; background: rgba(0, 10, 20, 0.9); border: 1px solid var(--primary); border-radius: 4px; overflow: hidden;">
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 255, 255, 0.05) 2px); pointer-events: none;"></div>
                 <div style="position: absolute; top: 20px; left: 20px; color: var(--primary); font-family: var(--font-tech); pointer-events: none;">
-                    <h2>GALAXY MAP</h2>
-                    <p>Current System: ${currentSystem.name}</p>
-                    <p>Jump Range: ${state.ship.jumpRange} LY</p>
-                    <p style="font-size: 0.75rem; color: #aaa; margin-top: 5px;">💡 Drag to pan the map</p>
+                    <h2>MAPA GALÁCTICO</h2>
+                    <p>Sistema Actual: ${currentSystem.name}</p>
+                    <p>Alcance FTL: ${state.ship.jumpRange} LY</p>
+                    <p style="font-size: 0.75rem; color: #aaa; margin-top: 5px;">💡 Arrastra para mover el mapa</p>
                 </div>
                 
                 <div id="galaxy-grid" style="position: absolute; top: 50%; left: 50%; width: 2000px; height: 2000px; transform: translate(-50%, -50%); pointer-events: auto;">
@@ -51,11 +51,11 @@ class MapUI {
                 </div>
             </div>
             <div id="system-info-panel" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); min-height: 100px;">
-                <p style="color: #aaa; font-style: italic;">Select a system to view details.</p>
+                <p style="color: #aaa; font-style: italic;">Selecciona un sistema estelar para ver detalles.</p>
             </div>
         `;
 
-        this.uiManager.createModal('NAVIGATION', content);
+        this.uiManager.createModal('NAVEGACIÓN FTL', content);
 
         // Add event listeners to stars
         setTimeout(() => {
@@ -113,7 +113,7 @@ class MapUI {
                             ${inRange ? '✓ In Jump Range' : '✗ Out of Range'}
                         </p>
                         ${isCurrent ? '<p style="color: var(--primary); font-weight: bold;">◉ Current Location</p>' : ''}
-                        ${isCurrent ? `<button id="view-system-btn" style="margin-top: 10px;">VIEW SYSTEM MAP</button>` : ''}
+                        ${isCurrent ? `<button id="view-system-btn" style="margin-top: 10px;">VIEW MAPA DEL SISTEMA</button>` : ''}
                         ${inRange && !isCurrent ? `<button id="jump-btn" style="margin-top: 10px;">INITIATE JUMP</button>` : ''}
                     `;
 
@@ -163,7 +163,7 @@ class MapUI {
                 <div style="position: absolute; top: 20px; left: 20px; color: var(--primary); font-family: var(--font-tech); z-index: 10; pointer-events: none;">
                     <h2>${system.name.toUpperCase()} SYSTEM</h2>
                     <p>Fuel: ${state.ship.fuel}/${state.ship.maxFuel}</p>
-                    <p style="font-size: 0.75rem; color: #aaa; margin-top: 5px;">💡 Drag to pan the map</p>
+                    <p style="font-size: 0.75rem; color: #aaa; margin-top: 5px;">💡 Arrastra para mover el mapa</p>
                 </div>
 
                 <!-- Planetary System Container (for panning) -->
@@ -214,7 +214,7 @@ class MapUI {
             </div>
         `;
 
-        this.uiManager.createModal('SYSTEM MAP', content);
+        this.uiManager.createModal('MAPA DEL SISTEMA', content);
 
         setTimeout(() => {
             const planets = document.querySelectorAll('.planet-node');
@@ -275,7 +275,7 @@ class MapUI {
                                     Fuel Cost: ${fuelCost.toFixed(1)} units
                                 </p>
                                 <button id="travel-btn" style="margin-top: 10px;" ${state.ship.fuel < fuelCost ? 'disabled' : ''}>
-                                    ${state.ship.fuel >= fuelCost ? 'TRAVEL' : 'INSUFFICIENT FUEL'}
+                                    ${state.ship.fuel >= fuelCost ? 'TRAVEL' : 'COMBUSTIBLE INSUFICIENTE'}
                                 </button>
                             </div>
                         ` : ''}

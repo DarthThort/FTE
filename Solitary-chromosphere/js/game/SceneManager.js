@@ -30,14 +30,13 @@ class SceneManager {
                 this.game.state.hazardUI.update(dt, this.player);
             }
 
-
             this.shipRenderer.computeVisibility(this.player);
             this.handleCrewInteraction();
         } else if (this.currentScene === 'COMBAT') {
             // UPDATE CREW AI IN COMBAT TOO!
-				this.game.state.updateCrewAI();
-			
-			// Combat scene update
+            this.game.state.updateCrewAI();
+            
+            // Combat scene update
             if (this.game.state.combatManager) {
                 this.game.state.combatManager.tick(dt);
             }
@@ -48,18 +47,22 @@ class SceneManager {
         const mouse = this.game.input.getMousePosition();
         const crewUnderMouse = this.getCrewAtPosition(mouse.x, mouse.y);
 
+        // Update hover tooltip
         if (crewUnderMouse) {
             this.hoveredCrew = crewUnderMouse;
             this.showCrewTooltip(crewUnderMouse, mouse.x, mouse.y);
-
-            if (this.game.input.wasClicked()) {
-                if (this.game.ui) {
-                    this.game.ui.showCrewDetail(crewUnderMouse.id);
-                }
-            }
         } else {
             this.hoveredCrew = null;
             this.hideCrewTooltip();
+        }
+
+        // Consume click position and ONLY open details if click occurred ON crew
+        const clickPos = this.game.input.getClickPosition();
+        if (clickPos) {
+            const crewAtClick = this.getCrewAtPosition(clickPos.x, clickPos.y);
+            if (crewAtClick && this.game.ui) {
+                this.game.ui.showCrewDetail(crewAtClick.id);
+            }
         }
     }
 
@@ -75,7 +78,7 @@ class SceneManager {
             const dy = canvasY - crew.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance <= 12) {
+            if (distance <= 14) {
                 return crew;
             }
         }
@@ -90,31 +93,31 @@ class SceneManager {
         const skillLevel = crew.skills[primarySkill]?.level || 1;
 
         const assignedSystem = this.game.state.ship.systems.find(s => s.assignedCrew?.id === crew.id);
-        const assignment = assignedSystem ? assignedSystem.name : 'Unassigned';
+        const assignment = assignedSystem ? assignedSystem.name : 'Sin asignar';
 
         this.tooltip.innerHTML = `
             <div style="font-family: 'Rajdhani', sans-serif; color: var(--text);">
                 <div style="font-size: 0.9rem; font-weight: 600; color: var(--secondary); margin-bottom: 6px;">${crew.name}</div>
-                <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px;">${crew.species} · ${crew.role}</div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px;">${crew.species} • ${crew.role}</div>
                 <div style="display: flex; gap: 12px; margin-top: 8px; font-size: 0.7rem;">
                     <div>
-                        <div style="color: var(--text-dim);">Health</div>
+                        <div style="color: var(--text-dim);">Salud</div>
                         <div style="color: var(--success);">${crew.health}/${crew.maxHealth}</div>
                     </div>
                     <div>
-                        <div style="color: var(--text-dim);">Morale</div>
+                        <div style="color: var(--text-dim);">Moral</div>
                         <div style="color: var(--warning);">${crew.morale}%</div>
                     </div>
                     <div>
                         <div style="color: var(--text-dim);">${primarySkill}</div>
-                        <div style="color: var(--secondary);">Lv ${skillLevel}</div>
+                        <div style="color: var(--secondary);">Nv ${skillLevel}</div>
                     </div>
                 </div>
                 <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; color: var(--text-dim);">
                     ${assignment}
                 </div>
                 <div style="margin-top: 4px; font-size: 0.65rem; color: rgba(0,240,255,0.6); font-style: italic;">
-                    Click to view details
+                    Haz clic para ver detalles
                 </div>
             </div>
         `;
@@ -137,12 +140,10 @@ class SceneManager {
             this.shipRenderer.render(ctx, deltaTime);
             this.player.render(ctx);
         } else if (this.currentScene === 'PORT') {
-            ctx.fillStyle = '#1a1a2e';
+            ctx.fillStyle = '#030712';
             ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         } else if (this.currentScene === 'COMBAT') {
-            // Render ship (no player control during combat)
             this.shipRenderer.render(ctx, deltaTime);
-            // Combat UI is rendered via UIManager
         }
     }
 }

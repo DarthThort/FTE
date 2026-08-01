@@ -1,4 +1,4 @@
-class ShipRenderer {
+﻿class ShipRenderer {
     constructor(gameEngine) {
         this.game = gameEngine;
         this.tileSize = 32;
@@ -328,148 +328,251 @@ class ShipRenderer {
      * Render a distant Stanford Torus space station
      * Only renders if the current planet has a station
      */
+            /**
+     * Initialize Three.js 3D WebGL renderer for the Stanford Torus space station
+     */
+    
+
+        /**
+     * Generate procedural metallic panel texture for 3D station hull
+     */
+    _generateStationHullTexture() {
+        const c = document.createElement('canvas');
+        c.width = 1024;
+        c.height = 512;
+        const ctx = c.getContext('2d');
+
+        // Base metallic plating background
+        ctx.fillStyle = '#2c394b';
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        // Panel seams grid
+        ctx.strokeStyle = '#151d28';
+        ctx.lineWidth = 3;
+        const cols = 32;
+        const rows = 16;
+        const colW = c.width / cols;
+        const rowH = c.height / rows;
+
+        for (let i = 0; i < cols; i++) {
+            for (let j = 0; j < rows; j++) {
+                // Randomize panel shading for realistic armor plating
+                if ((i + j) % 2 === 0) {
+                    ctx.fillStyle = '#37475d';
+                    ctx.fillRect(i * colW + 2, j * rowH + 2, colW - 4, rowH - 4);
+                } else if ((i + j) % 5 === 0) {
+                    ctx.fillStyle = '#202b3b';
+                    ctx.fillRect(i * colW + 2, j * rowH + 2, colW - 4, rowH - 4);
+                }
+
+                ctx.strokeRect(i * colW, j * rowH, colW, rowH);
+            }
+        }
+
+        // Panel rivet dots
+        ctx.fillStyle = '#607490';
+        for (let i = 0; i < cols; i++) {
+            for (let j = 0; j < rows; j++) {
+                const x = i * colW;
+                const y = j * rowH;
+                ctx.fillRect(x + 4, y + 4, 2, 2);
+                ctx.fillRect(x + colW - 6, y + 4, 2, 2);
+            }
+        }
+
+        // Illuminated Habitat Windows band (warm yellow + cyan)
+        const winY1 = c.height * 0.38;
+        const winY2 = c.height * 0.58;
+        for (let i = 0; i < cols * 2; i++) {
+            const wx = (i / (cols * 2)) * c.width + 4;
+            ctx.fillStyle = i % 4 === 0 ? '#00f0ff' : '#ffe088';
+            ctx.fillRect(wx, winY1, colW * 0.35, rowH * 0.45);
+            ctx.fillRect(wx, winY2, colW * 0.35, rowH * 0.45);
+        }
+
+        return c;
+    }
+
+    /**
+     * Initialize Three.js 3D WebGL renderer for the Stanford Torus space station
+     */
+    initStationThreeJS() {
+        if (!window.THREE || this.station3D) return;
+
+        try {
+            const width = 450;
+            const height = 400;
+
+            const offscreen = document.createElement('canvas');
+            offscreen.width = width;
+            offscreen.height = height;
+
+            const renderer = new THREE.WebGLRenderer({
+                canvas: offscreen,
+                alpha: true,
+                antialias: true
+            });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(1);
+            if (THREE.ACESFilmicToneMapping) {
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1.3;
+            }
+
+            const scene = new THREE.Scene();
+
+            // Camera positioned further back to avoid clipping and fit perfectly
+            const camera = new THREE.PerspectiveCamera(35, width / height, 1, 1000);
+            camera.position.set(0, 120, 380);
+            camera.lookAt(0, 0, 0);
+
+            // Lighting (Directional Sunlight + Ambient + Point light)
+            const sun = new THREE.DirectionalLight(0xffffff, 2.8);
+            sun.position.set(-250, 200, 180);
+            scene.add(sun);
+
+            const ambient = new THREE.AmbientLight(0x28384e, 0.6);
+            scene.add(ambient);
+
+            const cyanGlow = new THREE.PointLight(0x00f0ff, 2.5, 180);
+            cyanGlow.position.set(0, 25, 0);
+            scene.add(cyanGlow);
+
+            const stationGroup = new THREE.Group();
+            stationGroup.rotation.x = Math.PI / 3.4; // Tilted angle matching reference photo
+            stationGroup.rotation.z = -0.15;
+
+            // Generate procedural hull texture
+            const hullCanvas = this._generateStationHullTexture();
+            const hullTex = new THREE.CanvasTexture(hullCanvas);
+            hullTex.wrapS = THREE.RepeatWrapping;
+            hullTex.wrapT = THREE.RepeatWrapping;
+            hullTex.repeat.set(4, 1);
+
+            // 1. Outer Habitat Torus Ring (Smaller radius: 68px)
+            const torusGeo = new THREE.TorusGeometry(68, 12, 24, 64);
+            const torusMat = new THREE.MeshStandardMaterial({
+                map: hullTex,
+                bumpMap: hullTex,
+                bumpScale: 0.15,
+                metalness: 0.8,
+                roughness: 0.3
+            });
+            const torusRing = new THREE.Mesh(torusGeo, torusMat);
+            stationGroup.add(torusRing);
+
+            // 2. Inner Lattice Truss Ring
+            const trussGeo = new THREE.TorusGeometry(46, 2.5, 12, 48);
+            const trussMat = new THREE.MeshStandardMaterial({
+                color: 0x788da6,
+                metalness: 0.9,
+                roughness: 0.2
+            });
+            const trussRing = new THREE.Mesh(trussGeo, trussMat);
+            stationGroup.add(trussRing);
+
+            // 3. Central Command Cylinder
+            const hubGeo = new THREE.CylinderGeometry(15, 15, 36, 32);
+            const hubMat = new THREE.MeshStandardMaterial({
+                map: hullTex,
+                metalness: 0.75,
+                roughness: 0.35
+            });
+            const hub = new THREE.Mesh(hubGeo, hubMat);
+            hub.rotation.x = Math.PI / 2;
+            stationGroup.add(hub);
+
+            // Hub Top Cap
+            const capGeo = new THREE.CylinderGeometry(12, 15, 4, 32);
+            const capMat = new THREE.MeshStandardMaterial({ color: 0x90a4bc, metalness: 0.9, roughness: 0.2 });
+            const cap = new THREE.Mesh(capGeo, capMat);
+            cap.rotation.x = Math.PI / 2;
+            cap.position.z = 18;
+            stationGroup.add(cap);
+
+            // Docking Bay Glow Aperture
+            const bayGeo = new THREE.CircleGeometry(6, 32);
+            const bayMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, side: THREE.DoubleSide });
+            const bay = new THREE.Mesh(bayGeo, bayMat);
+            bay.position.z = 20.2;
+            stationGroup.add(bay);
+
+            // 4. Structural Spokes (Connecting hub to torus)
+            const numSpokes = 4;
+            const spokeMat = new THREE.MeshStandardMaterial({ color: 0x3a4859, metalness: 0.8, roughness: 0.3 });
+            for (let i = 0; i < numSpokes; i++) {
+                const angle = (i / numSpokes) * Math.PI * 2;
+                const spoke = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.5, 105, 16), spokeMat);
+                spoke.rotation.z = angle + Math.PI / 2;
+                stationGroup.add(spoke);
+            }
+
+            scene.add(stationGroup);
+
+            this.station3D = {
+                renderer,
+                scene,
+                camera,
+                stationGroup,
+                canvas: offscreen,
+                width,
+                height
+            };
+        } catch (e) {
+            console.warn('[ShipRenderer] Failed to init 3D station renderer:', e);
+        }
+    }
+
     renderStation(ctx) {
         const currentPlanet = this.game.state.currentPlanet;
         if (!currentPlanet || !currentPlanet.hasStation) {
-            return; // No station to render
+            return;
         }
 
-        ctx.save();
+        // Init 3D WebGL renderer if Three.js is available
+        if (window.THREE && !this.station3D) {
+            this.initStationThreeJS();
+        }
 
-        // Position in upper right corner (moved left to avoid UI overlap)
-        const stationX = ctx.canvas.width - 400;
+        const stationX = ctx.canvas.width - 560;
         const stationY = 150;
-        const time = Date.now() / 1000;
 
-        // Stanford Torus dimensions
-        const outerRadius = 100;
-        const innerRadius = 60;
-        const thickness = outerRadius - innerRadius;
+        if (this.station3D) {
+            // Render 3D WebGL scene offscreen
+            this.station3D.stationGroup.rotation.z += 0.0025;
+            this.station3D.renderer.render(this.station3D.scene, this.station3D.camera);
 
-        // Draw outer ring with gradient
-        const outerGradient = ctx.createRadialGradient(
-            stationX, stationY, innerRadius,
-            stationX, stationY, outerRadius
-        );
-        outerGradient.addColorStop(0, '#2a2a3e');
-        outerGradient.addColorStop(0.5, '#4a4a6e');
-        outerGradient.addColorStop(1, '#1a1a2e');
-
-        // Draw main torus ring
-        ctx.strokeStyle = outerGradient;
-        ctx.lineWidth = thickness;
-        ctx.beginPath();
-        ctx.arc(stationX, stationY, (outerRadius + innerRadius) / 2, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Draw inner shadow for depth
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
-        ctx.lineWidth = thickness * 0.3;
-        ctx.beginPath();
-        ctx.arc(stationX, stationY, innerRadius + thickness * 0.15, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Draw structural spokes (connecting hub to ring)
-        const numSpokes = 8;
-        const hubRadius = 15;
-        ctx.strokeStyle = '#556677';
-        ctx.lineWidth = 2;
-        for (let i = 0; i < numSpokes; i++) {
-            const angle = (i / numSpokes) * Math.PI * 2;
-            const x1 = stationX + Math.cos(angle) * hubRadius;
-            const y1 = stationY + Math.sin(angle) * hubRadius;
-            const x2 = stationX + Math.cos(angle) * innerRadius;
-            const y2 = stationY + Math.sin(angle) * innerRadius;
-
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
+            // Draw WebGL canvas frame into 2D game canvas nicely scaled (no clipping)
+            ctx.drawImage(
+                this.station3D.canvas,
+                stationX - 180,
+                stationY - 140,
+                360,
+                300
+            );
         }
 
-        // Draw central hub
-        const hubGradient = ctx.createRadialGradient(
-            stationX, stationY, 0,
-            stationX, stationY, hubRadius
-        );
-        hubGradient.addColorStop(0, '#5a5a7e');
-        hubGradient.addColorStop(1, '#2a2a4e');
-
-        ctx.fillStyle = hubGradient;
-        ctx.beginPath();
-        ctx.arc(stationX, stationY, hubRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Add detail lines on the ring (segments)
-        const numSegments = 16;
-        ctx.strokeStyle = '#667788';
-        ctx.lineWidth = 1.5;
-        for (let i = 0; i < numSegments; i++) {
-            const angle = (i / numSegments) * Math.PI * 2;
-            const x1 = stationX + Math.cos(angle) * innerRadius;
-            const y1 = stationY + Math.sin(angle) * innerRadius;
-            const x2 = stationX + Math.cos(angle) * outerRadius;
-            const y2 = stationY + Math.sin(angle) * outerRadius;
-
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.stroke();
-        }
-
-        // Add illuminated windows on the ring
-        ctx.fillStyle = '#ffcc66';
-        const numWindows = 40;
-        for (let i = 0; i < numWindows; i++) {
-            const angle = (i / numWindows) * Math.PI * 2;
-            const windowRadius = (outerRadius + innerRadius) / 2;
-            const windowX = stationX + Math.cos(angle) * windowRadius;
-            const windowY = stationY + Math.sin(angle) * windowRadius;
-
-            // Some windows blink
-            const blink = Math.sin(time * 2 + i * 0.5) > 0.5 ? 1.0 : 0.4;
-            ctx.globalAlpha = blink;
-
-            ctx.beginPath();
-            ctx.arc(windowX, windowY, 1.5, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1.0;
-
-        // Add navigation lights
-        ctx.shadowBlur = 15;
-
-        // Red light (port side - left)
-        ctx.shadowColor = '#ff0000';
-        ctx.fillStyle = '#ff0000';
-        ctx.beginPath();
-        ctx.arc(stationX - outerRadius, stationY, 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Green light (starboard side - right)
-        ctx.shadowColor = '#00ff00';
-        ctx.fillStyle = '#00ff00';
-        ctx.beginPath();
-        ctx.arc(stationX + outerRadius, stationY, 4, 0, Math.PI * 2);
-        ctx.fill();
-
-        // White light (top)
-        ctx.shadowColor = '#ffffff';
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(stationX, stationY - outerRadius, 3, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.shadowBlur = 0;
-
-        // Add station name label
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.font = '14px "Rajdhani", sans-serif';
+        // Technical Station Label (Spanish)
+        const labelY = stationY + 115;
+        ctx.save();
+        ctx.font = '700 13px var(--font-tech, monospace)';
         ctx.textAlign = 'center';
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-        ctx.shadowBlur = 4;
-        ctx.fillText(currentPlanet.name + ' Station', stationX, stationY + outerRadius + 25);
-        ctx.shadowBlur = 0;
+
+        const text = 'ESTACION ' + (currentPlanet && currentPlanet.name ? currentPlanet.name.toUpperCase() : 'ESPACIAL') + ' [OPERATIVA]';
+        const textWidth = ctx.measureText(text).width;
+
+        ctx.fillStyle = 'rgba(3, 7, 18, 0.85)';
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.rect(stationX - textWidth / 2 - 12, labelY - 14, textWidth + 24, 22);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#00f0ff';
+        ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
+        ctx.shadowBlur = 6;
+        ctx.fillText(text, stationX, labelY);
 
         ctx.restore();
     }

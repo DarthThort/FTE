@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ModuleDefinitions.js
  * 
  * Defines all purchasable ship modules with stats, prices, and tier information.
@@ -22,7 +22,7 @@ const MODULES = {
 
     'laser_mk1': {
         id: 'laser_mk1',
-        name: 'Laser Cannon Mk1',
+        name: 'Cañón Láser Mk1',
         category: MODULE_CATEGORIES.WEAPON,
         tier: 1,
         stats: {
@@ -38,12 +38,12 @@ const MODULES = {
         },
         price: 500,
         scrapCost: 0,
-        description: 'Standard energy weapon with balanced damage output'
+        description: 'Arma de energía estándar con daño equilibrado'
     },
 
     'ion_cannon': {
         id: 'ion_cannon',
-        name: 'Ion Cannon',
+        name: 'Cañón Iónico',
         category: MODULE_CATEGORIES.WEAPON,
         tier: 2,
         stats: {
@@ -65,7 +65,7 @@ const MODULES = {
 
     'railgun': {
         id: 'railgun',
-        name: 'Railgun',
+        name: 'Cañón electromagnético',
         category: MODULE_CATEGORIES.WEAPON,
         tier: 2,
         stats: {
@@ -84,7 +84,7 @@ const MODULES = {
 
     'plasma_cannon': {
         id: 'plasma_cannon',
-        name: 'Plasma Cannon',
+        name: 'Cañón de Plasma',
         category: MODULE_CATEGORIES.WEAPON,
         tier: 3,
         stats: {
@@ -104,7 +104,7 @@ const MODULES = {
 
     'pulse_laser': {
         id: 'pulse_laser',
-        name: 'Pulse Laser',
+        name: 'Láser de Pulsos',
         category: MODULE_CATEGORIES.WEAPON,
         tier: 2,
         stats: {
@@ -259,7 +259,7 @@ const MODULES = {
 
     'jumpdrive_basic': {
         id: 'jumpdrive_basic',
-        name: 'Basic Jump Drive',
+        name: 'Motor FTL Básico',
         category: MODULE_CATEGORIES.JUMP_DRIVE,
         tier: 1,
         stats: {
@@ -362,7 +362,7 @@ const MODULES = {
 
     'reactor_experimental': {
         id: 'reactor_experimental',
-        name: 'Fusion Reactor',
+        name: 'Reactor de Fusión',
         category: MODULE_CATEGORIES.REACTOR,
         tier: 4,
         stats: {
@@ -393,7 +393,7 @@ const MODULES = {
 
     'bridge_improved': {
         id: 'bridge_improved',
-        name: 'Command Bridge',
+        name: 'Puente de Mando',
         category: MODULE_CATEGORIES.BRIDGE,
         tier: 2,
         stats: {

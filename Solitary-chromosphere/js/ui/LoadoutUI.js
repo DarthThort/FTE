@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LoadoutUI.js
  * 
  * Simple interface for managing ship module loadout
@@ -47,18 +47,18 @@ class LoadoutUI {
                     margin: 0 0 25px 0;
                     font-size: 2rem;
                     text-align: center;
-                ">⚙️ SHIP LOADOUT</h2>
+                ">⚙️ EQUIPAMIENTO DE LA NAVE</h2>
                 
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px;">
                     <!-- Hardpoints Column -->
                     <div>
-                        <h3 style="color: var(--secondary); margin-bottom: 15px;">EQUIPPED MODULES</h3>
+                        <h3 style="color: var(--secondary); margin-bottom: 15px;">MÓDULOS EQUIPADOS</h3>
                         ${this.renderHardpoints()}
                     </div>
                     
                     <!-- Inventory Column -->
                     <div>
-                        <h3 style="color: var(--success); margin-bottom: 15px;">INVENTORY</h3>
+                        <h3 style="color: var(--success); margin-bottom: 15px;">INVENTARIO DE MÓDULOS</h3>
                         ${this.renderInventory()}
                     </div>
                 </div>
@@ -73,7 +73,7 @@ class LoadoutUI {
                         border-radius: 8px;
                         cursor: pointer;
                         transition: all 0.3s;
-                    ">CLOSE</button>
+                    ">CERRAR</button>
                 </div>
             </div>
         `;

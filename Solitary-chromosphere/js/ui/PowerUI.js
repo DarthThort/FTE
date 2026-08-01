@@ -1,4 +1,4 @@
-class PowerUI {
+﻿class PowerUI {
     constructor(game, uiManager) {
         this.game = game;
         this.uiManager = uiManager;
@@ -31,12 +31,12 @@ class PowerUI {
                     cursor: move;
                     user-select: none;
                 ">
-                    ⚡ REACTOR POWER
+                    ⚡ POTENCIA DEL REACTOR
                 </h3>
                 
                 <div style="margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span style="color: #aaa;">Available:</span>
+                        <span style="color: #aaa;">Disponible:</span>
                         <span style="color: var(--primary); font-weight: bold;">${powerDist.availablePower}/${powerDist.maxPower}</span>
                     </div>
                     <div style="display: flex; gap: 4px;">
@@ -45,12 +45,12 @@ class PowerUI {
                 </div>
 
                 <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                    <h4 style="margin: 0 0 10px 0; color: var(--secondary); font-size: 0.9rem;">SYSTEMS</h4>
+                    <h4 style="margin: 0 0 10px 0; color: var(--secondary); font-size: 0.9rem;">SISTEMAS</h4>
                     ${state.ship.systems.map(sys => this.renderSystemPowerRow(sys)).join('')}
                 </div>
 
                 <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 15px;">
-                    <h4 style="margin: 0 0 10px 0; color: var(--warning); font-size: 0.9rem;">SHIELDS</h4>
+                    <h4 style="margin: 0 0 10px 0; color: var(--warning); font-size: 0.9rem;">ESCUDOS</h4>
                     ${this.renderShieldStatus()}
                 </div>
             </div>
@@ -146,7 +146,7 @@ class PowerUI {
                 
                 ${status.effectiveness < 1.0 ? `
                     <div style="margin-top: 4px; font-size: 0.7rem; color: #ffaa00;">
-                        Efficiency: ${Math.round(status.effectiveness * 100)}%
+                        Eficiencia: ${Math.round(status.effectiveness * 100)}%
                     </div>
                 ` : ''}
             </div>
@@ -174,8 +174,8 @@ class PowerUI {
         const shields = this.game.state.ship.shields;
         let layers = '';
 
-        for (let i = 0; i < shields.maxLayers; i++) {
-            const active = i < shields.currentLayers;
+        for (let i = 0; i < shields.maxCapas; i++) {
+            const active = i < shields.currentCapas;
             layers += `<div style="
                 width: 30px;
                 height: 30px;
@@ -190,12 +190,12 @@ class PowerUI {
             <div style="display: flex; gap: 8px; align-items: center;">
                 ${layers}
                 <span style="color: #aaa; font-size: 0.85rem; margin-left: 8px;">
-                    ${shields.currentLayers}/${shields.maxLayers} Layers
+                    ${shields.currentCapas}/${shields.maxCapas} Capas
                 </span>
             </div>
             ${shields.rechargeTimer > 0 ? `
                 <div style="margin-top: 8px; font-size: 0.75rem; color: var(--secondary);">
-                    Recharging in ${shields.rechargeTimer.toFixed(1)}s
+                    Recargando en ${shields.rechargeTimer.toFixed(1)}s
                 </div>
             ` : ''}
         `;
@@ -312,7 +312,7 @@ class PowerUI {
                     cursor: move;
                     user-select: none;
                 ">
-                    🚪 DOOR CONTROLS
+                    🚪 CONTROL DE PUERTAS
                 </h3>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -326,7 +326,7 @@ class PowerUI {
                         cursor: pointer;
                         font-family: var(--font-tech);
                     ">
-                        ▶ OPEN ALL DOORS
+                        ▶ ABRIR TODAS LAS PUERTAS
                     </button>
                     <button id="btn-close-all-doors" style="
                         padding: 10px; 
@@ -338,12 +338,12 @@ class PowerUI {
                         cursor: pointer;
                         font-family: var(--font-tech);
                     ">
-                        ◀ CLOSE ALL DOORS
+                        ◀ CERRAR TODAS LAS PUERTAS
                     </button>
                 </div>
                 
                 <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.7rem; color: #888; text-align: center;">
-                    Controls all ship doors
+                    Controla todas las puertas de la nave
                 </div>
             </div>
         `;

@@ -1,132 +1,106 @@
 /**
- * EnemyShipOverlay - Minimal enemy ship status display
- * 
- * Shows in top-right corner:
- * - Enemy ship sprite/miniature
- * - Hull bar
- * - Shield layers
- * - Name
+ * EnemyShipOverlay - Sleek status overlay for the targeted hostile ship
  */
-
 class EnemyShipOverlay {
     constructor(game) {
         this.game = game;
         this.enemy = null;
     }
 
-    /**
-     * Initialize with enemy ship
-     */
     initialize(enemy) {
         this.enemy = enemy;
     }
 
-    /**
-     * Render enemy ship overlay
-     */
     render() {
         if (!this.enemy) return '';
 
-        const hullPercent = (this.enemy.hull / this.enemy.maxHull) * 100;
+        const hullPercent = Math.max(0, Math.min(100, (this.enemy.hull / this.enemy.maxHull) * 100));
+        const shieldPercent = this.enemy.maxShields > 0 ? (this.enemy.shields / this.enemy.maxShields) * 100 : 0;
 
         return `
-            <div id="enemy-ship-overlay" style="
+            <div id="enemy-ship-overlay" class="enemy-overlay-panel" style="
                 position: fixed;
-                top: 20px;
-                left: 280px;
-                background: rgba(10, 10, 25, 0.95);
-                border: 2px solid var(--warning);
-                border-radius: 12px;
-                padding: 15px;
-                min-width: 250px;
-                z-index: 900;
-                font-family: var(--font-tech);
-                box-shadow: 0 0 20px rgba(255,0,85,0.3);
+                top: 75px;
+                right: 25px;
+                width: 310px;
+                background: rgba(10, 16, 31, 0.92);
+                border: 1px solid var(--danger);
+                border-radius: 8px;
+                padding: 14px;
+                z-index: 999;
+                box-shadow: 0 0 25px rgba(255, 51, 102, 0.35);
+                backdrop-filter: blur(8px);
             ">
-                <!-- Enemy Name -->
+                <!-- Header / Name -->
                 <div style="
-                    text-align: center;
-                    color: var(--warning);
-                    font-weight: bold;
-                    font-size: 1rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
                     margin-bottom: 10px;
-                    text-transform: uppercase;
-                    letter-spacing: 1px;
-                ">⚔️ ${this.enemy.name}</div>
+                    border-bottom: 1px solid rgba(255, 51, 102, 0.3);
+                    padding-bottom: 6px;
+                ">
+                    <span style="
+                        font-family: var(--font-header);
+                        color: var(--danger);
+                        font-size: 0.95rem;
+                        font-weight: 700;
+                        letter-spacing: 1px;
+                        text-shadow: var(--danger-glow);
+                    ">⚠️ ${this.enemy.name || 'HOSTILE VESSEL'}</span>
+                    <span style="font-size: 0.8rem; color: var(--text-dim); font-family: var(--font-header);">TARGET</span>
+                </div>
                 
-                <!-- Enemy Ship Visual -->
-                <div style="
-                    text-align: center;
-                    font-size: 3rem;
-                    margin: 10px 0;
-                    filter: drop-shadow(0 0 8px rgba(255,0,85,0.5));
-                ">🚀</div>
-                
-                <!-- Hull Bar -->
+                <!-- Hull Health Bar -->
                 <div style="margin-bottom: 10px;">
-                    <div style="
-                        display: flex;
-                        justify-content: space-between;
-                        font-size: 0.75rem;
-                        margin-bottom: 4px;
-                        color: #fff;
-                    ">
-                        <span>❤️ HULL</span>
-                        <span>${Math.round(this.enemy.hull)}/${Math.round(this.enemy.maxHull)}</span>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; font-family: var(--font-header);">
+                        <span style="color: var(--text-main);">HULL INTEGRITY</span>
+                        <span style="color: var(--danger); font-weight: 700;">${Math.round(this.enemy.hull)} / ${Math.round(this.enemy.maxHull)}</span>
                     </div>
                     <div style="
                         width: 100%;
                         height: 12px;
-                        background: rgba(255,255,255,0.1);
-                        border-radius: 6px;
+                        background: rgba(255, 255, 255, 0.08);
+                        border-radius: 4px;
                         overflow: hidden;
-                        border: 1px solid rgba(255,0,85,0.3);
+                        border: 1px solid rgba(255, 51, 102, 0.4);
                     ">
                         <div style="
                             width: ${hullPercent}%;
                             height: 100%;
-                            background: linear-gradient(90deg, #ff0055, #aa0033);
-                            transition: width 0.3s;
+                            background: linear-gradient(90deg, #ff3366, #ff0000);
+                            box-shadow: 0 0 10px rgba(255, 51, 102, 0.8);
+                            transition: width 0.3s ease;
                         "></div>
                     </div>
                 </div>
                 
-                <!-- Shield Bar and Layers -->
-                <div style="margin-bottom: 10px;">
-                    <div style="
-                        display: flex;
-                        justify-content: space-between;
-                        font-size: 0.75rem;
-                        margin-bottom: 4px;
-                        color: #fff;
-                    ">
-                        <span>🛡️ SHIELDS</span>
-                        <span>${this.enemy.shields}/${this.enemy.maxShields}</span>
+                <!-- Shields Bar & Layers -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px; font-family: var(--font-header);">
+                        <span style="color: var(--primary);">SHIELD LAYERS</span>
+                        <span style="color: var(--primary); font-weight: 700;">${this.enemy.shields} / ${this.enemy.maxShields}</span>
                     </div>
                     
-                    <!-- Shield strength bar -->
-                    ${this.enemy.maxShields > 0 ? `
+                    <div style="
+                        width: 100%;
+                        height: 10px;
+                        background: rgba(255, 255, 255, 0.08);
+                        border-radius: 4px;
+                        overflow: hidden;
+                        border: 1px solid rgba(0, 240, 255, 0.4);
+                        margin-bottom: 8px;
+                    ">
                         <div style="
-                            width: 100%;
-                            height: 8px;
-                            background: rgba(255,255,255,0.1);
-                            border-radius: 4px;
-                            overflow: hidden;
-                            border: 1px solid rgba(0,240,255,0.3);
-                            margin-bottom: 6px;
-                        ">
-                            <div style="
-                                width: ${(this.enemy.shields / this.enemy.maxShields) * 100}%;
-                                height: 100%;
-                                background: linear-gradient(90deg, #00f0ff, #0088ff);
-                                transition: width 0.3s;
-                                box-shadow: 0 0 8px rgba(0,240,255,0.6);
-                            "></div>
-                        </div>
-                    ` : ''}
+                            width: ${shieldPercent}%;
+                            height: 100%;
+                            background: linear-gradient(90deg, #00f0ff, #00aaff);
+                            box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+                            transition: width 0.3s ease;
+                        "></div>
+                    </div>
                     
-                    <!-- Shield layer hexagons -->
-                    <div style="display: flex; gap: 4px; justify-content: center;">
+                    <div style="display: flex; gap: 6px; justify-content: center;">
                         ${this.renderShieldLayers(this.enemy.shields, this.enemy.maxShields)}
                     </div>
                 </div>
@@ -134,30 +108,25 @@ class EnemyShipOverlay {
         `;
     }
 
-    /**
-     * Render shield layers
-     */
     renderShieldLayers(current, max) {
         let html = '';
         for (let i = 0; i < max; i++) {
             const active = i < current;
-            // Use hex symbols: ⬢ (active) and ⬡ (inactive)
             html += `
-                <span style="
-                    font-size: 1.4rem;
-                    color: ${active ? '#00f0ff' : 'rgba(255,255,255,0.2)'};
-                    text-shadow: ${active ? '0 0 10px #00f0ff, 0 0 20px #00f0ff' : 'none'};
-                    transition: all 0.3s;
-                    filter: ${active ? 'drop-shadow(0 0 4px #00f0ff)' : 'none'};
-                ">${active ? '⬢' : '⬡'}</span>
+                <div style="
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    border: 2px solid ${active ? '#00f0ff' : 'rgba(255, 255, 255, 0.2)'};
+                    background: ${active ? 'rgba(0, 240, 255, 0.4)' : 'transparent'};
+                    box-shadow: ${active ? '0 0 8px #00f0ff' : 'none'};
+                    transition: all 0.2s ease;
+                "></div>
             `;
         }
         return html;
     }
 
-    /**
-     * Update overlay (called each frame)
-     */
     update() {
         const overlay = document.getElementById('enemy-ship-overlay');
         if (overlay && this.enemy) {

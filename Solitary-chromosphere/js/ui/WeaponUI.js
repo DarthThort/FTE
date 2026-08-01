@@ -1,4 +1,4 @@
-class WeaponUI {
+﻿class WeaponUI {
     constructor(game, uiManager) {
         this.game = game;
         this.uiManager = uiManager;
@@ -209,7 +209,7 @@ class WeaponUI {
                         animation: pulse-fire 1s infinite;
                     "
                 >
-                    🔥 FIRE
+                    🔥 FUEGO
                 </button>
                 <style>
                     @keyframes pulse-fire {
@@ -244,7 +244,7 @@ class WeaponUI {
                     font-size: 0.75rem;
                     font-family: var(--font-tech);
                 ">
-                    COOLING
+                    ENFRIANDO
                 </div>
             `;
         }

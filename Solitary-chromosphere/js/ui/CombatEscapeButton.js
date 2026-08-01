@@ -1,6 +1,5 @@
 /**
- * CombatEscapeButton - Standalone escape button for combat
- * Created as a separate overlay with proper pointer-events
+ * CombatEscapeButton - Standalone escape button for combat FTL jump
  */
 class CombatEscapeButton {
     constructor(game) {
@@ -10,55 +9,53 @@ class CombatEscapeButton {
     }
 
     show() {
-        if (this.container) return; // Already visible
+        if (this.container) return;
 
-        // Create container
         this.container = document.createElement('div');
         this.container.id = 'combat-escape-overlay';
         this.container.style.cssText = `
             position: fixed;
-            top: 160px;
+            top: 130px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 9999999;
+            z-index: 99999;
             pointer-events: none;
         `;
 
-        // Create button
         this.button = document.createElement('button');
         this.button.id = 'escape-btn-new';
-        this.button.textContent = '🏃 ESCAPE';
+        this.button.innerHTML = '🚀 FTL ESCAPE';
         this.button.style.cssText = `
-            padding: 12px 24px;
-            font-size: 1.1rem;
-            background: rgba(255, 0, 85, 0.3);
-            border: 2px solid #ff0055;
-            color: #ff0055;
+            padding: 8px 20px;
+            font-size: 0.95rem;
+            background: rgba(255, 51, 102, 0.2);
+            border: 2px solid var(--danger);
+            color: var(--danger);
             border-radius: 6px;
             cursor: pointer;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
+            font-family: var(--font-header);
+            font-weight: 700;
             text-transform: uppercase;
-            transition: all 0.2s;
+            letter-spacing: 1.5px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: auto;
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.5);
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.4);
         `;
 
-        // Add event listener
         this.button.addEventListener('click', () => this.handleClick());
         this.button.addEventListener('mouseover', () => {
-            this.button.style.transform = 'scale(1.1)';
-            this.button.style.boxShadow = '0 0 30px rgba(255, 0, 85, 0.8)';
+            if (!this.button.disabled) {
+                this.button.style.transform = 'scale(1.05)';
+                this.button.style.boxShadow = '0 0 25px rgba(255, 51, 102, 0.7)';
+            }
         });
         this.button.addEventListener('mouseout', () => {
             this.button.style.transform = 'scale(1)';
-            this.button.style.boxShadow = '0 0 20px rgba(255, 0, 85, 0.5)';
+            this.button.style.boxShadow = '0 0 15px rgba(255, 51, 102, 0.4)';
         });
 
         this.container.appendChild(this.button);
         document.body.appendChild(this.container);
-
-        console.log('[CombatEscapeButton] Button created and visible');
     }
 
     hide() {
@@ -66,46 +63,36 @@ class CombatEscapeButton {
             this.container.remove();
             this.container = null;
             this.button = null;
-            console.log('[CombatEscapeButton] Button hidden');
         }
     }
 
     handleClick() {
-        console.log('[CombatEscapeButton] Escape button clicked!');
-
-        if (!this.game.state.combatManager) {
-            console.error('[CombatEscapeButton] No combat manager!');
-            return;
-        }
-
-        // Call attemptPlayerEscape
+        if (!this.game.state.combatManager) return;
         this.game.state.combatManager.attemptPlayerEscape();
     }
 
     update() {
-        // Update button state if combat ends
         if (!this.game.state.combatManager || !this.game.state.combatManager.active) {
             this.hide();
             return;
         }
 
-        // Update cooldown display
         if (this.button && this.game.state.combatManager) {
             const cm = this.game.state.combatManager;
             const now = Date.now() / 1000;
-            const bridgeModule = getModule(this.game.state.ship.hardpoints.bridge);
+            const bridgeModule = getModule ? getModule(this.game.state.ship.hardpoints.bridge) : null;
             const bridgeTier = bridgeModule?.tier || 1;
             const cooldown = Math.max(5, cm.escapeCooldownBase - (bridgeTier - 1));
             const timeSinceLastAttempt = now - cm.lastEscapeAttempt;
 
             if (timeSinceLastAttempt < cooldown) {
                 const remaining = Math.ceil(cooldown - timeSinceLastAttempt);
-                this.button.textContent = `🏃 ESCAPE (${remaining}s)`;
+                this.button.innerHTML = `⏳ FTL CHARGING (${remaining}s)`;
                 this.button.disabled = true;
                 this.button.style.opacity = '0.5';
                 this.button.style.cursor = 'not-allowed';
             } else {
-                this.button.textContent = '🏃 ESCAPE';
+                this.button.innerHTML = '🚀 FTL ESCAPE';
                 this.button.disabled = false;
                 this.button.style.opacity = '1';
                 this.button.style.cursor = 'pointer';

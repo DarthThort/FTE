@@ -1,4 +1,4 @@
-/**
+﻿/**
  * CrewRepairUI.js
  * HTML-based UI panel for assigning crew to repair breaches
  */
@@ -230,9 +230,13 @@ class CrewRepairUI {
             `;
 
             const skillColor = skill > 0 ? '#00ff00' : '#888';
+            const avatarUrl = window.getCrewAvatarURL ? window.getCrewAvatarURL(member) : '';
             btn.innerHTML = `
-                <span><strong>${member.name}</strong> - ${member.role}</span>
-                <span style="color: ${skillColor};">Engineering: ${skill}</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img src="${avatarUrl}" style="width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #00f0ff; background: #0f172a; flex-shrink: 0;" />
+                    <span><strong>${member.name}</strong> - ${member.role} (${member.species})</span>
+                </div>
+                <span style="color: ${skillColor}; font-weight: bold;">Ingeniería: ${skill}</span>
             `;
 
             btn.onmouseover = () => btn.style.background = 'rgba(0, 240, 255, 0.2)';

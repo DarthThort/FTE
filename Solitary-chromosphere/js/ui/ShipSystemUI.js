@@ -1,4 +1,4 @@
-class ShipSystemUI {
+﻿class ShipSystemUI {
     constructor(game, root, uiManager) {
         this.game = game;
         this.root = root;
@@ -64,15 +64,15 @@ class ShipSystemUI {
                     </div>
                 ` : `
                     <div style="background: rgba(255,255,255,0.03); border: 2px dashed #444; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-                        <div style="color: #666; font-size: 1.1rem; font-weight: bold; margin-bottom: 8px;">⚠️ NO MODULE INSTALLED</div>
-                        <div style="color: #555; font-size: 0.9rem;">This system requires a module to function</div>
+                        <div style="color: #666; font-size: 1.1rem; font-weight: bold; margin-bottom: 8px;">⚠️ SIN MÓDULO INSTALADO</div>
+                        <div style="color: #555; font-size: 0.9rem;">Este sistema requiere un módulo para funcionar</div>
                     </div>
                 `}
 
-                <!-- SYSTEM INTEGRITY -->
+                <!-- INTEGRIDAD DEL SISTEMA -->
                 <div style="margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span style="color: var(--text-dim);">SYSTEM INTEGRITY</span>
+                        <span style="color: var(--text-dim);">INTEGRIDAD DEL SISTEMA</span>
                         <span style="color: ${system.health === system.maxHealth ? 'var(--success)' : 'var(--warning)'};">${Math.round((system.health / system.maxHealth) * 100)}%</span>
                     </div>
                     <div style="background: rgba(255,255,255,0.1); height: 12px; border-radius: 6px; overflow: hidden;">
@@ -111,10 +111,10 @@ class ShipSystemUI {
                 <!-- CONTROL BUTTONS -->
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px;">
                     <button id="btn-diagnostics" style="padding: 12px; background: rgba(0,240,255,0.2); border-color: var(--primary);">
-                        📊 DIAGNOSTICS
+                        📊 DIAGNÓSTICO
                     </button>
                     <button id="btn-power" style="padding: 12px; ${system.currentPower > 0 ? 'background: rgba(0,255,100,0.2); border-color: var(--success);' : 'background: rgba(100,100,100,0.2); border-color: #666;'}">
-                        ⚡ POWER: ${system.currentPower > 0 ? 'ON' : 'OFF'}
+                        ⚡ POTENCIA: ${system.currentPower > 0 ? 'ON' : 'OFF'}
                     </button>
                 </div>
 
@@ -129,7 +129,7 @@ class ShipSystemUI {
                         </button>
                     ` : `
                         <button id="btn-install-module" style="padding: 12px; background: rgba(0,255,100,0.2); border-color: var(--success); color: var(--success);">
-                            ➕ INSTALL MODULE
+                            ➕ INSTALAR MÓDULO
                         </button>
                     `}
                 </div>
@@ -302,7 +302,7 @@ class ShipSystemUI {
             </div>
         `;
 
-        this.uiManager.createModal('INSTALL MODULE', content);
+        this.uiManager.createModal('INSTALAR MÓDULO', content);
 
         // Close on click outside
         const modalOverlay1 = document.querySelector('.modal-overlay');
@@ -375,6 +375,7 @@ class ShipSystemUI {
         const content = `
             <div style="max-width: 500px; margin: 0 auto;">
                 <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="margin-bottom: 12px;"><img src="${window.getCrewAvatarURL ? window.getCrewAvatarURL(crew) : ''}" style="width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--secondary); box-shadow: 0 0 20px rgba(0,240,255,0.4); background: #0f172a;" /></div>
                     <h2 style="color: var(--secondary); margin-bottom: 5px;">${crew.name}</h2>
                     <p style="color: #aaa; font-size: 0.9rem;">${crew.species} • ${crew.gender} • Age ${crew.age}</p>
                     <p style="color: var(--primary); font-weight: bold; font-size: 1.1rem; margin-top: 5px;">${crew.role}</p>
