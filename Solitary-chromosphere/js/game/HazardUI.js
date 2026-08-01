@@ -32,7 +32,7 @@ class HazardUI {
         this.nearestFire = this.findNearestFire(playerTile);
 
         // Handle repair action (Hold E near breach)
-        if (this.nearestBreach && this.nearestBreach.distance <= 1.5) {
+        if (this.nearestBreach && this.nearestBreach.distance <= 1.8) {
             if (player.input && player.input.isDown('KeyE')) {
                 this.startPlayerRepair(this.nearestBreach.index, player, dt);
             } else {
@@ -43,7 +43,7 @@ class HazardUI {
         }
 
         // Handle fire fighting action (Hold E near fire)
-        if (this.nearestFire && this.nearestFire.distance <= 1.5 && !this.playerRepairing) {
+        if (this.nearestFire && this.nearestFire.distance <= 1.8 && !this.playerRepairing) {
             if (player.input && player.input.isDown('KeyE')) {
                 this.startPlayerFireFighting(this.nearestFire, player, dt);
             } else {
@@ -51,6 +51,27 @@ class HazardUI {
             }
         } else {
             this.stopPlayerFireFighting();
+        }
+    }
+
+    /**
+     * Attempt repair / fire fighting action triggered by E key press in GameEngine
+     */
+    attemptRepair() {
+        if (this.nearestBreach && this.nearestBreach.distance <= 2.5) {
+            if (this.state.hazardManager) {
+                this.state.hazardManager.repairBreach(this.nearestBreach.index, 1);
+                if (this.state.hud) {
+                    this.state.hud.showNotification('Reparando brecha de casco...', 'info');
+                }
+            }
+        } else if (this.nearestFire && (this.nearestFire.distance === undefined || this.nearestFire.distance <= 2.5)) {
+            if (this.state.hazardManager) {
+                this.state.hazardManager.extinguishFire(this.nearestFire.x, this.nearestFire.y);
+                if (this.state.hud) {
+                    this.state.hud.showNotification('Incendio extinguido por la tripulación', 'success');
+                }
+            }
         }
     }
 
