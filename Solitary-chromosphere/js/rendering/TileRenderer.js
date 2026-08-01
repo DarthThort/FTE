@@ -32,9 +32,21 @@ class TileRenderer {
         const height = layout.length;
         const time = Date.now() / 1000;
 
+        // Find ship bounding box to place nav lights ONLY on outermost wingtips
+        let minX = width, maxX = 0, minY = height, maxY = 0;
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
-                // If this is a space tile (0), check if it borders ship interior tiles (non-0)
+                if (layout[y][x] !== 0) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
                 if (layout[y][x] === 0) {
                     const N = (y > 0 && layout[y - 1][x] !== 0);
                     const S = (y < height - 1 && layout[y + 1][x] !== 0);
@@ -46,11 +58,10 @@ class TileRenderer {
                     const SW = (y < height - 1 && x > 0 && layout[y + 1][x - 1] !== 0);
                     const SE = (y < height - 1 && x < width - 1 && layout[y + 1][x + 1] !== 0);
 
-                    // If at least one adjacent tile is ship interior, draw outer hull tile!
                     if (N || S || W || E || NW || NE || SW || SE) {
                         const posX = x * this.tileSize;
                         const posY = y * this.tileSize;
-                        this.drawHullTile(ctx, posX, posY, { N, S, W, E, NW, NE, SW, SE }, time, x, y, width, height);
+                        this.drawSmoothHullTile(ctx, posX, posY, { N, S, W, E, NW, NE, SW, SE }, time, x, y, width, height, minX, maxX, minY, maxY);
                     }
                 }
             }
@@ -58,100 +69,102 @@ class TileRenderer {
     }
 
     /**
-     * Draw individual modular hull armor tile
+     * Draw continuous, smooth sci-fi metallic hull armor plate
      */
-    drawHullTile(ctx, posX, posY, n, time, gridX, gridY, width, height) {
+    drawSmoothHullTile(ctx, posX, posY, n, time, gridX, gridY, width, height, minX, maxX, minY, maxY) {
         ctx.save();
 
-        // 1. Dark Armor Metal Base
-        const grad = ctx.createLinearGradient(posX, posY, posX + 32, posY + 32);
+        const p = this.tileSize; // 32
+        const h = p / 2; // 16
+
+        // Dark Metallic Gradient
+        const grad = ctx.createLinearGradient(posX, posY, posX + p, posY + p);
         grad.addColorStop(0, '#1e293b');
         grad.addColorStop(0.5, '#0f172a');
         grad.addColorStop(1, '#020617');
         ctx.fillStyle = grad;
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+        ctx.lineWidth = 1.5;
 
-        if (n.S && !n.N) { // Top border (Proa / Nose)
+        // 1. STRAIGHT BORDERS (Continuous smooth bands, no sawteeth!)
+        if (n.S && !n.N && !n.W && !n.E) { // Top Straight Armor Band (Proa)
+            ctx.fillRect(posX, posY + h, p, h);
+            ctx.strokeRect(posX, posY + h, p, h);
+            // Panel seam
+            if (gridX % 2 === 0) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                ctx.beginPath(); ctx.moveTo(posX, posY + h); ctx.lineTo(posX, posY + p); ctx.stroke();
+            }
+        } else if (n.N && !n.S && !n.W && !n.E) { // Bottom Straight Armor Band (Popa)
+            ctx.fillRect(posX, posY, p, h);
+            ctx.strokeRect(posX, posY, p, h);
+            if (gridX % 2 === 0) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                ctx.beginPath(); ctx.moveTo(posX, posY); ctx.lineTo(posX, posY + h); ctx.stroke();
+            }
+        } else if (n.E && !n.W && !n.N && !n.S) { // Left Straight Armor Band (Babor)
+            ctx.fillRect(posX + h, posY, h, p);
+            ctx.strokeRect(posX + h, posY, h, p);
+            if (gridY % 2 === 0) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                ctx.beginPath(); ctx.moveTo(posX + h, posY); ctx.lineTo(posX + p, posY); ctx.stroke();
+            }
+            // Nav light ONLY if at outermost wingtip corner
+            if (gridX === minX - 1 && (gridY === minY || gridY === maxY || gridY === Math.floor((minY + maxY) / 2))) {
+                const pulse = 0.5 + Math.sin(time * 6 + gridY) * 0.5;
+                ctx.fillStyle = `rgba(255, 0, 85, ${0.4 + pulse * 0.6})`;
+                ctx.shadowColor = '#ff0055'; ctx.shadowBlur = 8;
+                ctx.beginPath(); ctx.arc(posX + h + 4, posY + h, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+            }
+        } else if (n.W && !n.E && !n.N && !n.S) { // Right Straight Armor Band (Estribor)
+            ctx.fillRect(posX, posY, h, p);
+            ctx.strokeRect(posX, posY, h, p);
+            if (gridY % 2 === 0) {
+                ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+                ctx.beginPath(); ctx.moveTo(posX, posY); ctx.lineTo(posX + h, posY); ctx.stroke();
+            }
+            // Nav light ONLY if at outermost wingtip corner
+            if (gridX === maxX + 1 && (gridY === minY || gridY === maxY || gridY === Math.floor((minY + maxY) / 2))) {
+                const pulse = 0.5 + Math.sin(time * 6 + gridY) * 0.5;
+                ctx.fillStyle = `rgba(0, 255, 85, ${0.4 + pulse * 0.6})`;
+                ctx.shadowColor = '#00ff55'; ctx.shadowBlur = 8;
+                ctx.beginPath(); ctx.arc(posX + h - 4, posY + h, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+            }
+        } 
+        // 2. SMOOTH 45-DEGREE CORNER CHAMFERS (Seamless Transition)
+        else if (n.S && n.E) { // Top-Left Outer Corner
             ctx.beginPath();
-            ctx.moveTo(posX, posY + 32);
-            ctx.lineTo(posX + 16, posY + 8);
-            ctx.lineTo(posX + 32, posY + 32);
+            ctx.moveTo(posX + p, posY + h);
+            ctx.lineTo(posX + h, posY + p);
+            ctx.lineTo(posX + p, posY + p);
             ctx.closePath();
-            ctx.fill();
-
-            // Metallic Bevel Edge
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Panel seams
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.fill(); ctx.stroke();
+        } else if (n.S && n.W) { // Top-Right Outer Corner
             ctx.beginPath();
-            ctx.moveTo(posX + 16, posY + 8);
-            ctx.lineTo(posX + 16, posY + 32);
-            ctx.stroke();
-        } else if (n.N && !n.S) { // Bottom border (Popa / Engine Vents)
+            ctx.moveTo(posX, posY + h);
+            ctx.lineTo(posX + h, posY + p);
+            ctx.lineTo(posX, posY + p);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+        } else if (n.N && n.E) { // Bottom-Left Outer Corner
+            ctx.beginPath();
+            ctx.moveTo(posX + p, posY);
+            ctx.lineTo(posX + h, posY);
+            ctx.lineTo(posX + p, posY + h);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+        } else if (n.N && n.W) { // Bottom-Right Outer Corner
             ctx.beginPath();
             ctx.moveTo(posX, posY);
-            ctx.lineTo(posX + 32, posY);
-            ctx.lineTo(posX + 24, posY + 24);
-            ctx.lineTo(posX + 8, posY + 24);
+            ctx.lineTo(posX + h, posY);
+            ctx.lineTo(posX, posY + h);
             ctx.closePath();
-            ctx.fill();
-
-            ctx.strokeStyle = 'rgba(255, 170, 0, 0.4)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Small Engine Vent Glow
-            ctx.fillStyle = 'rgba(255, 170, 0, 0.2)';
-            ctx.fillRect(posX + 10, posY + 16, 12, 6);
-        } else if (n.E && !n.W) { // Left border (Babor / Port Wing)
-            ctx.beginPath();
-            ctx.moveTo(posX + 32, posY);
-            ctx.lineTo(posX + 8, posY + 16);
-            ctx.lineTo(posX + 32, posY + 32);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Port Navigation Light (Red LED)
-            const pulse = 0.5 + Math.sin(time * 6 + gridY) * 0.5;
-            ctx.fillStyle = `rgba(255, 0, 85, ${0.4 + pulse * 0.6})`;
-            ctx.shadowColor = '#ff0055';
-            ctx.shadowBlur = 8;
-            ctx.beginPath();
-            ctx.arc(posX + 10, posY + 16, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        } else if (n.W && !n.E) { // Right border (Estribor / Starboard Wing)
-            ctx.beginPath();
-            ctx.moveTo(posX, posY);
-            ctx.lineTo(posX + 24, posY + 16);
-            ctx.lineTo(posX, posY + 32);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // Starboard Navigation Light (Green LED)
-            const pulse = 0.5 + Math.sin(time * 6 + gridY) * 0.5;
-            ctx.fillStyle = `rgba(0, 255, 85, ${0.4 + pulse * 0.6})`;
-            ctx.shadowColor = '#00ff55';
-            ctx.shadowBlur = 8;
-            ctx.beginPath();
-            ctx.arc(posX + 22, posY + 16, 3, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        } else { // Corner or diagonal hull plates
-            ctx.fillRect(posX + 4, posY + 4, 24, 24);
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.2)';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(posX + 4, posY + 4, 24, 24);
+            ctx.fill(); ctx.stroke();
+        } 
+        // 3. DIAGONALS & FILLERS
+        else {
+            ctx.fillRect(posX + 6, posY + 6, 20, 20);
+            ctx.strokeRect(posX + 6, posY + 6, 20, 20);
         }
 
         ctx.restore();
