@@ -52,16 +52,182 @@ class TileRenderer {
                     this.drawSystemSlot(ctx, posX, posY);
                 } else if (tile === 4) {
                     // Closed door
-                    this.drawClosedDoor(ctx, posX, posY);
+                    this.drawClosedDoor(ctx, posX, posY, x, y, layout);
                 } else if (tile === 5) {
                     // Open door
-                    this.drawOpenDoor(ctx, posX, posY);
+                    this.drawOpenDoor(ctx, posX, posY, x, y, layout);
                 } else if (tile === 7) {
                     // Infirmary
                     this.drawInfirmary(ctx, posX, posY);
                 }
             }
         }
+    }
+
+    /**
+     * Draw high-tech vibrant orange pneumatic blast door (Closed State)
+     */
+    drawClosedDoor(ctx, posX, posY, gridX = 0, gridY = 0, layout = null) {
+        ctx.save();
+        const p = this.tileSize; // 32
+
+        // Determine orientation (Horizontal if W & E walls, Vertical if N & S walls)
+        let isVertical = false;
+        if (layout && gridY > 0 && gridY < layout.length - 1) {
+            const tUp = layout[gridY - 1][gridX];
+            const tDown = layout[gridY + 1][gridX];
+            if ((tUp === 1 || tUp === 4 || tUp === 5) && (tDown === 1 || tDown === 4 || tDown === 5)) {
+                isVertical = true;
+            }
+        }
+
+        // 1. Dark Threshold Base Floor
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(posX, posY, p, p);
+
+        // 2. Molded Steel Door Frame Pockets
+        ctx.fillStyle = '#334155';
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1.5;
+
+        if (isVertical) { // Vertical Door Frame (Pockets Top & Bottom)
+            ctx.fillRect(posX, posY, p, 4);
+            ctx.fillRect(posX, posY + p - 4, p, 4);
+            ctx.strokeRect(posX, posY, p, 4);
+            ctx.strokeRect(posX, posY + p - 4, p, 4);
+        } else { // Horizontal Door Frame (Pockets Left & Right)
+            ctx.fillRect(posX, posY, 4, p);
+            ctx.fillRect(posX + p - 4, posY, 4, p);
+            ctx.strokeRect(posX, posY, 4, p);
+            ctx.strokeRect(posX + p - 4, posY, 4, p);
+        }
+
+        // 3. Vibrant Orange Armored Blast Door Leaves (Highlighted Sci-Fi Orange)
+        const orangeGrad = ctx.createLinearGradient(posX, posY, posX + p, posY + p);
+        orangeGrad.addColorStop(0, '#ff7700'); // Vibrant Neon Orange Highlight
+        orangeGrad.addColorStop(0.5, '#f97316'); // Core Sci-Fi Orange
+        orangeGrad.addColorStop(1, '#c2410c'); // Deep Bevel Shadow
+
+        ctx.fillStyle = orangeGrad;
+        ctx.strokeStyle = '#7c2d12';
+        ctx.lineWidth = 1.5;
+
+        if (isVertical) {
+            // Top Leaf
+            ctx.fillRect(posX + 3, posY + 3, p - 6, 12);
+            ctx.strokeRect(posX + 3, posY + 3, p - 6, 12);
+
+            // Bottom Leaf
+            ctx.fillRect(posX + 3, posY + 17, p - 6, 12);
+            ctx.strokeRect(posX + 3, posY + 17, p - 6, 12);
+
+            // Interlocking Center Pressure Seal (Horizontal Seam)
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(posX + 2, posY + 15, p - 4, 2);
+
+            // Hydraulic Handle Lock
+            ctx.fillStyle = '#fed7aa';
+            ctx.fillRect(posX + p / 2 - 4, posY + 14, 8, 4);
+        } else {
+            // Left Leaf
+            ctx.fillRect(posX + 3, posY + 3, 12, p - 6);
+            ctx.strokeRect(posX + 3, posY + 3, 12, p - 6);
+
+            // Right Leaf
+            ctx.fillRect(posX + 17, posY + 3, 12, p - 6);
+            ctx.strokeRect(posX + 17, posY + 3, 12, p - 6);
+
+            // Interlocking Center Pressure Seal (Vertical Seam)
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(posX + 15, posY + 2, 2, p - 4);
+
+            // Hydraulic Handle Lock
+            ctx.fillStyle = '#fed7aa';
+            ctx.fillRect(posX + 14, posY + p / 2 - 4, 4, 8);
+        }
+
+        // 4. Status Indicator LED Bar (🔴 RED = LOCKED / CLOSED)
+        ctx.fillStyle = '#ef4444';
+        ctx.shadowColor = '#ef4444';
+        ctx.shadowBlur = 6;
+        if (isVertical) {
+            ctx.fillRect(posX + 2, posY + p / 2 - 1, 3, 2);
+            ctx.fillRect(posX + p - 5, posY + p / 2 - 1, 3, 2);
+        } else {
+            ctx.fillRect(posX + p / 2 - 4, posY + 2, 8, 2);
+        }
+        ctx.shadowBlur = 0;
+
+        ctx.restore();
+    }
+
+    /**
+     * Draw high-tech open pneumatic blast door (Retracted Leaves + Green Sensor Light)
+     */
+    drawOpenDoor(ctx, posX, posY, gridX = 0, gridY = 0, layout = null) {
+        ctx.save();
+        const p = this.tileSize;
+
+        let isVertical = false;
+        if (layout && gridY > 0 && gridY < layout.length - 1) {
+            const tUp = layout[gridY - 1][gridX];
+            const tDown = layout[gridY + 1][gridX];
+            if ((tUp === 1 || tUp === 4 || tUp === 5) && (tDown === 1 || tDown === 4 || tDown === 5)) {
+                isVertical = true;
+            }
+        }
+
+        // 1. Open Walkway Floor Threshold
+        ctx.fillStyle = '#0b1329';
+        ctx.fillRect(posX, posY, p, p);
+
+        // Illuminated Floor Track Stripes
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.3)';
+        ctx.lineWidth = 1;
+        if (isVertical) {
+            ctx.beginPath(); ctx.moveTo(posX + 8, posY); ctx.lineTo(posX + 8, posY + p); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(posX + p - 8, posY); ctx.lineTo(posX + p - 8, posY + p); ctx.stroke();
+        } else {
+            ctx.beginPath(); ctx.moveTo(posX, posY + 8); ctx.lineTo(posX + p, posY + 8); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(posX, posY + p - 8); ctx.lineTo(posX + p, posY + p - 8); ctx.stroke();
+        }
+
+        // 2. Retracted Orange Door Leaves inside Frame Pockets
+        ctx.fillStyle = '#ff7700';
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 1;
+
+        if (isVertical) {
+            // Top Pocket Retracted Leaf
+            ctx.fillRect(posX + 4, posY + 1, p - 8, 4);
+            ctx.strokeRect(posX + 4, posY + 1, p - 8, 4);
+
+            // Bottom Pocket Retracted Leaf
+            ctx.fillRect(posX + 4, posY + p - 5, p - 8, 4);
+            ctx.strokeRect(posX + 4, posY + p - 5, p - 8, 4);
+        } else {
+            // Left Pocket Retracted Leaf
+            ctx.fillRect(posX + 1, posY + 4, 4, p - 8);
+            ctx.strokeRect(posX + 1, posY + 4, 4, p - 8);
+
+            // Right Pocket Retracted Leaf
+            ctx.fillRect(posX + p - 5, posY + 4, 4, p - 8);
+            ctx.strokeRect(posX + p - 5, posY + 4, 4, p - 8);
+        }
+
+        // 3. Status Indicator LED Bar (🟢 GREEN = OPEN)
+        ctx.fillStyle = '#10b981';
+        ctx.shadowColor = '#10b981';
+        ctx.shadowBlur = 8;
+        if (isVertical) {
+            ctx.fillRect(posX + 2, posY + p / 2 - 1, 3, 2);
+            ctx.fillRect(posX + p - 5, posY + p / 2 - 1, 3, 2);
+        } else {
+            ctx.fillRect(posX + p / 2 - 4, posY + 2, 8, 2);
+        }
+        ctx.shadowBlur = 0;
+
+        ctx.restore();
     }
 
     /**
