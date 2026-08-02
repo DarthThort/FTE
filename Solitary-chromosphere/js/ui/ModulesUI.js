@@ -19,27 +19,27 @@ class ModulesUI {
         const content = `
             <div style="font-family: 'Orbitron', var(--font-tech, monospace); width: 100%; color: #fff;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,240,255,0.3); padding-bottom: 12px;">
-                    <div style="color: #38bdf8; font-size: 0.9rem; font-weight: bold; letter-spacing: 1px;">
+                    <div style="color: #38bdf8; font-size: 0.95rem; font-weight: bold; letter-spacing: 1.5px;">
                         CATÁLOGO DE TECNOLOGÍA Y COMPONENTES DE NAVE
                     </div>
-                    <div style="color: #ffaa00; font-size: 1.2rem; font-weight: bold; text-shadow: 0 0 10px rgba(255,170,0,0.5);">
-                        CRÉDITOS: ${this.game.state.credits} CR
+                    <div style="color: #ffaa00; font-size: 1.3rem; font-weight: bold; text-shadow: 0 0 12px rgba(255,170,0,0.6);">
+                        CRÉDITOS DISPONIBLES: ${this.game.state.credits} CR
                     </div>
                 </div>
                 
                 <!-- Category Tabs -->
-                <div id="module-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 8px;">
+                <div id="module-tabs" style="display: flex; gap: 10px; margin-bottom: 22px; padding-bottom: 4px; flex-wrap: wrap;">
                     ${this.renderTabs()}
                 </div>
                 
                 <!-- Module Grid -->
-                <div id="module-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; max-height: 55vh; overflow-y: auto; padding-right: 5px;">
+                <div id="module-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 20px; max-height: 72vh; overflow-y: auto; padding-right: 5px;">
                     ${this.renderModules(this.currentCategory)}
                 </div>
             </div>
         `;
 
-        this.uiManager.createModal('🛒 TIENDA DE MÓDULOS DE NAVE', content);
+        this.uiManager.createModal('🛒 TIENDA DE MÓDULOS DE NAVE', content, 'modal-wide');
 
         // Tab click handlers
         setTimeout(() => {

@@ -480,7 +480,7 @@ class UIManager {
         };
     }
 
-    createModal(title, contentHTML) {
+    createModal(title, contentHTML, customClass = '') {
         // Hide Port Menu if it exists
         const portMenu = document.getElementById('port-main-menu');
         if (portMenu) portMenu.style.setProperty('display', 'none', 'important');
@@ -493,7 +493,7 @@ class UIManager {
         overlay.className = 'modal-overlay';
 
         overlay.innerHTML = `
-            <div class="modal-window">
+            <div class="modal-window ${customClass}">
                 <div class="modal-header">
                     <h2>${title}</h2>
                     <button class="modal-close">&times;</button>

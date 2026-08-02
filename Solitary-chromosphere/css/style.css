@@ -355,6 +355,12 @@ button.secondary:hover {
     border-radius: 8px;
 }
 
+.modal-window.modal-wide {
+    width: 1320px !important;
+    max-width: 95vw !important;
+    max-height: 92vh !important;
+}
+
 .modal-header {
     display: flex;
     justify-content: space-between;
