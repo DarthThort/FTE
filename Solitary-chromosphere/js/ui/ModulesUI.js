@@ -13,120 +13,40 @@ class ModulesUI {
     }
 
     /**
-     * Show modules shop modal
+     * Show modules shop modal using standard UIManager createModal
      */
     show() {
-        const modal = document.createElement('div');
-        modal.id = 'modules-shop-overlay';
-        modal.className = 'modal-overlay';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        `;
-
-        modal.innerHTML = `
-            <div style="
-                width: 90%;
-                max-width: 1200px;
-                max-height: 90vh;
-                background: linear-gradient(135deg, rgba(10,10,30,0.98), rgba(20,10,40,0.98));
-                border: 3px solid var(--primary);
-                border-radius: 15px;
-                padding: 30px;
-                box-shadow: 0 0 60px rgba(0,240,255,0.5);
-                overflow-y: auto;
-            ">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                    <h2 style="
-                        color: var(--primary);
-                        margin: 0;
-                        font-size: 2rem;
-                        text-transform: uppercase;
-                        letter-spacing: 3px;
-                    ">⚙️ TIENDA DE MÓDULOS</h2>
-                    
-                    <div style="color: #ffaa00; font-size: 1.3rem; font-weight: bold;">
-                        💰 ${this.game.state.credits} CR
+        const content = `
+            <div style="font-family: 'Orbitron', var(--font-tech, monospace); width: 100%; color: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(0,240,255,0.3); padding-bottom: 12px;">
+                    <div style="color: #38bdf8; font-size: 0.9rem; font-weight: bold; letter-spacing: 1px;">
+                        CATÁLOGO DE TECNOLOGÍA Y COMPONENTES DE NAVE
+                    </div>
+                    <div style="color: #ffaa00; font-size: 1.2rem; font-weight: bold; text-shadow: 0 0 10px rgba(255,170,0,0.5);">
+                        CRÉDITOS: ${this.game.state.credits} CR
                     </div>
                 </div>
                 
                 <!-- Category Tabs -->
-                <div id="module-tabs" style="
-                    display: flex;
-                    gap: 10px;
-                    margin-bottom: 25px;
-                    border-bottom: 2px solid rgba(0,240,255,0.3);
-                    padding-bottom: 10px;
-                ">
+                <div id="module-tabs" style="display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 8px;">
                     ${this.renderTabs()}
                 </div>
                 
                 <!-- Module Grid -->
-                <div id="module-grid" style="
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 20px;
-                ">
+                <div id="module-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; max-height: 55vh; overflow-y: auto; padding-right: 5px;">
                     ${this.renderModules(this.currentCategory)}
-                </div>
-                
-                <!-- Close Button -->
-                <div style="text-align: center; margin-top: 20px;">
-                    <button id="btn-close-shop" style="
-                        padding: 12px 40px;
-                        font-size: 1.1rem;
-                        background: rgba(255,255,255,0.1);
-                        border: 2px solid var(--primary);
-                        color: var(--primary);
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-family: var(--font-tech);
-                        transition: all 0.3s;
-                    " onmouseover="this.style.background='rgba(0,240,255,0.2)'"
-                       onmouseout="this.style.background='rgba(255,255,255,0.1)'">
-                        CERRAR
-                    </button>
                 </div>
             </div>
         `;
 
-        document.body.appendChild(modal);
+        this.uiManager.createModal('🛒 TIENDA DE MÓDULOS DE NAVE', content);
 
         // Tab click handlers
-        document.querySelectorAll('.module-tab').forEach(tab => {
-            tab.onclick = () => this.switchCategory(tab.dataset.category);
-        });
-
-        // Close button
-        document.getElementById('btn-close-shop').onclick = () => {
-            modal.remove();
-            // Show port menu again
-            const portMenu = document.getElementById('port-main-menu');
-            if (portMenu) {
-                portMenu.style.display = '';
-            }
-        };
-
-        // Close on click outside
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                modal.remove();
-                // Show port menu again
-                const portMenu = document.getElementById('port-main-menu');
-                if (portMenu) {
-                    portMenu.style.display = '';
-                }
-            }
-        };
+        setTimeout(() => {
+            document.querySelectorAll('.module-tab').forEach(tab => {
+                tab.onclick = () => this.switchCategory(tab.dataset.category);
+            });
+        }, 50);
     }
 
     /**
