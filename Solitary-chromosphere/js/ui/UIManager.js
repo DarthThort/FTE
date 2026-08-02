@@ -483,7 +483,7 @@ class UIManager {
     createModal(title, contentHTML) {
         // Hide Port Menu if it exists
         const portMenu = document.getElementById('port-main-menu');
-        if (portMenu) portMenu.style.display = 'none';
+        if (portMenu) portMenu.style.setProperty('display', 'none', 'important');
 
         // Remove existing modal if any
         const existing = document.querySelector('.modal-overlay');
@@ -508,11 +508,22 @@ class UIManager {
 
         const closeModal = () => {
             overlay.remove();
-            // Restore Port Menu
-            if (portMenu) portMenu.style.display = 'flex';
+            // Restore Port Menu centered
+            if (portMenu) {
+                portMenu.style.setProperty('display', 'flex', 'important');
+                portMenu.style.setProperty('align-items', 'center', 'important');
+                portMenu.style.setProperty('justify-content', 'center', 'important');
+            }
         };
 
         // Close handlers
         overlay.querySelector('.modal-close').onclick = closeModal;
+
+        // Close on background overlay click
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                closeModal();
+            }
+        };
     }
 }
