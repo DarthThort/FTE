@@ -133,13 +133,6 @@ class ModulesUI {
      * Render category tabs
      */
     renderTabs() {
-        const categories = [
-            { id: MODULE_CATEGORIES.WEAPON, label: '⚔️ ARMAS', icon: '⚔️' },
-            { id: MODULE_CATEGORIES.SHIELD, label: '🛡️ ESCUDOS', icon: '🛡️' },
-            { id: MODULE_CATEGORIES.ENGINE, label: '🚀 MOTORES', icon: '🚀' },
-            { id: MODULE_CATEGORIES.JUMP_DRIVE, label: '✨ SALTO FTL', icon: '✨' },
-            { id: MODULE_CATEGORIES.REACTOR, label: '⚡ REACTORES', icon: '⚡' },
-            { id: MODULE_CATEGORIES.BRIDGE, label: '🎯 BRIDGE', icon: '🎯' }
         return Object.entries(MODULE_CATEGORIES).map(([key, value]) => `
             <button class="module-tab" data-category="${value}" style="
                 padding: 10px 20px;
