@@ -51,7 +51,7 @@ class PortUI {
         overlay.style.cssText = `
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(3, 10, 24, 0.75); backdrop-filter: blur(8px);
-            z-index: 1000; display: flex; align-items: center; justify-content: center;
+            z-index: 1000; display: flex !important; align-items: center !important; justify-content: center !important;
             font-family: 'Orbitron', var(--font-tech, monospace);
         `;
 
@@ -604,7 +604,7 @@ class PortUI {
                                     </div>
                                     <div style="display: flex; align-items: center; gap: 10px;">
                                         <span style="color: var(--warning); font-weight: bold;">${price} CR</span>
-                                        <button style="font-size: 0.75rem; padding: 4px 10px; background: var(--primary); color: #000; border: none; font-weight: bold; border-radius: 4px; cursor: pointer;" onclick="window.game.ui.buyItem('${item.id}', ${price})">COMPRAR</button>
+                                        <button style="font-size: 0.8rem; padding: 6px 14px; background: #00f0ff !important; color: #000000 !important; border: 1.5px solid #38bdf8 !important; font-family: 'Orbitron', monospace; font-weight: 900 !important; border-radius: 4px; cursor: pointer; box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);" onclick="window.game.ui.buyItem('${item.id}', ${price})">🛒 COMPRAR</button>
                                     </div>
                                 </div>
                             `;

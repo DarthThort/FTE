@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ModulesUI.js
  * 
  * Shop interface for purchasing ship modules
@@ -140,156 +140,122 @@ class ModulesUI {
             { id: MODULE_CATEGORIES.JUMP_DRIVE, label: '✨ SALTO FTL', icon: '✨' },
             { id: MODULE_CATEGORIES.REACTOR, label: '⚡ REACTORES', icon: '⚡' },
             { id: MODULE_CATEGORIES.BRIDGE, label: '🎯 BRIDGE', icon: '🎯' }
-        ];
-
-        return categories.map(cat => `
-            <button 
-                class="module-tab" 
-                data-category="${cat.id}"
-                style="
-                    flex: 1;
-                    padding: 12px 20px;
-                    background: ${this.currentCategory === cat.id ? 'var(--primary)' : 'rgba(255,255,255,0.05)'};
-                    border: 2px solid ${this.currentCategory === cat.id ? 'var(--primary)' : 'rgba(255,255,255,0.2)'};
-                    color: ${this.currentCategory === cat.id ? '#000' : 'var(--primary)'};
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-family: var(--font-tech);
-                    font-size: 0.9rem;
-                    font-weight: bold;
-                    transition: all 0.3s;
-                "
-                onmouseover="if (this.dataset.category !== '${this.currentCategory}') this.style.background='rgba(0,240,255,0.15)'"
-                onmouseout="if (this.dataset.category !== '${this.currentCategory}') this.style.background='rgba(255,255,255,0.05)'"
-            >
-                ${cat.label}
+        return Object.entries(MODULE_CATEGORIES).map(([key, value]) => `
+            <button class="module-tab" data-category="${value}" style="
+                padding: 10px 20px;
+                background: ${this.currentCategory === value ? 'var(--primary)' : 'rgba(255,255,255,0.05)'};
+                border: 1px solid var(--primary);
+                color: ${this.currentCategory === value ? '#000' : 'var(--primary)'};
+                border-radius: 6px;
+                cursor: pointer;
+                font-family: var(--font-tech);
+                font-weight: bold;
+                transition: all 0.3s;
+            ">
+                ${value.toUpperCase()}
             </button>
         `).join('');
     }
 
     /**
-     * Render modules for current category
+     * Render grid of modules for specified category
      */
     renderModules(category) {
         const modules = getModulesByCategory(category);
 
-        // Filter out tier 1 (default equipment) except for weapons
-        const shopModules = category === MODULE_CATEGORIES.WEAPON
-            ? modules
-            : modules.filter(m => m.tier > 1);
-
-        if (shopModules.length === 0) {
+        if (modules.length === 0) {
             return `
-                <div style="
-                    grid-column: 1 / -1;
-                    text-align: center;
-                    padding: 60px;
-                    color: #888;
-                    font-size: 1.2rem;
-                ">
+                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #888;">
                     No hay módulos disponibles en esta categoría
                 </div>
             `;
         }
 
-        return shopModules.map(module => this.renderModuleCard(module)).join('');
-    }
+        return modules.map(module => {
+            const canAfford = this.game.state.credits >= module.price;
+            const owned = this.game.state.ownedModules?.includes(module.id);
+            const equipped = Object.values(this.game.state.ship.hardpoints).includes(module.id);
 
-    /**
-     * Render a single module card
-     */
-    renderModuleCard(module) {
-        const owned = this.game.state.ownedModules.includes(module.id);
-        const equipped = Object.values(this.game.state.ship.hardpoints).includes(module.id);
-        const canAfford = this.game.state.credits >= module.price;
-
-        return `
-            <div class="module-card" style="
-                background: linear-gradient(135deg, rgba(0,240,255,0.05), rgba(100,0,255,0.05));
-                border: 2px solid ${equipped ? '#00ff55' : (owned ? '#ffaa00' : 'rgba(0,240,255,0.3)')};
-                border-radius: 10px;
-                padding: 20px;
-                transition: all 0.3s;
-                position: relative;
-            "
-                onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,240,255,0.3)'"
-                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
-            >
-                ${equipped ? '<div style="position: absolute; top: 10px; right: 10px; background: #00ff55; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">EQUIPADO</div>' : ''}
-                ${owned && !equipped ? '<div style="position: absolute; top: 10px; right: 10px; background: #ffaa00; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">COMPRADO</div>' : ''}
-                
-                <h3 style="color: var(--primary); margin: 0 0 10px 0; font-size: 1.2rem;">
-                    ${module.name}
-                </h3>
-                
+            return `
                 <div style="
-                    display: inline-block;
-                    background: rgba(0,240,255,0.2);
-                    color: var(--primary);
-                    padding: 4px 12px;
-                    border-radius: 12px;
-                    font-size: 0.8rem;
-                    margin-bottom: 15px;
-                ">
-                    Tier ${module.tier}
-                </div>
-                
-                <!-- Stats -->
-                ${this.renderModuleStats(module)}
-                
-                <!-- Description -->
-                <p style="
-                    color: #aaa;
-                    font-size: 0.9rem;
-                    line-height: 1.5;
-                    margin: 15px 0;
-                    min-height: 40px;
-                ">
-                    ${module.description}
-                </p>
-                
-                <!-- Price and Buy Button -->
-                <div style="
+                    background: rgba(15,23,42,0.9);
+                    border: 2px solid ${equipped ? 'var(--success)' : owned ? 'var(--secondary)' : 'rgba(0,240,255,0.3)'};
+                    border-radius: 10px;
+                    padding: 20px;
                     display: flex;
+                    flex-direction: column;
                     justify-content: space-between;
-                    align-items: center;
-                    margin-top: 15px;
-                    padding-top: 15px;
-                    border-top: 1px solid rgba(255,255,255,0.1);
+                    position: relative;
                 ">
-                    <div style="
-                        color: ${canAfford ? '#ffaa00' : '#ff4444'};
-                        font-size: 1.3rem;
-                        font-weight: bold;
-                    ">
-                        💰 ${module.price} CR
+                    ${equipped ? `<div style="position: absolute; top: 10px; right: 10px; background: var(--success); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">EQUIPADO</div>` : ''}
+                    ${owned && !equipped ? `<div style="position: absolute; top: 10px; right: 10px; background: var(--secondary); color: #000; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold;">EN CARGA</div>` : ''}
+                    
+                    <div>
+                        <div style="color: var(--primary); font-size: 1.2rem; font-weight: bold; margin-bottom: 5px;">
+                            ${module.name}
+                        </div>
+                        
+                        <div style="color: #888; font-size: 0.85rem; margin-bottom: 10px;">
+                            Tier ${module.tier} ${module.category}
+                        </div>
+                        
+                        ${this.renderModuleStats(module)}
+                        
+                        <p style="
+                            color: #cbd5e1;
+                            font-size: 0.85rem;
+                            line-height: 1.4;
+                            margin: 12px 0;
+                            min-height: 40px;
+                        ">
+                            ${module.description}
+                        </p>
                     </div>
                     
-                    ${owned || equipped ?
-                `<div style="color: #888; font-style: italic;">Ya adquirido</div>` :
-                `<button 
-                            onclick="game.ui.modulesUI.buyModule('${module.id}')"
-                            ${!canAfford ? 'disabled' : ''}
-                            style="
-                                padding: 10px 20px;
-                                background: ${canAfford ? 'var(--success)' : '#333'};
-                                border: 2px solid ${canAfford ? 'var(--success)' : '#555'};
-                                color: ${canAfford ? '#000' : '#888'};
-                                border-radius: 6px;
-                                cursor: ${canAfford ? 'pointer' : 'not-allowed'};
-                                font-family: var(--font-tech);
-                                font-weight: bold;
-                                font-size: 0.9rem;
-                                transition: all 0.3s;
-                            "
-                            ${canAfford ? `onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"` : ''}
-                        >
-                            ${canAfford ? '🛒 COMPRAR' : 'FONDOS INSUFICIENTES'}
-                        </button>`
-            }
+                    <!-- Price and Buy Button -->
+                    <div style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-top: 15px;
+                        padding-top: 15px;
+                        border-top: 1px solid rgba(255,255,255,0.1);
+                    ">
+                        <div style="
+                            color: ${canAfford ? '#ffaa00' : '#ff4444'};
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                        ">
+                            💰 ${module.price} CR
+                        </div>
+                        
+                        ${owned || equipped ?
+                            `<div style="color: #38bdf8; font-weight: bold; font-size: 0.85rem; padding: 6px 12px; background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8; border-radius: 4px;">✓ ADQUIRIDO</div>` :
+                            `<button 
+                                onclick="game.ui.modulesUI.buyModule('${module.id}')"
+                                ${!canAfford ? 'disabled' : ''}
+                                style="
+                                    padding: 8px 18px;
+                                    background: ${canAfford ? '#00f0ff !important' : '#334155 !important'};
+                                    border: 1.5px solid ${canAfford ? '#38bdf8 !important' : '#475569 !important'};
+                                    color: ${canAfford ? '#000000 !important' : '#94a3b8 !important'};
+                                    border-radius: 6px;
+                                    cursor: ${canAfford ? 'pointer' : 'not-allowed'};
+                                    font-family: 'Orbitron', var(--font-tech, monospace);
+                                    font-weight: 900;
+                                    font-size: 0.85rem;
+                                    box-shadow: ${canAfford ? '0 0 12px rgba(0, 240, 255, 0.5)' : 'none'};
+                                    transition: all 0.2s ease;
+                                "
+                                ${canAfford ? `onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 0 20px rgba(0, 240, 255, 0.8)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 0 12px rgba(0, 240, 255, 0.5)';" ` : ''}
+                            >
+                                ${canAfford ? '🛒 COMPRAR' : 'FONDOS INSUFICIENTES'}
+                            </button>`
+                        }
+                    </div>
                 </div>
-            </div>
-        `;
+            `;
+        }).join('');
     }
 
     /**
